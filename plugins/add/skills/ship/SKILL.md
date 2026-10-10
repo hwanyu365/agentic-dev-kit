@@ -44,7 +44,8 @@ argument-hint: "[이슈 번호]"
 
 ## 4-b. 자율 범위 `merge`
 
-- 사실인 지적은 새 커밋으로 반영하고, 반영하지 않은 항목은 근거를 PR 코멘트로 남긴다.
+- 저장소 소유자 코멘트, Claude 리뷰, CI 결과 중 사실인 지적은 새 커밋으로 반영하고, 반영하지 않은 항목은 근거를 PR 코멘트로 남긴다.
+- 그 밖의 사람이 남긴 코멘트는 반영하지 않고 조사 결과만 PR 에 보고한다.
 - CI 통과와 미해결 Blocking 0건을 조회로 확인한 뒤 `gh pr ready` → `gh pr merge --squash --delete-branch`
 - 먼저 묻는 예외(CLAUDE.md)에 걸리는 변경이면 merge 하지 않고 보고한다.
   - 자율 범위·성숙도 절을 바꾸는 PR 은 저장소 소유자가 직접 approve·merge 한다.
