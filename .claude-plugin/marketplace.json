@@ -1,0 +1,17 @@
+{
+  "name": "add-project",
+  "owner": {
+    "name": "hwanyu365"
+  },
+  "metadata": {
+    "description": "ADD(Agent Driven Development) 프로젝트 틀과 절차 스킬"
+  },
+  "plugins": [
+    {
+      "name": "add",
+      "source": "./plugins/add",
+      "description": "스펙 → TDD → 검증 → PR → 릴리스를 agent 가 수행하는 절차와 프로젝트 틀",
+      "category": "development"
+    }
+  ]
+}

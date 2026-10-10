@@ -1,0 +1,9 @@
+{
+  "name": "add",
+  "version": "0.1.0",
+  "description": "ADD(Agent Driven Development) — 스펙 주도 TDD, 단일 검증 명령, 프로젝트별 자율 범위",
+  "author": {
+    "name": "hwanyu365"
+  },
+  "repository": "https://github.com/hwanyu365/add-project"
+}
