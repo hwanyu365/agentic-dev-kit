@@ -27,4 +27,6 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | GitHub Spec Kit | `tasks.md` | 이슈가 작업 단위. 이중 관리가 됨 |
 | Kiro | `design.md` 분리 | rules_spec §0.7: 설계 결정은 스펙 §6 에 둬야 요구사항과 근거가 함께 고쳐짐 |
 | Kiro | EARS 표기 | Given-When-Then 이 그대로 TC 가 되어 같은 역할 |
+| GitHub branch protection | 미해결 리뷰 대화를 merge 차단 요건으로 두기 | 지적 하나하나가 차단 요건이 되고, 반영 push 가 리뷰를 다시 깨워 라운드가 끝나지 않음. 적용 저장소에서 한 PR 이 아홉 라운드를 돌고 마지막엔 지적이 서로를 되돌렸다 |
+| [claude-code-action](https://github.com/anthropics/claude-code-action) | `@claude` 에게 코드 수정 위임 | push 의 actor 가 bot 으로 기록되어 워크플로가 승인 대기가 되고 리뷰는 bot actor 로 거부됨. 사람이 매번 승인해야 하므로 자율 범위 `merge` 가 끊긴다. 결과물 품질과는 무관 |
 | [AGENTS.md](https://agents.md) | 도구 중립 규칙 파일 | OpenAI Codex 에서 시작한 형식. Claude Code 만 쓰므로 CLAUDE.md 하나로 충분. 다른 agent 를 들이면 CLAUDE.md 내용을 AGENTS.md 로 옮기고 CLAUDE.md 에서 `@AGENTS.md` 로 import |
