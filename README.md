@@ -37,7 +37,7 @@ flowchart LR
 | `/add:spec <이슈>` | 이슈 → `docs/spec_{function}.md` 갱신, 요구사항 ID·TC 부여, `[확인필요]` 0건 |
 | `/add:tdd` | TC 로 테스트 먼저(Red) → 최소 구현(Green) → 정리 |
 | `/add:verify` | 검증 명령 + 스펙 항목별 구현 위치·TC 대조 + 변경 범위 점검 |
-| `/add:ship` | 커밋 → draft PR → CI·리뷰 조사 → 자율 범위에 따라 보고 또는 merge |
+| `/add:ship` | 커밋 → draft PR → CI·리뷰 조사 → 후속 건 이슈 등록 → 자율 범위에 따라 보고 또는 merge |
 | `/add:release <버전>` | 태그 → 릴리스 워크플로 확인 → 배포 후 확인 목록 |
 | `/add:handoff` | `.add/handoff.md` 에 현재 상태 기록 |
 
