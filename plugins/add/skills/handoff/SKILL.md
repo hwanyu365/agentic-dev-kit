@@ -7,9 +7,15 @@ description: 다음 세션(사람 또는 다른 agent)이 이어받을 수 있�
 
 `.add/handoff.md` 는 로컬 파일이다 (`.gitignore` 대상). 이력을 쌓지 않고 매번 현재 상태로 덮어쓴다.
 
+- 위치는 main 클론이다: `$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.add/handoff.md`
+  - 워크트리 안에 쓰면 merge 후 워크트리를 지울 때 함께 사라진다.
+  - 세션 시작 시 add 플러그인 hook 이 이 경로를 읽어 컨텍스트에 넣는다.
+
 ## 쓰기 전 조회
 
 - 열린 PR·CI 상태, 워크트리 목록, 현재 브랜치는 기억이 아니라 지금 조회한 값으로 쓴다.
+- 기존 파일이 있으면 먼저 읽는다. "결정" 은 아직 유효한 것을 이어 적고, 끝난 "진행 중"·"대기" 만 지운다.
+- `/add:spec` 이 보고한 ID 목록과 `/add:tdd` 의 Red 테스트 목록이 아직 PR 본문에 없으면 "진행 중" 에 적는다 → 새 세션이 ship 의 Red 보존 확인과 PR 본문을 채울 근거다.
 
 ## 양식 (50줄 이하)
 

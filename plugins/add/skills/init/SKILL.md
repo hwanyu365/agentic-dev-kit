@@ -28,7 +28,7 @@ disable-model-invocation: true
 | `{{STACK}}` | 언어·프레임워크·주요 의존성과 선택 이유 | 코드에서 읽은 값 |
 | `{{VERIFY_CMD}}` | 로컬과 CI 가 같이 돌릴 검증 명령 (lint + 타입 + 테스트) | 스택 관례 |
 | `{{VERIFY_ALLOWED_TOOLS}}` | 검증 명령의 Claude 권한 패턴 | `&&` 로 이은 하위 명령마다 정확히 일치하는 `Bash(<하위 명령>)` 하나씩 (앞부분 와일드카드는 publish·install 까지 연다) |
-| `{{TEST_LOCATION}}` | 테스트 파일 위치 규칙 | 사용자 전역 규칙, 스택이 강제하면 그 경로와 이유 |
+| `{{TEST_LOCATION}}` | 테스트 파일 위치 규칙 | 소스 옆 `{file}.test.*` (사용자 전역 규칙이 있으면 그것), 스택이 강제하면 그 경로와 이유 |
 | `{{SECRET_FILES_REGEX}}` | 기본 목록(`.env`, 키 파일, 서비스 계정 키) 밖에 커밋되면 안 되는 스택 설정 파일의 정규식 | 없으면 줄 삭제 |
 | `{{CI_SETUP}}` | CI 런타임 준비 step (setup-java, setup-node 등) | 스택 관례 |
 | `{{RELEASE_CMD}}` | 태그 시 산출물 빌드·배포 명령 | 없으면 step 삭제 |
@@ -45,7 +45,7 @@ disable-model-invocation: true
   - `.github/secret-files.regex` 에 맞는 파일은 `.gitignore` 와 `.claude/settings.json` deny 의 `Read(<glob>)` 에도 넣는다.
   - `claude.yml` 의 `{{CI_SETUP}}` step 에는 `if: steps.secret.outputs.ok == 'true'` 를 붙인다.
   - dependabot 에 스택의 `package-ecosystem` 을 추가한다.
-  - `{{AUTONOMY}}` 가 `pr` 이면 CLAUDE.md 자율 범위 표에서 `merge` 행과 그 아래 대체 문구를 지우고, `merge` 면 `pr` 행을 지운다.
+  - `{{AUTONOMY}}` 는 CLAUDE.md 자율 범위 표와 대체 글머리에서 고르지 않은 값의 행·줄을 지운다. "리뷰 조사 (두 값 공통)" 은 남긴다.
   - `merge` 면 `.claude/settings.json` allow 에 `Bash(gh pr ready:*)`, `Bash(gh pr merge --squash:*)`, `Bash(git worktree remove:*)` 를 더한다.
   - `{{REVIEWER}}` 는 CLAUDE.md "리뷰" 에서 고르지 않은 값의 글머리를 지운다. `local` 이면 `claude.yml`·`claude-review.yml` 을 복사하지 않고, CLAUDE.md GIT 절의 `@claude` 글머리 묶음도 지운다.
 - `docs/spec_{function}.md.example` 은 첫 UC 스펙을 쓸 때 복사하도록 그대로 둔다.
@@ -54,6 +54,7 @@ disable-model-invocation: true
 
 - `git grep -n '{{'` 결과가 0건이어야 한다 (GitHub Actions 의 `${{ }}` 는 제외).
 - 검증 명령을 한 번 실행하고 출력을 보여 준다. 실패하면 원인을 보고하고 멈춘다.
+  - 테스트가 하나도 없어서 실패하는 것이면 스모크 테스트 하나를 만들어 통과시킨다. 스펙이 없으므로 `TC#n` 이름 규칙의 예외이고, 첫 스펙의 TC 테스트가 생기면 지운다.
 - 비밀 파일 정규식이 예시 파일명(`.env`, `release.jks`, `service-account.json`)을 잡고 일반 파일(`README.md`)은 잡지 않는지 `printf ... | grep -Ef .github/secret-files.regex` 로 확인한다.
 
 ## 5. 사람이 할 일 목록 출력

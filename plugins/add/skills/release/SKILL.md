@@ -15,13 +15,14 @@ disable-model-invocation: true
 
 ## 2. 노트
 
-- `git log <지난 태그>..origin/main --oneline` 과 merge 된 PR 목록으로 사용자 관점 변경 요약을 만든다.
+- `git log <지난 태그>..origin/main --oneline` 과 merge 된 PR 목록으로 사용자 관점 변경 요약을 만든다. 첫 릴리스면 `git log origin/main --oneline` 전체로 만든다.
 - 사용자가 할 일(재설치, 권한 재허용, 설정 변경)이 있으면 맨 위에 둔다.
 
 ## 3. 태그
 
 - 노트를 보여 주고 확인을 받은 뒤 `git tag v<버전> origin/main` → `git push origin v<버전>`
 - `gh run watch` 로 Release 워크플로를 끝까지 본다. 실패하면 로그 요약과 원인을 보고하고, 태그를 지우거나 다시 만들지는 묻는다.
+- 성공하면 확인받은 노트로 바꾼다: `gh release edit v<버전> --notes-file <노트 파일>` → 워크플로의 자동 노트에는 "사용자가 할 일" 이 없다.
 
 ## 4. 배포 후 확인
 
