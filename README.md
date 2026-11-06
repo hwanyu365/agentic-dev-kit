@@ -33,7 +33,7 @@ flowchart LR
 
 | 명령 | 하는 일 |
 | --- | --- |
-| `/add:init` | 현재 저장소에 틀을 복사하고 자리표시자(스택, 검증 명령, 성숙도, 자율 범위 등)를 인터뷰로 채움 |
+| `/add:init` | 현재 저장소에 틀을 복사하고 자리표시자(스택, 검증 명령, 성숙도, 자율 범위, 리뷰 방식 등)를 인터뷰로 채움 |
 | `/add:spec <이슈>` | 이슈 → `docs/spec_{function}.md` 갱신, 요구사항 ID·TC 부여, `[확인필요]` 0건 |
 | `/add:tdd` | TC 로 테스트 먼저(Red) → 최소 구현(Green) → 정리 |
 | `/add:verify` | 검증 명령 + 스펙 항목별 구현 위치·TC 대조 + 변경 범위 점검 |
@@ -49,9 +49,11 @@ flowchart LR
 | `docs/specification.md` | 색인 + 공통 제약 |
 | `docs/spec_{function}.md` | 기능별 스펙 (§1~§7) |
 | `docs/rules_spec.md` | 스펙 작성 규칙 |
+| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, 커밋 직전 비밀 파일 차단 hook |
 | `.github/workflows/ci.yml` | 비밀 파일 가드 + 검증 명령 |
-| `.github/workflows/claude.yml` | 이슈·PR 의 `@claude` (소유자·협업자만) |
-| `.github/workflows/claude-review.yml` | PR 자동 리뷰 (같은 저장소 브랜치만, 양식 고정) |
+| `.github/secret-files.regex` | 커밋되면 안 되는 파일 목록. CI 가드와 `.claude/settings.json` 의 커밋 직전 hook 이 함께 읽음 |
+| `.github/workflows/claude.yml` | 이슈·PR 의 `@claude` (소유자·협업자만, 리뷰·질의응답 전용으로 커밋·push 차단). 리뷰 `github` 일 때만 |
+| `.github/workflows/claude-review.yml` | PR 자동 리뷰 (같은 저장소 브랜치만, 양식 고정). 리뷰 `github` 일 때만. `local` 이면 `/add:ship` 이 로컬 subagent 로 리뷰 |
 | `.github/workflows/release.yml` | `v*` 태그 → 검증 → 산출물 → GitHub Release |
 | `.github/ISSUE_TEMPLATE/`, `pull_request_template.md` | 스토리·인수 조건, 재현 절차, PR 검증 항목 |
 
