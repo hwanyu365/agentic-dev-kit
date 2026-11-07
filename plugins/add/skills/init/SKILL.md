@@ -61,6 +61,8 @@ disable-model-invocation: true
 
 - `main` 브랜치 보호: CI job 필수, PR 로만 merge, 관리자 포함 (`gh api` 로 대신 설정할지 묻는다)
   - 브랜치가 최신인지 요구하는 설정은 켠다 → 낡은 CI 결과로 merge 되는 것을 막는다.
+  - `github` 리뷰면 `claude-review.yml` 의 `review` job 도 필수 check 로 둔다 → 브라우저에서 merge 해도 리뷰 실패·진행 중이면 막힌다.
+  - private 저장소는 플랜에 따라 브랜치 보호를 쓸 수 없다 → 그때는 merge 게이트 hook 만 남는다고 알린다.
   - **미해결 리뷰 대화를 merge 차단 요건으로 만드는 설정은 켜지 않는다.** 지적 하나하나가 차단 요건이 되고, 반영 push 가 리뷰를 다시 깨워 라운드가 끝나지 않는다. 지적은 조사해 판단하고 근거를 남긴다.
   - 커밋 이력을 선형으로 강제하는 설정도 켜지 않는다 → squash 로 올리는 것은 관례로 지키면 되고, 그 설정은 rebase 를 막지 못해 반쪽이다.
 - Secrets: 릴리스용 비밀값. `github` 리뷰면 `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`) 도

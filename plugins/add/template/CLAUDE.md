@@ -116,6 +116,8 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
 - 리뷰: `{{REVIEWER}}`
   - `github`: PR 마다 `claude-review.yml` 이 리뷰한다.
   - `local`: GitHub 에서 Claude 를 쓰지 않는다 → `/add:ship` 이 대화 이력 없는 subagent 로 같은 기준의 리뷰를 PR 코멘트로 남긴다.
+  - 항목마다 처리 결과를 "리뷰 대응" 코멘트로 남긴다 (`/add:ship` 3-2) → 다음 라운드 리뷰가 이전 항목의 상태를 이어받는다.
+  - `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막는다.
 - **코드 변경은 세션이 직접 커밋한다. `@claude` 에게 맡기지 않는다.**
   - `claude-code-action` 의 push 는 actor 가 bot 으로 기록된다 → 워크플로가 승인 대기가 되고 리뷰는 bot actor 로 거부된다. 저장소 Actions 승인 정책을 느슨하게 해도 그대로다.
   - 커밋 author 는 `claude[bot]` 으로 찍히지만 그 주소의 ID 는 bot 계정의 것이다 → author 로 actor 를 짐작할 수 없다.

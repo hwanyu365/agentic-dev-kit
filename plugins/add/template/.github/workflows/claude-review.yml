@@ -2,7 +2,7 @@ name: Claude review
 
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
+    types: [opened, synchronize, reopened]
 
 # 연속 push 때 이전 head 의 리뷰가 늦게 끝나 최신 요약처럼 섞이지 않게 한다.
 concurrency:
@@ -47,11 +47,19 @@ jobs:
             - 버그와 보안 문제를 우선하고, 취향 문제는 남기지 않는다
             - 리뷰어가 스스로 알 수 있는 것(CI 결과, diff 요약, 충돌)과 커밋 메시지 양식은 쓰지 않는다
 
-            inline comment 로 남기지 않은 요약은 `gh pr comment` 로 한 번만, 아래 양식으로 남긴다.
-            빈 버킷도 지우지 않고 `없음.` 으로 둔다. 항목 ID 는 [B1]/[S1]/[N1].
+            이전 라운드
+            - `gh pr view --comments` 로 이전 리뷰 요약과 "리뷰 대응" 코멘트를 읽는다. inline 답글은 보이지 않으므로 "리뷰 대응" 이 처리 기록이다.
+            - 이전 항목 ID 는 그대로 쓰고, 새 항목은 이어지는 번호를 쓴다.
+            - 미반영 근거가 적힌 항목은 그 근거를 확인한다. 새 근거 없이 같은 지적을 다시 올리지 않는다.
+
+            inline comment 는 첫 줄을 항목 ID 와 한 줄 제목으로 시작한다 (예: `[B1] 빈 목록에서 크래시`).
+            요약은 inline 항목을 포함한 모든 항목을 버킷에 나열하고 `gh pr comment` 로 한 번만 남긴다 → merge 판정은 요약만 본다.
+            빈 버킷도 지우지 않고 `없음.` 으로 둔다. 항목 ID 는 [B1]/[S1]/[N1]. 각 항목에 `파일:라인` 을 적는다.
 
             HEAD: <위 HEAD 값>
             ## 개요
+            ## 이전 항목
+            - 이전 요약의 항목마다 해결 / 이월 / 반박 수용 / 소유자 결정 중 하나. 이월이면 아래 버킷에 같은 ID 로 다시 둔다. 첫 리뷰면 `없음.`
             ## 🔴 Blocking (merge 전 수정 필수)
             ## 🟡 Should Fix (merge 전 확인 권장)
             ## 🟢 Nits (follow-up 가능)

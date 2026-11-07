@@ -23,6 +23,7 @@ claude plugin install add@add-project
 
 - 갱신: `claude plugin marketplace update add-project` → `claude plugin update add@add-project` (자동 갱신은 기본으로 꺼져 있다)
 - 플러그인 hook: 세션 시작 시 main 클론의 `.add/handoff.md` 를 컨텍스트에 넣는다
+- Claude Code v2.1.295 이상: 템플릿의 차단 hook 은 `onFailure: "block"` 으로 hook 실패·시간 초과도 막는다. 그보다 낮은 버전은 이 필드를 모르므로 실패가 통과로 끝난다
 - [MountainUnicorn/add](https://github.com/MountainUnicorn/add) 와 함께 설치하면 `/add:*` 명령 이름이 겹친다. 하나만 설치한다.
 
 ## 사용 흐름
@@ -54,7 +55,8 @@ flowchart LR
 | `docs/specification.md` | 색인 + 공통 제약 |
 | `docs/spec_{function}.md` | 기능별 스펙 (§1~§7) |
 | `docs/rules_spec.md` | 스펙 작성 규칙 |
-| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, 커밋 직전 비밀 파일 차단 hook |
+| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, 커밋 직전 비밀 파일 차단 hook, merge 게이트 hook |
+| `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음 |
 | `.github/workflows/ci.yml` | 비밀 파일 가드 + 검증 명령 |
 | `.github/secret-files.regex` | 커밋되면 안 되는 파일 목록. CI 가드와 `.claude/settings.json` 의 커밋 직전 hook 이 함께 읽음 |
 | `.github/workflows/claude.yml` | 이슈·PR 의 `@claude` (소유자·협업자만, 리뷰·질의응답 전용으로 커밋·push 차단). 리뷰 `github` 일 때만 |

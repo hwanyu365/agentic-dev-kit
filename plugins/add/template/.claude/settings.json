@@ -39,6 +39,12 @@
             "type": "command",
             "if": "Bash(git commit *)",
             "command": "r=\"$(git rev-parse --show-toplevel)/.github/secret-files.regex\"; [ -s \"$r\" ] || { echo \"$r 없음 → 커밋 차단\" >&2; exit 2; }; f=$({ git -c core.quotePath=false diff --cached --name-only --diff-filter=d; git -c core.quotePath=false ls-files -mo --exclude-standard; } | grep -Ef \"$r\" | grep -vE '\\.example$' | sort -u); [ -z \"$f\" ] || { echo \"비밀 파일이 stage 됐거나 커밋 후보임 → 커밋 차단 (.github/secret-files.regex): $f\" >&2; exit 2; }"
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr merge *)",
+            "onFailure": "block",
+            "command": "sh \"$(git rev-parse --show-toplevel)/.claude/hooks/merge-gate.sh\""
           }
         ]
       }

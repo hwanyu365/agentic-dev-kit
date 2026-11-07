@@ -17,7 +17,7 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | [superpowers](https://github.com/obra/superpowers) | 스펙 전 질문은 하나씩, 선택지 + 권장안 | 질문 묶음은 답이 얕아지고 기본값이 동의로 오인됨 | spec 2단계, init 인터뷰 |
 | superpowers | 명령 출력 없이 완료 선언 금지 | "통과했다"는 보고가 실행 없이 나오는 것을 막음 | 템플릿 CLAUDE.md 원칙, verify |
 | [Claude Code best practices](https://code.claude.com/docs/en/best-practices) | 대화 이력 없는 subagent 로 diff 리뷰·스펙 대조 | 구현한 agent 는 자기 코드를 근거로 판단함. GitHub 에서 Claude 를 쓸 수 없는 저장소에서도 merge 전 리뷰를 남김. 읽기만 하므로 역할 간 인계가 없음 | ship 3단계 (리뷰 `local`), verify 2단계 |
-| [Claude Code hooks](https://code.claude.com/docs/en/hooks) | 매번 지켜야 하는 것은 hook 으로 | 비밀 파일 커밋 차단과 handoff 읽기를 모델 판단에 맡기지 않음. CI 가드는 최종 방어선으로 유지 | 템플릿 `.claude/settings.json` PreToolUse, 플러그인 `hooks/hooks.json` SessionStart |
+| [Claude Code hooks](https://code.claude.com/docs/en/hooks) | 매번 지켜야 하는 것은 hook 으로 | 비밀 파일 커밋 차단, merge 게이트(CI·현재 head 리뷰 요약·Blocking 0건), handoff 읽기를 모델 판단에 맡기지 않음. 적용 저장소에서 리뷰 대상 PR 24개 중 22개가 마지막 리뷰 전에 merge 됐다. CI 가드는 최종 방어선으로 유지 | 템플릿 `.claude/settings.json` PreToolUse·`.claude/hooks/`, 플러그인 `hooks/hooks.json` SessionStart |
 
 ## 채택하지 않음
 
