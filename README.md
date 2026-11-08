@@ -22,6 +22,7 @@ claude plugin install add@add-project
 ```
 
 - 갱신: `claude plugin marketplace update add-project` → `claude plugin update add@add-project` (자동 갱신은 기본으로 꺼져 있다)
+  - 플러그인만 갱신하면 이미 적용한 저장소의 틀(hook·CI·CLAUDE.md)은 그대로다 → 그 저장소에서 `/add:init --update` 로 맞춘다
 - 플러그인 hook: 세션 시작 시 main 클론의 `.add/handoff.md` 를 컨텍스트에 넣고, 아래 두 agent 의 Bash 를 조회 명령으로 제한하고, `add:reviewer` 의 반환 양식을 검사하고, 컨텍스트 압축 때 ADD 진행 상태(이슈·리뷰 항목·소유자 결정)를 요약에 남기게 한다
 - 플러그인 agent: `add:reviewer`(local 리뷰), `add:spec-verifier`(스펙 대조)
   - 편집 도구(Edit·Write)가 없고, Bash 는 hook 이 허용 목록으로 제한함: git·gh 조회, 읽기 도구, 자체 검사·검증 래퍼만 통과
@@ -47,7 +48,7 @@ flowchart LR
 
 | 명령 | 하는 일 |
 | --- | --- |
-| `/add:init` | 현재 저장소에 틀을 복사하고 자리표시자(스택, 검증 명령, 성숙도, 자율 범위, 리뷰 방식 등)를 인터뷰로 채움 |
+| `/add:init` | 현재 저장소에 틀을 복사하고 자리표시자(스택, 검증 명령, 성숙도, 자율 범위, 리뷰 방식 등)를 인터뷰로 채움. `--update` 는 적용된 저장소의 현재 값을 읽어 최신 템플릿과 파일마다 비교·병합 |
 | `/add:spec [이슈]` | 워크트리·브랜치 생성·기준선 검증 → `docs/spec_{function}.md` 갱신, 요구사항 ID·TC 부여, `[확인필요]` 0건. 이슈가 없으면 확인받고 생성 |
 | `/add:tdd` | TC 로 테스트 먼저(Red) → 최소 구현(Green) → 정리. 같은 TC 수정이 3번 실패하면 멈춤. 리뷰 지적은 같은 입력이 들어오는 자리를 전수로 세고 테스트부터 |
 | `/add:verify` | 검증 명령 + 스펙 항목별 구현 위치·TC·Then 단언 대조와 diff → 스펙 역대조(대화 이력 없는 subagent) + 보안 경계 mutation 표 + 차단 장치의 이전 버전 비교 + 변경 범위 점검. chore 는 대조 생략 |
