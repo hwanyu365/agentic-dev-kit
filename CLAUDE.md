@@ -5,7 +5,7 @@ ADD 프로젝트 틀(`plugins/add/template/`)과 절차 스킬(`plugins/add/skil
 ## 수정 규칙
 
 - 절차를 바꾸면 세 곳을 함께 맞춘다: 템플릿 `CLAUDE.md`, 해당 스킬 `SKILL.md`, `README.md` 의 명령 표
-- 템플릿 자리표시자를 추가·삭제하면 `plugins/add/skills/init/SKILL.md` 의 자리표시자 표도 고친다
+- 템플릿 자리표시자를 추가·삭제하면 `plugins/add/skills/init/SKILL.md` 의 자리표시자 표와 `plugins/add/skills/init/update.md` 의 "읽는 곳" 표를 함께 고친다
   - 자리표시자는 `{{NAME}}` 형식이다. YAML 안에서는 주석 줄이나 block scalar(`run: |`) 안에 둬서 치환 전에도 파싱되게 한다
 - 리뷰 기준을 바꾸면 `plugins/add/template/.github/workflows/claude-review.yml` 의 prompt 와 `plugins/add/skills/ship/review.md` 를 함께 고친다
 - 템플릿에는 특정 프로젝트의 경로·이름·이슈 번호를 넣지 않는다. 사례는 `docs/benchmark.md` 나 적용 예 저장소로 보낸다
@@ -22,6 +22,7 @@ sh tests/spec-trace.test.sh
 sh tests/verify.test.sh
 sh tests/review-format.test.sh
 sh tests/readonly-agent.test.sh
+sh tests/skill-size.test.sh
 ```
 
 - 템플릿 YAML(`plugins/add/template/.github/**/*.yml`)이 치환 전에도 파싱되는지 확인한다

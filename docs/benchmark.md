@@ -27,6 +27,7 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | [Qodo PR-Agent](https://github.com/qodo-ai/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml) | 덜 심각한 지적은 구체적 트리거 시나리오가 있을 때만 | 오탐이 몰리는 곳은 "재현하지 못한 결함 가능성" 이 들어가는 Should Fix. (추정) 항목에 실패 시나리오를 요구 | 같음 |
 | [gstack](https://github.com/garrytan/gstack) `/review`, [pr-review-toolkit](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/pr-review-toolkit) | 테스트·검사 약화를 하나씩 이름으로 보고, 주석이 코드와 맞는지 | Red 테스트 삭제만 보면 기존 테스트의 skip·timeout 확대·snapshot 갱신·suppression 이 통과함. 틀린 주석은 agent 가 사실로 읽음 | 같음 |
 | [MountainUnicorn/add](https://github.com/MountainUnicorn/add) | 플러그인 저장소 자체 CI (validate·자체 검사) | 검증 명령이 로컬에서만 돌면 검증 없이 merge 될 수 있고, 공개 후 외부 PR 은 확인할 수단이 없음. ubuntu 의 `sh`·`awk` 에서도 같은 결과인지 확인됨 | 루트 `.github/workflows/test.yml` |
+| [superpowers](https://github.com/obra/superpowers), [Claude Code skills](https://code.claude.com/docs/en/skills) | 스킬 본문 크기 상한 테스트, 특정 상황에서만 쓰는 절차를 같은 폴더의 참조 파일로 분리 | 압축 뒤 스킬마다 앞 5,000 토큰만 다시 붙는다 → 긴 스킬은 뒤쪽 절(merge 조건 등)이 압축 뒤 사라짐. 분리한 파일은 해당 단계에서 읽음 | `tests/skill-size.test.sh`, `skills/ship/{human-review,followup}.md`, `skills/init/update.md`, `skills/ship/review.md` "사전 리뷰" |
 
 ## 채택하지 않음
 
@@ -44,3 +45,4 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | claude-plugins-official code-review, Qodo PR-Agent | 신뢰도 점수(0–100) | 리뷰어가 스스로 매긴 값이라 검증되지 않음. (재현함)/(원문 확인)/(추정) 근거 표시가 같은 역할을 더 구체적으로 함 |
 | [Trail of Bits 감사 보고서](https://github.com/trailofbits/publications), [Conventional Comments](https://conventionalcomments.org/) | 감사 보고서식 항목 필드(심각도·난이도·유형·권고 단기/장기), praise·question 등 코멘트 라벨 | 리뷰 양식의 뼈대(등급·판정·라운드 추적)가 업계 관행과 큰 차이가 없음. 필드를 늘리면 PR 마다 출력만 길어지고 merge 판정은 같음 |
 | Qodo PR-Agent | 리뷰 난이도 점수, PR 분할 제안 | 소규모 저장소에서 merge 판정의 입력이 되지 않음 |
+| [superpowers](https://github.com/obra/superpowers) v7 | 스펙 builder check: 대화 이력 없는 subagent 가 스펙만 읽고 구현 전에 물어야 할 것을 나열 | 스펙마다 subagent 실행 사용량이 늘어남. `[확인필요]` 0건 점검과 `/add:verify` 의 스펙 대조가 같은 빈칸을 구현 전·후에 잡음 |

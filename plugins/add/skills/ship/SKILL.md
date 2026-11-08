@@ -25,12 +25,7 @@ argument-hint: "[이슈 번호]"
 ## 1-1. push 전 사전 리뷰 (차단 장치·보안 경계를 바꿀 때)
 
 - hook·검사 스크립트·권한 규칙처럼 무언가를 막는 장치를 바꾸면 push 전에 3의 리뷰를 로컬 diff 로 먼저 받는다. chore 여도 같다.
-  - 읽기 전용 subagent(`add:reviewer`)에게 [review.md](review.md) 의 블록을 넘긴다. PR 이 아직 없으므로 필드를 이렇게 채운다.
-    - `PR NUMBER`: 없음. `HEAD`: 로컬 `git rev-parse HEAD`
-    - 범위: `git diff --merge-base origin/main` (커밋 전 변경 포함)과 미추적 파일
-    - "이전 라운드" 단계는 건너뛴다 → PR 코멘트가 아직 없다
-  - Blocking·Should Fix 가 0건이 된 뒤 push 한다 → PR 리뷰는 고칠 것을 처음 찾는 자리가 아니라 확인하는 자리가 된다.
-- 사전 리뷰가 찾은 우회·오탐 입력은 테스트로 고정한다.
+- 넘기는 필드와 범위는 [review.md](review.md) "사전 리뷰" 를 따른다. Blocking·Should Fix 가 0건이 된 뒤 push 한다.
 
 ## 2. draft PR
 
@@ -61,14 +56,7 @@ argument-hint: "[이슈 번호]"
 
 - 3의 정리 중 이 PR 에서 처리하지 않는 항목은 merge 전에 이슈로 등록한다. 세션은 끝나면 사라지고 handoff 는 로컬에만 남으므로, 공유되는 자리는 이슈뿐이다.
 - 자율 범위 `pr` 이면 등록하지 않고 후보를 4-a 보고에 넣는다. 저장소 소유자가 고른 것만 등록한다 → 무엇을 미룰지는 소유자의 선택이다.
-- 미루는 것이 기본은 아니다. 후속으로 분류될 항목은 애초에 그 PR 안에 있어야 한다. 그래도 남는 것만 등록한다.
-  - 리뷰가 후속으로 분류한 항목
-  - 저장소 소유자 판단을 기다리는 설정·정책
-  - 실행하지 못한 검증
-- 이슈에 적는다: 어느 PR 에서 왜 미뤘는지, 닫는 조건, 검증 항목이면 어떤 조건에서 확인하면 공허해지는지, 리뷰의 `(기존)` 항목이면 원래 등급.
-- PR 본문과 리뷰 답글에 이슈 번호를 남긴다 → PR 과 이슈를 양방향으로 되짚을 수 있다.
-- 등록 전에 같은 내용이 이미 이슈·PR 로 있는지 조회한다.
-- 다음 작업이 저절로 드러내는 것은 등록하지 않는다. 대상은 따로 시간을 들여야 확인·결정되는 것이고, 등록하지 않을 때는 그 근거를 PR 본문에 적는다.
+- 등록 대상·적을 내용·중복 조회는 [followup.md](followup.md) 3-1 을 따른다.
 
 ## 3-2. 리뷰 대응 기록
 
@@ -89,11 +77,7 @@ argument-hint: "[이슈 번호]"
 ## 3-3. 반복 지적 승격
 
 - 같은 유형의 지적·CI 실패가 두 번째로 나오면 개별 수정과 별개로 규칙으로 올린다 → 세 번째를 사람이 다시 찾지 않게 한다.
-  - 대상: 리뷰 항목에 `(반복)` 이 붙었거나, 이 PR 의 이전 라운드·최근 PR 리뷰에서 같은 유형이 이미 나온 것
-  - 최근 PR 은 `gh pr list --state merged --limit 10` 으로 목록을 얻고, 각 PR 의 리뷰 요약을 `gh pr view <번호> --comments` 로 읽는다.
-- 기계로 막을 수 있으면 hook·CI·`.github/spec-trace.sh` 검사로, 아니면 CLAUDE.md 에 한 줄로 올린다.
-- 이 PR 범위를 넓히지 않는다. chore 이슈로 등록하고 반복된 PR·항목 ID 를 적는다. `pr` 이면 후보만 4-a 보고에 넣는다.
-- CLAUDE.md 원칙·자율 범위·성숙도를 바꾸는 규칙이면 먼저 묻는 예외다.
+- 대상·올리는 곳·범위는 [followup.md](followup.md) 3-3 을 따른다.
 
 ## 3-4. 멈춤 기준
 
@@ -116,23 +100,7 @@ argument-hint: "[이슈 번호]"
   - ruleset 의 `pull_request` 규칙에서 `required_approving_review_count` 가 1 이상 (`gh api repos/{owner}/{repo}/rules/branches/{base}`)
   - PR 에 bot 이 아닌 계정의 리뷰 요청이나 리뷰가 있음 (`gh pr view <번호> --json reviewRequests,reviews`)
   - 보호·ruleset 조회가 404(설정 없음)나 플랜 미지원 403 이 아닌 이유로 실패하면 해당으로 본다 → 모르는 채로 새 커밋 반영을 하지 않는다.
-- 지적을 반영한 뒤에는 amend·push → 회신 → 재리뷰 요청 순서로 한다. 자율 범위 `pr` 이면 셋 다 지시받은 뒤에 한다.
-- amend·push
-  - 기존 커밋에 `--amend` → `git push --force-with-lease`. 자율 범위 `merge` 여도 새 커밋을 만들지 않는다 → 리뷰어는 force-push 의 비교 링크로 이번 변경분을 본다.
-- 회신
-  - inline 지적은 그 스레드에 답글을 단다: 반영 커밋 SHA / 미반영 근거 / 이슈 번호 → 사람 리뷰어는 지적한 자리에서 답을 찾는다.
-    - `gh api repos/{owner}/{repo}/pulls/{번호}/comments/{comment_id}/replies -f body=...`. `comment_id` 는 스레드 첫 코멘트다 → 답글에 다는 답글은 API 가 받지 않는다.
-  - 리뷰 본문의 지적과 전체 처리 결과는 3-2 의 "리뷰 대응" 코멘트로 남긴다.
-  - 대화는 resolve 하지 않는다 → 반영을 확인하고 닫는 것은 리뷰어다.
-- 재리뷰 요청
-  - 지적을 남긴 사람 리뷰어마다 `gh api -X POST repos/{owner}/{repo}/pulls/{번호}/requested_reviewers/rerequest -f 'reviewers[]=<login>'`
-  - `gh pr view <번호> --json reviewRequests` 로 요청이 걸렸는지 확인한다. 없으면 `.../requested_reviewers` 로 요청하고 다시 확인한다.
-- merge 는 3-4 판정에 더해 승인을 조회로 확인한 뒤에 한다. 리뷰 목록은 `gh api --paginate repos/{owner}/{repo}/pulls/{번호}/reviews --jq '.[] | [.user.login, .state, .commit_id, .submitted_at] | @tsv'` 로 읽는다.
-  - `--paginate` 가 없으면 30건까지만 온다. `--jq` 는 페이지마다 따로 적용되므로 리뷰를 한 줄씩 펼쳐 내고, 리뷰어별 집계는 모든 줄을 합친 뒤 `submitted_at` 순으로 한다 → 페이지 안에서 집계하면 다른 페이지의 `CHANGES_REQUESTED` 를 놓친다. `--slurp` 는 `--jq` 와 함께 쓸 수 없다.
-  - 리뷰어마다 `APPROVED`·`CHANGES_REQUESTED`·`DISMISSED` 중 가장 최근 것을 그 리뷰어의 최근 리뷰로 본다. `COMMENTED` 는 건너뛴다 → 스레드 답글도 `COMMENTED` 리뷰로 쌓여 승인을 가린다.
-  - `reviewRequests` 가 비어 있다 → 재리뷰를 요청한 리뷰어가 아직 답하지 않았으면 merge 하지 않는다.
-  - 지적을 남긴 사람 리뷰어(bot 제외 → Claude 리뷰는 3-4 판정으로 본다)마다 최근 리뷰가 `APPROVED` 이고 `commit_id` 가 현재 head 다.
-  - 현재 head 의 `APPROVED` 수가 필요 승인 수(위 조회값, 없으면 1) 이상이다 → 브랜치 보호가 이전 승인을 무효로 하지 않으면 반영 전 head 의 승인이 남는다.
+- 해당하면 반영부터 merge 까지 [human-review.md](human-review.md) 를 읽고 그 순서를 따른다.
 
 ## 4-a. 자율 범위 `pr`
 
