@@ -23,6 +23,9 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | Claude Code best practices | 무인 실행에 멈추는 조건을 둠 (`--max-turns`, 시간 상한, 반복 실패 시 중단) | 끝나지 않는 CI 실행과 추측 수정의 반복을 막음 | `claude.yml`·`claude-review.yml`, tdd Green |
 | Kiro | 버그 수정에 "바뀌지 않아야 할 동작" 을 함께 적음 | 재현 테스트만으로는 고치면서 생기는 회귀를 막지 못함 | 버그 이슈 양식, spec 1단계 |
 | 이 저장소의 PR 리뷰 실적 | 멈춤 기준, 막는 장치의 push 전 사전 리뷰·입력 자리 전수 나열·이전 버전 비교, 허용 목록 원칙 | 한 PR 의 리뷰가 10라운드 이어졌다. Nits 반영이 재리뷰를 부르고, 지적된 한 자리만 고쳐 다음 자리가 다음 라운드에 나오고, 허용 목록을 거부 목록으로 바꾸거나 예외를 넣어 원래 막던 입력이 다시 풀렸다. 사전 리뷰와 이전 버전 비교를 시작한 뒤 우회가 push 전에 잡혔다 | ship 1-1·3-4, tdd "지적 반영", verify 2-3, 템플릿 CLAUDE.md 원칙 |
+| [Claude Code Code Review](https://code.claude.com/docs/en/code-review-pull-requests.md), [code-review 플러그인](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-review) | 기존 결함 분리, 재리뷰는 이전 리뷰 이후 변경분만, Nits 상한, 규칙 위반은 원문 인용·동작 주장은 `파일:라인`, linter·일부러 끈 규칙·변경 밖 일반 품질 제외 | 기존 결함과 바뀌지 않은 코드의 새 지적이 Should Fix 로 올라오면 고친 것과 무관하게 재리뷰가 이어짐. 이름으로 짐작한 지적 하나가 왕복 한 번을 씀 | `skills/ship/review.md`, `claude-review.yml` prompt (재리뷰 변경분 한정은 local 리뷰만. CI 리뷰는 이전 HEAD 를 받지 않음) |
+| [Qodo PR-Agent](https://github.com/qodo-ai/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml) | 덜 심각한 지적은 구체적 트리거 시나리오가 있을 때만 | 오탐이 몰리는 곳은 "재현하지 못한 결함 가능성" 이 들어가는 Should Fix. (추정) 항목에 실패 시나리오를 요구 | 같음 |
+| [gstack](https://github.com/garrytan/gstack) `/review`, [pr-review-toolkit](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/pr-review-toolkit) | 테스트·검사 약화를 하나씩 이름으로 보고, 주석이 코드와 맞는지 | Red 테스트 삭제만 보면 기존 테스트의 skip·timeout 확대·snapshot 갱신·suppression 이 통과함. 틀린 주석은 agent 가 사실로 읽음 | 같음 |
 
 ## 채택하지 않음
 
@@ -37,3 +40,6 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | GitHub branch protection | 미해결 리뷰 대화를 merge 차단 요건으로 두기 | 지적 하나하나가 차단 요건이 되고, 반영 push 가 리뷰를 다시 깨워 라운드가 끝나지 않음. 적용 저장소에서 한 PR 이 아홉 라운드를 돌고 마지막엔 지적이 서로를 되돌렸다 |
 | [claude-code-action](https://github.com/anthropics/claude-code-action) | `@claude` 에게 코드 수정 위임 | push 의 actor 가 bot 으로 기록되어 워크플로가 승인 대기가 되고 리뷰는 bot actor 로 거부됨. 사람이 매번 승인해야 하므로 자율 범위 `merge` 가 끊긴다. 결과물 품질과는 무관 |
 | [AGENTS.md](https://agents.md) | 도구 중립 규칙 파일 | OpenAI Codex 에서 시작한 형식. Claude Code 만 쓰므로 CLAUDE.md 하나로 충분. 다른 agent 를 들이면 CLAUDE.md 내용을 AGENTS.md 로 옮기고 CLAUDE.md 에서 `@AGENTS.md` 로 import |
+| claude-plugins-official code-review, Qodo PR-Agent | 신뢰도 점수(0–100) | 리뷰어가 스스로 매긴 값이라 검증되지 않음. (재현함)/(원문 확인)/(추정) 근거 표시가 같은 역할을 더 구체적으로 함 |
+| [Trail of Bits 감사 보고서](https://github.com/trailofbits/publications), [Conventional Comments](https://conventionalcomments.org/) | 감사 보고서식 항목 필드(심각도·난이도·유형·권고 단기/장기), praise·question 등 코멘트 라벨 | 리뷰 양식의 뼈대(등급·판정·라운드 추적)가 업계 관행과 큰 차이가 없음. 필드를 늘리면 PR 마다 출력만 길어지고 merge 판정은 같음 |
+| Qodo PR-Agent | 리뷰 난이도 점수, PR 분할 제안 | 소규모 저장소에서 merge 판정의 입력이 되지 않음 |
