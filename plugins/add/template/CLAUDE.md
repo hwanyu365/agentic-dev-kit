@@ -57,7 +57,7 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
 - agent 는 `sh .claude/hooks/verify.sh` 로 실행한다 → 같은 명령에 추적성 검사를 더해 돌리고, 통과한 작업 트리를 기록한다.
   - 통과 뒤 작업 트리(미추적 파일 포함)가 바뀌면 커밋 직전 hook 이 막는다. stage 범위는 비교하지 않는다 → 일부만 골라 커밋하지 않는다.
 - CI(`.github/workflows/ci.yml`)도 같은 명령과 추적성 검사(`.github/spec-trace.sh`)를 실행한다.
-- 완료 판정은 스펙 §3·§4·§6 항목별로 구현 위치와 TC 를 대조한다 (`docs/rules_spec.md` §2.2).
+- 완료 판정은 스펙 §3·§4·§6 항목별로 구현 위치와 TC 를 대조하고, 반대로 diff 의 새 분기·문구마다 근거 스펙 ID 를 찾는다 (`docs/rules_spec.md` §2.2, `/add:verify`).
 - 변경이 닿는 경로(같은 입력을 읽는 곳, 같은 산출물을 만드는 곳)를 모두 세고, 고치지 않은 경로는 왜 영향이 없는지 말할 수 있어야 한다.
 
 ## 성숙도: `{{MATURITY}}`
@@ -119,6 +119,7 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
   - `github`: PR 마다 `claude-review.yml` 이 리뷰한다.
   - `local`: GitHub 에서 Claude 를 쓰지 않는다 → `/add:ship` 이 대화 이력 없는 subagent 로 같은 기준의 리뷰를 PR 코멘트로 남긴다.
   - 항목마다 처리 결과를 "리뷰 대응" 코멘트로 남긴다 (`/add:ship` 3-2) → 다음 라운드 리뷰가 이전 항목의 상태를 이어받는다.
+  - 같은 유형의 지적이 두 번째로 나오면 규칙으로 올린다 (`/add:ship` 3-3). 기계로 막을 수 있으면 hook·CI, 아니면 이 파일에 한 줄.
   - `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막는다.
 - **코드 변경은 세션이 직접 커밋한다. `@claude` 에게 맡기지 않는다.**
   - `claude-code-action` 의 push 는 actor 가 bot 으로 기록된다 → 워크플로가 승인 대기가 되고 리뷰는 bot actor 로 거부된다. 저장소 Actions 승인 정책을 느슨하게 해도 그대로다.
@@ -126,7 +127,7 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
   - 작업 품질과 무관한 제약이다. `@claude` 는 이슈·PR 에서 리뷰와 질의응답만 맡고, `claude.yml` 이 커밋·push 를 막는다.
 - **후속으로 미룬 것과 확인하지 못한 것은 merge 전에 이슈로 등록한다.** 세션은 끝나면 사라지고 handoff 는 로컬에만 남으므로, 다른 사람·다른 기기와 공유되는 자리는 이슈뿐이다.
   - 미루는 것이 기본은 아니다. 등록 대상·적을 내용은 `/add:ship` 3-1 을 따른다.
-- `main` 은 보호 브랜치다 (CI 필수, PR 로만 merge).
+- `main` 브랜치 보호: 저장소가 지원하면 CI 필수, PR 로만 merge 로 둔다. private 무료 플랜처럼 지원하지 않으면 두지 않는다 → merge 조건은 merge 게이트 hook 이 확인한다.
 
 ## 문서·주석
 

@@ -59,4 +59,6 @@ j 2 github abc12 "{$bot,body:$ok}"
 j 2 github abc1234 "{$bot,body:$ok}" 1
 j 0 local abc1234 "{$usr,body:$ok}"
 j 2 local abc1234 "{$usr,body:$bl},{$oth,body:$ok}"
+quoted='"HEAD: abc1234def\n## 개요\n```md\n## 🔴 Blocking (merge 전 수정 필수)\n없음.\n```\n## 🔴 Blocking (merge 전 수정 필수)\n### [B1] 실제 지적\n"'
+j 2 github abc1234 "{$bot,body:$quoted}"
 [ $fail -eq 0 ] && echo PASS-판정 || exit 1

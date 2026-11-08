@@ -49,8 +49,9 @@ else
   me=$(gh api user -q .login) && [ -n "$me" ] || deny "gh 계정을 조회하지 못함"
   who=".user.login == \"$me\""
 fi
+# Blocking 절이 여럿이면(코드블록에 양식을 인용한 경우 등) 모두 본다.
 q='.[] | select(WHO) | .body | select(startswith("HEAD: SHA")) | split("\n## ") | map(select(startswith("🔴 Blocking")))
-  | if length == 0 then "format" elif (.[0] | test("\\[B[0-9]+\\]")) then "blocking" else "ok" end'
+  | if length == 0 then "format" elif any(.[]; test("\\[B[0-9]+\\]")) then "blocking" else "ok" end'
 q=$(printf '%s' "$q" | sed "s/WHO/$who/; s/SHA/$sha/")
 v=$(gh api "repos/{owner}/{repo}/issues/$n/comments" --paginate --jq "$q") || deny "PR 코멘트를 조회하지 못함"
 v=$(printf '%s\n' "$v" | tail -n 1)

@@ -42,8 +42,8 @@ flowchart LR
 | `/add:init` | 현재 저장소에 틀을 복사하고 자리표시자(스택, 검증 명령, 성숙도, 자율 범위, 리뷰 방식 등)를 인터뷰로 채움 |
 | `/add:spec [이슈]` | 워크트리·브랜치 생성 → `docs/spec_{function}.md` 갱신, 요구사항 ID·TC 부여, `[확인필요]` 0건. 이슈가 없으면 확인받고 생성 |
 | `/add:tdd` | TC 로 테스트 먼저(Red) → 최소 구현(Green) → 정리 |
-| `/add:verify` | 검증 명령 + 스펙 항목별 구현 위치·TC 대조(대화 이력 없는 subagent) + 변경 범위 점검. chore 는 대조 생략 |
-| `/add:ship` | 커밋 → draft PR → CI·리뷰 조사 → 후속 건 이슈 등록(`pr` 은 후보 보고) → 자율 범위에 따라 보고 또는 merge |
+| `/add:verify` | 검증 명령 + 스펙 항목별 구현 위치·TC·Then 단언 대조와 diff → 스펙 역대조(대화 이력 없는 subagent) + 보안 경계 mutation 표 + 변경 범위 점검. chore 는 대조 생략 |
+| `/add:ship` | 커밋 → draft PR → CI·리뷰 조사 → 후속 건 이슈 등록(`pr` 은 후보 보고) → 반복 지적은 규칙화 이슈로 → 자율 범위에 따라 보고 또는 merge |
 | `/add:release <버전>` | 태그 → 릴리스 워크플로 확인 → 배포 후 확인 목록 |
 | `/add:handoff` | main 클론의 `.add/handoff.md` 에 현재 상태 기록 |
 
