@@ -72,6 +72,7 @@ flowchart LR
 | `.github/secret-files.regex` | 커밋되면 안 되는 파일 목록. CI 가드와 `.claude/settings.json` 의 커밋 직전 hook 이 함께 읽음 |
 | `.github/workflows/claude.yml` | 이슈·PR 의 `@claude` (소유자·협업자만, 리뷰·질의응답 전용으로 커밋·push 차단). 리뷰 `github` 일 때만 |
 | `.github/workflows/claude-review.yml` | PR 자동 리뷰 (같은 저장소 브랜치만, 양식 고정). 리뷰 `github` 일 때만. `local` 이면 `/add:ship` 이 로컬 subagent 로 리뷰 |
+| 두 워크플로 공통 | 코멘트·PR 본문의 prompt injection 이 러너의 비밀을 읽어 게시하는 경로를 줄임: 파일 도구의 저장소 밖 읽기 차단(`blockReadsOutsideWorkingDirectories`), 하위 프로세스 환경의 자격 증명 제거(`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`). 남는 경로: GitHub 앱 토큰(`gh` 가 쓰고 `.git/config` 의 origin URL 에도 들어감), 하위 프로세스가 부모 프로세스의 `/proc/<pid>/environ` 을 읽는 경로(PID 격리 없음) |
 | `.github/workflows/release.yml` | `v*` 태그 → 검증 → 산출물 → GitHub Release |
 | `.github/ISSUE_TEMPLATE/`, `pull_request_template.md` | 스토리·인수 조건, 재현 절차, chore, PR 검증 항목 |
 
