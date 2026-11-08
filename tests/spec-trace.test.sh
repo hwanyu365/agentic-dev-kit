@@ -136,3 +136,41 @@ E BAD_DEF docs/spec_a.md:8 -
 E BAD_DEF docs/spec_a.md:9 -
 W UNCONFIRMED_MENTION docs/spec_a.md:3 -'
 [ "$got" = "$want" ] && [ $rc -eq 1 ] && echo PASS-baddef || { echo "FAIL-baddef rc=$rc: $got"; exit 1; }
+
+# -b 범위: 여러 줄 hunk 의 줄마다 새 줄로 센다
+r4=$(mktemp -d); trap 'rm -rf "$r" "$r2" "$r3" "$r4"' EXIT
+cd "$r4"; git init -q; git config user.email t@t; git config user.name t; mkdir docs src
+cat > docs/spec_a.md <<'MD'
+## 3. 요구사항
+- `FR#1` 하나 [요구사항] [확인필요] 원래 있던 것
+- `FR#2` 둘 [요구사항]
+## 7. 테스트
+| TC | 대상 | 비고 |
+| --- | --- | --- |
+| `TC#1` | [FR#1, FR#2] | |
+MD
+echo 'test("TC#1 x", ()=>{})' > src/a.test.js
+git add -A; git commit -qm base
+cat > docs/spec_a.md <<'MD'
+## 3. 요구사항
+- `FR#1` 하나 [요구사항] [확인필요] 원래 있던 것
+- `FR#2` 둘 [요구사항]
+- `FR#3` 셋 [요구사항]
+- `FR#4` 넷 [확인필요] hunk 첫 줄이 아닌 자리에 새로 추가
+- `FR#5` 다섯 [요구사항]
+## 7. 테스트
+| TC | 대상 | 비고 |
+| --- | --- | --- |
+| `TC#1` | [FR#1, FR#2, FR#3, FR#4, FR#5] | |
+MD
+got=$(sh "$st" -b HEAD 2>&1) && rc=0 || rc=$?
+want='E UNCONFIRMED docs/spec_a.md:5 -
+W UNCONFIRMED_OLD docs/spec_a.md:2 -'
+[ "$got" = "$want" ] && [ $rc -eq 1 ] && echo PASS-hunk || { echo "FAIL-hunk rc=$rc: $got"; exit 1; }
+git add -A; git commit -qm add
+# 지운 줄 바로 앞 줄(FR#4)에 [확인필요] 가 있다 → 삭제 hunk 를 한 줄로 세면 E 로 바뀐다
+sed -i '/^- `FR#5`/d; s/, FR#5//' docs/spec_a.md
+got=$(sh "$st" -b HEAD 2>&1) && rc=0 || rc=$?
+want='W UNCONFIRMED_OLD docs/spec_a.md:2 -
+W UNCONFIRMED_OLD docs/spec_a.md:5 -'
+[ "$got" = "$want" ] && [ $rc -eq 0 ] && echo PASS-hunk-del || { echo "FAIL-hunk-del rc=$rc: $got"; exit 1; }
