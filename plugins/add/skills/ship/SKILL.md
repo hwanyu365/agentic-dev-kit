@@ -22,12 +22,22 @@ argument-hint: "[이슈 번호]"
   - Red 에서 만든 테스트가 지워지거나 약화되지 않음
 - 커밋 메시지는 `CLAUDE.md` 형식. 스펙 문구를 옮기지 않고 실제로 구현·검증한 것만 적는다.
 
+## 1-1. push 전 사전 리뷰 (차단 장치·보안 경계를 바꿀 때)
+
+- hook·검사 스크립트·권한 규칙처럼 무언가를 막는 장치를 바꾸면 push 전에 3의 리뷰를 로컬 diff 로 먼저 받는다. chore 여도 같다.
+  - 읽기 전용 subagent(`add:reviewer`)에게 [review.md](review.md) 의 블록을 넘긴다. PR 이 아직 없으므로 필드를 이렇게 채운다.
+    - `PR NUMBER`: 없음. `HEAD`: 로컬 `git rev-parse HEAD`
+    - 범위: `git diff --merge-base origin/main` (커밋 전 변경 포함)과 미추적 파일
+    - "이전 라운드" 단계는 건너뛴다 → PR 코멘트가 아직 없다
+  - Blocking·Should Fix 가 0건이 된 뒤 push 한다 → PR 리뷰는 고칠 것을 처음 찾는 자리가 아니라 확인하는 자리가 된다.
+- 사전 리뷰가 찾은 우회·오탐 입력은 테스트로 고정한다.
+
 ## 2. draft PR
 
 - 이 브랜치의 PR 이 없을 때만 만든다 (`gh pr view` 로 조회). 있으면 본문만 갱신한다.
 - `gh pr create --draft`, `.github/pull_request_template.md` 를 채운다.
   - 스펙: `/add:spec` 이 보고한 ID 목록
-  - 검증: 실행한 명령과 결과, 보안 경계 mutation 표(`/add:verify` 2-2), 실기기 확인 여부 (안 했으면 안 했다고)
+  - 검증: 실행한 명령과 결과, 보안 경계 mutation 표(`/add:verify` 2-2), 차단 장치 회귀 비교(`/add:verify` 2-3), 실기기 확인 여부 (안 했으면 안 했다고)
   - 구조가 바뀌었으면 AS-IS / TO-BE 를 mermaid 도식 하나에 담는다
 - 본문은 이후 커밋이 추가될 때마다 최종 커밋 기준으로 갱신한다.
 
@@ -85,6 +95,20 @@ argument-hint: "[이슈 번호]"
 - 이 PR 범위를 넓히지 않는다. chore 이슈로 등록하고 반복된 PR·항목 ID 를 적는다. `pr` 이면 후보만 4-a 보고에 넣는다.
 - CLAUDE.md 원칙·자율 범위·성숙도를 바꾸는 규칙이면 먼저 묻는 예외다.
 
+## 3-4. 멈춤 기준
+
+- 판정의 입력은 3의 조사로 사실로 확인되어 아직 해결되지 않은 지적이다. 조사로 반박해 3-2 에 미반영 근거를 남긴 항목은 세지 않는다.
+- 이 절은 판정만 한다. 반영·ready·merge 는 4-a(`pr`: 판정을 보고하고 지시를 받음)·4-b(`merge`)가 한다.
+
+| 현재 head 의 미해결 지적 | 판정 |
+| --- | --- |
+| Blocking 또는 Should Fix 가 있음 | 재리뷰 필요: 반영한 뒤 다시 리뷰. 재리뷰는 2라운드까지 |
+| Nits 만 있거나 없음 | merge 가능: Nits 는 반영하지 않는다 → 반영하면 head 가 바뀌어 다시 리뷰해야 한다. Nits 는 3-1 로 후속 처리 |
+| 2라운드 뒤에도 Blocking·Should Fix 가 남음 | 중단: merge 하지 않고 보고 → 설계부터 다시 볼 신호다 |
+
+- 반영할 때는 지적된 한 자리만 고치지 않는다. 같은 입력이 들어오는 자리를 먼저 전수로 세고 테스트를 추가한 뒤 고친다 (`/add:tdd` "지적 반영").
+- 차단 장치를 고쳤으면 push 전에 이전 버전과 같은 입력으로 비교한다 (`/add:verify` 2-3). 고치다가 원래 막던 입력을 다시 푸는 일을 막는다.
+
 ## 4-a. 자율 범위 `pr`
 
 - 3의 정리를 보고하고 멈춘다.
@@ -95,10 +119,11 @@ argument-hint: "[이슈 번호]"
 
 - 3에서 사실로 확인한 지적은 새 커밋으로 반영하고, 반영하지 않은 항목은 근거를 PR 코멘트로 남긴다.
   - 반영은 세션이 직접 커밋한다. 리뷰 `github` 이면 `@claude` 에게 맡기지 않는다 (CLAUDE.md GIT 절).
-- 반영 커밋으로 head 가 바뀌면 3의 리뷰를 다시 받는다. 반영 후 재리뷰는 2라운드까지 하고, 그래도 Blocking 이 남으면 merge 하지 않고 보고한다.
-- CI 통과, 현재 head SHA 의 리뷰 요약 존재, 미해결 Blocking 0건을 조회로 확인한 뒤 `gh pr ready` → `gh pr merge --squash <번호> --delete-branch --match-head-commit <현재 head SHA> --subject "<PR 제목>" --body "<최종 결과 기준 [ISSUE]/[DESC]>"`
+- 반영 커밋으로 head 가 바뀌면 3의 리뷰를 다시 받는다. 언제 멈추는지는 3-4 를 따른다.
+- CI 통과, 현재 head SHA 의 리뷰 요약 존재, 3-4 판정이 merge 가능(미해결 Blocking·Should Fix 0건)인지 조회로 확인한 뒤 `gh pr ready` → `gh pr merge --squash <번호> --delete-branch --match-head-commit <현재 head SHA> --subject "<PR 제목>" --body "<최종 결과 기준 [ISSUE]/[DESC]>"`
   - 메시지를 지정하지 않으면 저장소 설정에 따라 PR 의 커밋 메시지가 이어 붙어 중간 상태가 남는다.
 - merge 게이트: `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, 그 요약의 Blocking 0건을 다시 확인하고 아니면 막는다.
+  - hook 은 Should Fix 를 보지 않는다 → Should Fix 는 조사로 반박한 항목이 섞여 있어 기계로 셀 수 없다. 위 조회로 확인한다.
   - 요약 작성자는 `github` 이면 Claude App, `local` 이면 세션의 gh 계정만 인정한다.
   - `--match-head-commit` 이 검사한 head 와 같아야 한다 → 검사 뒤 끼어든 push 는 gh 가 거부한다.
   - 막히면 원인을 고치거나 보고한다. `gh api` 로 merge 하는 등 hook 을 우회하지 않는다.

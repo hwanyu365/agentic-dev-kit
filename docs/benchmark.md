@@ -22,6 +22,7 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | 역할별 agent 를 도구 제한으로 정의 | 리뷰·스펙 대조는 읽기만 해야 함. 범용 agent 는 편집 도구를 쥐고 있음. frontmatter 로는 Bash 를 명령 단위로 막지 못해 PreToolUse hook 이 agent_type 으로 가려 허용 목록의 조회 명령만 통과시키고(거부 목록은 모르는 변형이 통과해 리뷰마다 보강이 이어졌다), 반환 양식은 SubagentStop hook 이 검사 | 플러그인 `agents/`, `hooks/readonly-agent.sh`·`review-format.sh` |
 | Claude Code best practices | 무인 실행에 멈추는 조건을 둠 (`--max-turns`, 시간 상한, 반복 실패 시 중단) | 끝나지 않는 CI 실행과 추측 수정의 반복을 막음 | `claude.yml`·`claude-review.yml`, tdd Green |
 | Kiro | 버그 수정에 "바뀌지 않아야 할 동작" 을 함께 적음 | 재현 테스트만으로는 고치면서 생기는 회귀를 막지 못함 | 버그 이슈 양식, spec 1단계 |
+| 이 저장소의 PR 리뷰 실적 | 멈춤 기준, 막는 장치의 push 전 사전 리뷰·입력 자리 전수 나열·이전 버전 비교, 허용 목록 원칙 | 한 PR 의 리뷰가 10라운드 이어졌다. Nits 반영이 재리뷰를 부르고, 지적된 한 자리만 고쳐 다음 자리가 다음 라운드에 나오고, 허용 목록을 거부 목록으로 바꾸거나 예외를 넣어 원래 막던 입력이 다시 풀렸다. 사전 리뷰와 이전 버전 비교를 시작한 뒤 우회가 push 전에 잡혔다 | ship 1-1·3-4, tdd "지적 반영", verify 2-3, 템플릿 CLAUDE.md 원칙 |
 
 ## 채택하지 않음
 
