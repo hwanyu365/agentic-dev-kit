@@ -127,7 +127,8 @@ argument-hint: "[이슈 번호]"
 - 재리뷰 요청
   - 지적을 남긴 사람 리뷰어마다 `gh api -X POST repos/{owner}/{repo}/pulls/{번호}/requested_reviewers/rerequest -f 'reviewers[]=<login>'`
   - `gh pr view <번호> --json reviewRequests` 로 요청이 걸렸는지 확인한다. 없으면 `.../requested_reviewers` 로 요청하고 다시 확인한다.
-- merge 는 3-4 판정에 더해 승인을 조회로 확인한 뒤에 한다. 리뷰 목록은 `gh api --paginate repos/{owner}/{repo}/pulls/{번호}/reviews` 로 읽는다 → 페이지를 넘기지 않으면 30건까지만 온다.
+- merge 는 3-4 판정에 더해 승인을 조회로 확인한 뒤에 한다. 리뷰 목록은 `gh api --paginate repos/{owner}/{repo}/pulls/{번호}/reviews --jq '.[] | [.user.login, .state, .commit_id, .submitted_at] | @tsv'` 로 읽는다.
+  - `--paginate` 가 없으면 30건까지만 온다. `--jq` 는 페이지마다 따로 적용되므로 리뷰를 한 줄씩 펼쳐 내고, 리뷰어별 집계는 모든 줄을 합친 뒤 `submitted_at` 순으로 한다 → 페이지 안에서 집계하면 다른 페이지의 `CHANGES_REQUESTED` 를 놓친다. `--slurp` 는 `--jq` 와 함께 쓸 수 없다.
   - 리뷰어마다 `APPROVED`·`CHANGES_REQUESTED`·`DISMISSED` 중 가장 최근 것을 그 리뷰어의 최근 리뷰로 본다. `COMMENTED` 는 건너뛴다 → 스레드 답글도 `COMMENTED` 리뷰로 쌓여 승인을 가린다.
   - `reviewRequests` 가 비어 있다 → 재리뷰를 요청한 리뷰어가 아직 답하지 않았으면 merge 하지 않는다.
   - 지적을 남긴 사람 리뷰어(bot 제외 → Claude 리뷰는 3-4 판정으로 본다)마다 최근 리뷰가 `APPROVED` 이고 `commit_id` 가 현재 head 다.
