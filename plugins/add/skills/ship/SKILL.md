@@ -44,7 +44,7 @@ argument-hint: "[이슈 번호]"
 ## 3. CI·리뷰 조사
 
 - `gh pr checks --watch` 로 CI 를 기다린다. 실패하면 원인을 고치고 다시 1단계부터.
-  - 수정은 `pr` 이면 기존 커밋에 amend + `push --force-with-lease`, `merge` 면 새 커밋이다.
+  - 수정은 `pr` 이면 기존 커밋에 amend + `push --force-with-lease`, `merge` 면 새 커밋이다. 3-5 에 해당하는 저장소는 자율 범위와 관계없이 amend 다.
   - 같은 원인으로 두 번 실패하면 멈추고 보고한다.
 - 현재 head SHA 의 Claude 리뷰 요약을 확보한다 (CLAUDE.md "리뷰").
   - `github`: `claude-review.yml` 의 `review` check 가 끝난 뒤 첫 줄이 `HEAD: <현재 head SHA>` 이고 작성자가 Claude GitHub App bot 인 요약 코멘트를 찾는다 → 다른 계정이 단 같은 형식의 코멘트는 요약으로 보지 않는다.
@@ -109,6 +109,30 @@ argument-hint: "[이슈 번호]"
 - 반영할 때는 지적된 한 자리만 고치지 않는다. 같은 입력이 들어오는 자리를 먼저 전수로 세고 테스트를 추가한 뒤 고친다 (`/add:tdd` "지적 반영").
 - 차단 장치를 고쳤으면 push 전에 이전 버전과 같은 입력으로 비교한다 (`/add:verify` 2-3). 고치다가 원래 막던 입력을 다시 푸는 일을 막는다.
 
+## 3-5. 사람 리뷰·승인이 필요한 저장소
+
+- 해당 여부는 조회로 정한다. 하나라도 맞으면 해당한다.
+  - 브랜치 보호의 `required_pull_request_reviews.required_approving_review_count` 가 1 이상 (`gh api repos/{owner}/{repo}/branches/{base}/protection`)
+  - ruleset 의 `pull_request` 규칙에서 `required_approving_review_count` 가 1 이상 (`gh api repos/{owner}/{repo}/rules/branches/{base}`)
+  - PR 에 bot 이 아닌 계정의 리뷰 요청이나 리뷰가 있음 (`gh pr view <번호> --json reviewRequests,reviews`)
+  - 보호·ruleset 조회가 404(설정 없음)나 플랜 미지원 403 이 아닌 이유로 실패하면 해당으로 본다 → 모르는 채로 새 커밋 반영을 하지 않는다.
+- 지적을 반영한 뒤에는 amend·push → 회신 → 재리뷰 요청 순서로 한다. 자율 범위 `pr` 이면 셋 다 지시받은 뒤에 한다.
+- amend·push
+  - 기존 커밋에 `--amend` → `git push --force-with-lease`. 자율 범위 `merge` 여도 새 커밋을 만들지 않는다 → 리뷰어는 force-push 의 비교 링크로 이번 변경분을 본다.
+- 회신
+  - inline 지적은 그 스레드에 답글을 단다: 반영 커밋 SHA / 미반영 근거 / 이슈 번호 → 사람 리뷰어는 지적한 자리에서 답을 찾는다.
+    - `gh api repos/{owner}/{repo}/pulls/{번호}/comments/{comment_id}/replies -f body=...`. `comment_id` 는 스레드 첫 코멘트다 → 답글에 다는 답글은 API 가 받지 않는다.
+  - 리뷰 본문의 지적과 전체 처리 결과는 3-2 의 "리뷰 대응" 코멘트로 남긴다.
+  - 대화는 resolve 하지 않는다 → 반영을 확인하고 닫는 것은 리뷰어다.
+- 재리뷰 요청
+  - 지적을 남긴 사람 리뷰어마다 `gh api -X POST repos/{owner}/{repo}/pulls/{번호}/requested_reviewers/rerequest -f 'reviewers[]=<login>'`
+  - `gh pr view <번호> --json reviewRequests` 로 요청이 걸렸는지 확인한다. 없으면 `.../requested_reviewers` 로 요청하고 다시 확인한다.
+- merge 는 3-4 판정에 더해 승인을 조회로 확인한 뒤에 한다. 리뷰 목록은 `gh api --paginate repos/{owner}/{repo}/pulls/{번호}/reviews` 로 읽는다 → 페이지를 넘기지 않으면 30건까지만 온다.
+  - 리뷰어마다 `APPROVED`·`CHANGES_REQUESTED`·`DISMISSED` 중 가장 최근 것을 그 리뷰어의 최근 리뷰로 본다. `COMMENTED` 는 건너뛴다 → 스레드 답글도 `COMMENTED` 리뷰로 쌓여 승인을 가린다.
+  - `reviewRequests` 가 비어 있다 → 재리뷰를 요청한 리뷰어가 아직 답하지 않았으면 merge 하지 않는다.
+  - 지적을 남긴 사람 리뷰어(bot 제외 → Claude 리뷰는 3-4 판정으로 본다)마다 최근 리뷰가 `APPROVED` 이고 `commit_id` 가 현재 head 다.
+  - 현재 head 의 `APPROVED` 수가 필요 승인 수(위 조회값, 없으면 1) 이상이다 → 브랜치 보호가 이전 승인을 무효로 하지 않으면 반영 전 head 의 승인이 남는다.
+
 ## 4-a. 자율 범위 `pr`
 
 - 3의 정리를 보고하고 멈춘다.
@@ -117,7 +141,7 @@ argument-hint: "[이슈 번호]"
 
 ## 4-b. 자율 범위 `merge`
 
-- 3에서 사실로 확인한 지적은 새 커밋으로 반영하고, 반영하지 않은 항목은 근거를 PR 코멘트로 남긴다.
+- 3에서 사실로 확인한 지적은 새 커밋으로 반영하고, 반영하지 않은 항목은 근거를 PR 코멘트로 남긴다. 3-5 에 해당하는 저장소는 3-5 순서를 따른다.
   - 반영은 세션이 직접 커밋한다. 리뷰 `github` 이면 `@claude` 에게 맡기지 않는다 (CLAUDE.md GIT 절).
 - 반영 커밋으로 head 가 바뀌면 3의 리뷰를 다시 받는다. 언제 멈추는지는 3-4 를 따른다.
 - CI 통과, 현재 head SHA 의 리뷰 요약 존재, 3-4 판정이 merge 가능(미해결 Blocking·Should Fix 0건)인지 조회로 확인한 뒤 `gh pr ready` → `gh pr merge --squash <번호> --delete-branch --match-head-commit <현재 head SHA> --subject "<PR 제목>" --body "<최종 결과 기준 [ISSUE]/[DESC]>"`
