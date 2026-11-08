@@ -55,9 +55,11 @@ flowchart LR
 | `docs/specification.md` | 색인 + 공통 제약 |
 | `docs/spec_{function}.md` | 기능별 스펙 (§1~§7) |
 | `docs/rules_spec.md` | 스펙 작성 규칙 |
-| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, 커밋 직전 비밀 파일 차단 hook, merge 게이트 hook |
+| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, 커밋 직전 hook (비밀 파일, 검증 뒤 변경), merge 게이트 hook. hook 이 실패해도 막음 |
 | `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음 |
-| `.github/workflows/ci.yml` | 비밀 파일 가드 + 검증 명령 |
+| `.claude/hooks/verify.sh` | 추적성 검사 + 검증 명령. 통과한 작업 트리를 기록하고, 커밋 직전에 달라졌으면 막음 |
+| `.github/workflows/ci.yml` | 비밀 파일 가드 + 추적성 검사 + 검증 명령 |
+| `.github/spec-trace.sh` | 스펙 ↔ TC ↔ 테스트 이름 대조 (누락, 고아 TC, `[확인필요]`, 형식 위반, 테스트 삭제 경고). 성숙도 `poc` 는 보고만 |
 | `.github/secret-files.regex` | 커밋되면 안 되는 파일 목록. CI 가드와 `.claude/settings.json` 의 커밋 직전 hook 이 함께 읽음 |
 | `.github/workflows/claude.yml` | 이슈·PR 의 `@claude` (소유자·협업자만, 리뷰·질의응답 전용으로 커밋·push 차단). 리뷰 `github` 일 때만 |
 | `.github/workflows/claude-review.yml` | PR 자동 리뷰 (같은 저장소 브랜치만, 양식 고정). 리뷰 `github` 일 때만. `local` 이면 `/add:ship` 이 로컬 subagent 로 리뷰 |

@@ -15,7 +15,8 @@ argument-hint: "[spec_{function}.md]"
 
 ## 1. 검증 명령
 
-- `CLAUDE.md` "검증" 의 명령을 실행하고 요약 출력을 보여 준다. 실패하면 여기서 멈춘다.
+- `sh .claude/hooks/verify.sh` 를 실행하고 요약 출력을 보여 준다. 실패하면 여기서 멈춘다.
+  - CI 와 같은 추적성 검사(`.github/spec-trace.sh`)와 `CLAUDE.md` "검증" 의 명령을 돌리고, 통과한 작업 트리를 기록한다 → 그 뒤에 파일을 고치면 커밋 직전 hook 이 막는다.
 - CI 의 비밀 파일 가드를 아직 추적하지 않은 파일까지 넓혀 돌린다 → 로컬 통과가 CI 통과를 뜻하게 한다.
   - `git -c core.quotePath=false ls-files --cached --others --exclude-standard | grep -Ef .github/secret-files.regex | grep -vE '\.example$'` 결과 0건
 
@@ -24,7 +25,8 @@ argument-hint: "[spec_{function}.md]"
 - 대상: 인자로 받은 기능 스펙, 없으면 커밋 전 변경까지 포함해 바뀐 스펙 파일
   - `git diff --name-only $(git merge-base origin/main HEAD) -- docs/` 와 `git ls-files --others --exclude-standard docs/`
 - 표는 대화 이력 없는 읽기 전용 subagent 에게 맡긴다 → 구현한 맥락을 모르는 쪽이 채워야 자기 코드를 근거로 넘어가지 않는다.
-  - 대상 스펙 파일, 이 절의 규칙, 성숙도를 전달하고 스타일은 보지 말라고 한다.
+  - 대상 스펙 파일, 이 절의 규칙, 성숙도, 1의 추적성 검사 출력을 전달하고 스타일은 보지 말라고 한다.
+  - 추적성 검사는 ID·TC·테스트 이름이 있는지만 본다. 구현 위치가 동작하는 경로인지, 테스트가 그 계약을 검증하는지는 이 표가 맡는다.
   - 돌아온 표의 빈 칸과 "구현됨" 판정 중 근거가 약한 것은 직접 읽어 확인한다.
 - §3·§4·§6 항목마다 표를 만든다.
 
@@ -34,7 +36,6 @@ argument-hint: "[spec_{function}.md]"
   - 구현 위치는 grep 결과가 아니라 실제로 읽어서 확인한 함수·파일이다. 호출 체인을 따라가 동작하는 경로인지 본다.
   - TC 는 `git grep -n -w --untracked "TC#n"` 으로 테스트 코드에서 찾는다. 스펙에만 있고 코드에 없으면 미구현이다.
     - `-w` 가 없으면 `TC#1` 이 `TC#10` 에 맞고, `--untracked` 가 없으면 아직 커밋하지 않은 테스트를 못 찾는다.
-    - TC 번호는 스펙 파일마다 따로 매겨진다 → 검색 결과가 이 기능의 테스트인지 읽어서 확인한다.
   - §6 항목은 그 결정이 근거가 된 요구사항의 TC 로 대조한다.
   - 성숙도가 자동화를 요구하지 않는 TC 는 TC 테스트 위치 칸에 `수동: {확인 방법과 결과}` 를 적는다. 확인하지 않았으면 빈 칸이다.
   - 비고에 다른 저장소·실기기 담당이 적힌 TC 는 그 사실을 표에 남긴다.

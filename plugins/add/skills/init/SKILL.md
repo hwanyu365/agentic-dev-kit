@@ -26,7 +26,7 @@ disable-model-invocation: true
 | `{{SUMMARY}}` | 한 줄 설명 (누가, 무엇을, 왜) | — |
 | `{{OWNER_REPO}}` | GitHub `owner/repo` | `gh repo view --json nameWithOwner` |
 | `{{STACK}}` | 언어·프레임워크·주요 의존성과 선택 이유 | 코드에서 읽은 값 |
-| `{{VERIFY_CMD}}` | 로컬과 CI 가 같이 돌릴 검증 명령 (lint + 타입 + 테스트) | 스택 관례 |
+| `{{VERIFY_CMD}}` | 로컬과 CI 가 같이 돌릴 검증 명령 (lint + 타입 + 테스트). `CLAUDE.md`·`ci.yml`·`.claude/hooks/verify.sh` 에 들어간다 | 스택 관례 |
 | `{{VERIFY_ALLOWED_TOOLS}}` | 검증 명령의 Claude 권한 패턴 | `&&` 로 이은 하위 명령마다 정확히 일치하는 `Bash(<하위 명령>)` 하나씩 (앞부분 와일드카드는 publish·install 까지 연다) |
 | `{{TEST_LOCATION}}` | 테스트 파일 위치 규칙 | 소스 옆 `{file}.test.*` (사용자 전역 규칙이 있으면 그것), 스택이 강제하면 그 경로와 이유 |
 | `{{SECRET_FILES_REGEX}}` | 기본 목록(`.env`, 키 파일, 서비스 계정 키) 밖에 커밋되면 안 되는 스택 설정 파일의 정규식 | 없으면 줄 삭제 |
@@ -53,7 +53,8 @@ disable-model-invocation: true
 ## 4. 확인
 
 - `git grep -n '{{'` 결과가 0건이어야 한다 (GitHub Actions 의 `${{ }}` 는 제외).
-- 검증 명령을 한 번 실행하고 출력을 보여 준다. 실패하면 원인을 보고하고 멈춘다.
+- `sh .claude/hooks/verify.sh` 를 한 번 실행하고 출력을 보여 준다. 실패하면 원인을 보고하고 멈춘다.
+  - 기존 스펙이 있으면 추적성 검사가 형식(`docs/rules_spec.md` §2.3) 위반을 낼 수 있다 → 위반 목록을 보여 주고, 스펙을 고칠지 성숙도를 `poc` 로 둘지 묻는다.
   - 테스트가 하나도 없어서 실패하는 것이면 스모크 테스트 하나를 만들어 통과시킨다. 스펙이 없으므로 `TC#n` 이름 규칙의 예외이고, 첫 스펙의 TC 테스트가 생기면 지운다.
 - 비밀 파일 정규식이 예시 파일명(`.env`, `release.jks`, `service-account.json`)을 잡고 일반 파일(`README.md`)은 잡지 않는지 `printf ... | grep -Ef .github/secret-files.regex` 로 확인한다.
 
