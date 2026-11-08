@@ -20,6 +20,8 @@ claude plugin validate .
 sh tests/merge-gate.test.sh
 sh tests/spec-trace.test.sh
 sh tests/verify.test.sh
+sh tests/review-format.test.sh
+sh tests/readonly-agent.test.sh
 ```
 
 - 템플릿 YAML(`plugins/add/template/.github/**/*.yml`)이 치환 전에도 파싱되는지 확인한다

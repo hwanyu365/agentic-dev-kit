@@ -19,6 +19,9 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | [Claude Code best practices](https://code.claude.com/docs/en/best-practices) | 대화 이력 없는 subagent 로 diff 리뷰·스펙 대조 | 구현한 agent 는 자기 코드를 근거로 판단함. GitHub 에서 Claude 를 쓸 수 없는 저장소에서도 merge 전 리뷰를 남김. 읽기만 하므로 역할 간 인계가 없음 | ship 3단계 (리뷰 `local`), verify 2단계 |
 | [Claude Code hooks](https://code.claude.com/docs/en/hooks) | 매번 지켜야 하는 것은 hook 으로 | 비밀 파일 커밋 차단, 검증 뒤 변경된 커밋 차단, merge 게이트(CI·현재 head 리뷰 요약·Blocking 0건), handoff 읽기를 모델 판단에 맡기지 않음. 적용 저장소에서 리뷰 대상 PR 24개 중 22개가 마지막 리뷰 전에 merge 됐다. 차단 hook 은 `onFailure: block` → hook 이 실패·시간 초과돼도 통과시키지 않음. CI 가드는 최종 방어선으로 유지 | 템플릿 `.claude/settings.json` PreToolUse·`.claude/hooks/`, 플러그인 `hooks/hooks.json` SessionStart |
 | Claude Code best practices, Codex | 같은 교정을 두 번 하면 규칙으로 올림 | 적용 저장소에서 "비동기 결과 미확인", "TC 는 있으나 시나리오를 검증하지 않음" 같은 지적이 PR 을 넘어 반복됐다. 기계로 막을 수 있으면 hook·CI, 아니면 CLAUDE.md 한 줄 | ship 3-3, 리뷰 기준의 `(반복)` 표시 |
+| [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | 역할별 agent 를 도구 제한으로 정의 | 리뷰·스펙 대조는 읽기만 해야 함. 범용 agent 는 편집 도구를 쥐고 있음. frontmatter 로는 Bash 를 명령 단위로 막지 못해 PreToolUse hook 이 agent_type 으로 가려 허용 목록의 조회 명령만 통과시키고(거부 목록은 모르는 변형이 통과해 리뷰마다 보강이 이어졌다), 반환 양식은 SubagentStop hook 이 검사 | 플러그인 `agents/`, `hooks/readonly-agent.sh`·`review-format.sh` |
+| Claude Code best practices | 무인 실행에 멈추는 조건을 둠 (`--max-turns`, 시간 상한, 반복 실패 시 중단) | 끝나지 않는 CI 실행과 추측 수정의 반복을 막음 | `claude.yml`·`claude-review.yml`, tdd Green |
+| Kiro | 버그 수정에 "바뀌지 않아야 할 동작" 을 함께 적음 | 재현 테스트만으로는 고치면서 생기는 회귀를 막지 못함 | 버그 이슈 양식, spec 1단계 |
 
 ## 채택하지 않음
 

@@ -14,6 +14,8 @@ jobs:
     # fork PR 은 secret 이 없고 외부 입력이므로 같은 저장소 브랜치만 리뷰한다. dependabot PR 에도 secret 이 전달되지 않는다.
     if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    # 끝나지 않는 실행이 토큰을 계속 쓰지 않게 시간과 턴에 상한을 둔다. 상한에 걸려 요약이 없으면 merge 게이트가 막는다.
+    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write
@@ -78,6 +80,7 @@ jobs:
             - 항목 — 닫는 조건: 관측할 것. 공허해지는 시험 조건. 없으면 `없음.`
             ## 결론
             - Blocking 유무와 머지 판정
-            - 실제로 돌린 명령과 결과 / 돌리지 못한 것
+            - 실제로 돌린 명령과 결과 / 돌리지 못한 것 (돌릴 수 있는 검증 명령·테스트는 돌린다. 남기는 것은 막힌 이유와 필요한 것을 적는다)
           claude_args: |
+            --max-turns 60
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

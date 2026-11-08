@@ -44,7 +44,7 @@ disable-model-invocation: true
   - `{{SECRET_FILES_REGEX}}` 는 `.github/secret-files.regex` 에 한 줄에 하나씩 넣는다. 빈 줄을 남기지 않는다 → 빈 패턴은 모든 파일에 맞는다.
   - `.github/secret-files.regex` 에 맞는 파일은 `.gitignore` 와 `.claude/settings.json` deny 의 `Read(<glob>)` 에도 넣는다.
   - `claude.yml` 의 `{{CI_SETUP}}` step 에는 `if: steps.secret.outputs.ok == 'true'` 를 붙인다.
-  - dependabot 에 스택의 `package-ecosystem` 을 추가한다.
+  - dependabot 에 스택의 `package-ecosystem` 을 `github-actions` 항목과 같은 형식(월 1회, 생태계마다 group 하나)으로 추가한다.
   - `{{AUTONOMY}}` 는 CLAUDE.md 자율 범위 표와 대체 글머리에서 고르지 않은 값의 행·줄을 지운다. "리뷰 조사 (두 값 공통)" 은 남긴다.
   - `merge` 면 `.claude/settings.json` allow 에 `Bash(gh pr ready:*)`, `Bash(gh pr merge --squash:*)`, `Bash(git worktree remove:*)` 를 더한다.
   - `{{REVIEWER}}` 는 CLAUDE.md "리뷰" 에서 고르지 않은 값의 글머리를 지운다. `local` 이면 `claude.yml`·`claude-review.yml` 을 복사하지 않고, CLAUDE.md GIT 절의 `@claude` 글머리 묶음도 지운다.
@@ -66,6 +66,8 @@ disable-model-invocation: true
   - 브랜치 보호를 쓸 수 없는 저장소(private 무료 플랜: `gh api repos/{owner}/{repo}/branches/main/protection` 이 403)는 이 항목을 건너뛴다 → 설정을 시도하지 않고, merge 조건은 merge 게이트 hook 만 확인한다고 알린다.
   - **미해결 리뷰 대화를 merge 차단 요건으로 만드는 설정은 켜지 않는다.** 지적 하나하나가 차단 요건이 되고, 반영 push 가 리뷰를 다시 깨워 라운드가 끝나지 않는다. 지적은 조사해 판단하고 근거를 남긴다.
   - 커밋 이력을 선형으로 강제하는 설정도 켜지 않는다 → squash 로 올리는 것은 관례로 지키면 되고, 그 설정은 rebase 를 막지 못해 반쪽이다.
+- Dependabot 알림과 보안 업데이트 켜기 (Settings → Advanced Security). 무료 플랜 private 저장소도 켤 수 있다 (`gh api -X PUT repos/{owner}/{repo}/vulnerability-alerts`, `.../automated-security-fixes` 로 대신 설정할지 묻는다)
+  - `dependabot.yml` 은 버전 따라가기만 한다 → 취약점 알림·수정 PR 은 이 설정이 있어야 온다.
 - Secrets: 릴리스용 비밀값. `github` 리뷰면 `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`) 도
 - `github` 리뷰면 Claude GitHub App 설치
 - 커밋은 저장소의 자율 범위 규칙을 따른다. 아직 규칙이 적용되기 전이므로 첫 커밋은 사용자에게 확인받는다.

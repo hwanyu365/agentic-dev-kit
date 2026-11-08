@@ -23,8 +23,8 @@ argument-hint: "[spec_{function}.md]"
 ## 2. 스펙 전수 대조
 
 - 대상: 인자로 받은 기능 스펙, 없으면 커밋 전 변경까지 포함해 바뀐 스펙 파일
-  - `git diff --name-only $(git merge-base origin/main HEAD) -- docs/` 와 `git ls-files --others --exclude-standard docs/`
-- 표(2, 2-1)는 대화 이력 없는 읽기 전용 subagent 에게 맡긴다 → 구현한 맥락을 모르는 쪽이 채워야 자기 코드를 근거로 넘어가지 않는다.
+  - `git diff --name-only --merge-base origin/main -- docs/` 와 `git ls-files --others --exclude-standard docs/` → 분기점과 작업 트리를 비교하므로 커밋 전 변경도 들어간다
+- 표(2, 2-1)는 대화 이력 없는 읽기 전용 subagent(`add:spec-verifier`)에게 맡긴다 → 구현한 맥락을 모르는 쪽이 채워야 자기 코드를 근거로 넘어가지 않는다.
   - 대상 스펙 파일, 2·2-1 의 규칙, 2-1 의 diff 범위, 성숙도, 1의 추적성 검사 출력을 전달하고 스타일은 보지 말라고 한다.
   - 추적성 검사는 ID·TC·테스트 이름이 있는지만 본다. 구현 위치가 동작하는 경로인지, 테스트가 그 계약을 검증하는지는 이 표가 맡는다.
   - 돌아온 표의 빈 칸과 "구현됨" 판정 중 근거가 약한 것은 직접 읽어 확인한다.
@@ -45,7 +45,7 @@ argument-hint: "[spec_{function}.md]"
 ## 2-1. 역대조 (코드 → 스펙)
 
 - 2는 스펙에 있는 것이 구현됐는지만 본다. 스펙에 없는 동작이 들어온 것은 반대 방향으로 센다.
-- 이번 diff(`git diff $(git merge-base origin/main HEAD)` + 미추적 파일)가 새로 만든 분기, 권한·검증 조건, 사용자에게 보이는 문구, 설정 값마다 한 행을 만든다.
+- 이번 diff(`git diff --merge-base origin/main` + 미추적 파일)가 새로 만든 분기, 권한·검증 조건, 사용자에게 보이는 문구, 설정 값마다 한 행을 만든다.
 
   | diff 위치 | 무엇 | 근거 ID |
   | --- | --- | --- |
@@ -77,4 +77,5 @@ argument-hint: "[spec_{function}.md]"
 - 판정: 완료 / 미완료(빈 칸 목록)
   - 미완료면 빈 칸 원인으로 돌아간다: TC 가 스펙에 없음·근거 ID 없음 → `/add:spec`, 테스트·구현·Then 단언·mutation 실패 TC 가 없음 → `/add:tdd`
 - 실행한 명령과 결과, 실행하지 못한 것(실기기, 다른 저장소)을 구분해 적는다.
+  - 실행하지 못한 것에는 시도했지만 막힌 것만 남기고, 확인에 무엇이 필요한지 적는다 (CLAUDE.md 원칙).
 - 대조 표는 PR 본문이나 세션 보고에만 쓰고 스펙 문서에는 남기지 않는다.

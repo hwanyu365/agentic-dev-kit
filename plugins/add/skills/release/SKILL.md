@@ -13,6 +13,12 @@ disable-model-invocation: true
 - `main` 의 최신 CI 가 통과인지 확인한다.
 - 버전 형식은 `v{major}.{minor}.{patch}`. 저장소 소유자가 준 번호를 쓰고, 없으면 지난 태그 이후 변경으로 제안한다 (기능 추가 → minor, 수정만 → patch).
 
+## 1-1. 자동 테스트가 없는 TC
+
+- `sh .github/spec-trace.sh` 의 `M MANUAL` 행(비고가 `(통합` / `(수동)` 인 TC)을 목록으로 낸다 → 테스트가 통과해도 이 TC 들은 확인된 것이 아니다.
+- 성숙도 `alpha` 이상이면 TC 마다 이번 릴리스 대상 커밋에서 확인한 방법과 결과를 받는다. 확인하지 않은 TC 가 남으면 태그를 만들지 않고 보고한다 (CLAUDE.md 성숙도 표 "실기기·통합 확인").
+- `poc` 는 목록만 보고한다.
+
 ## 2. 노트
 
 - `git log <지난 태그>..origin/main --oneline` 과 merge 된 PR 목록으로 사용자 관점 변경 요약을 만든다. 첫 릴리스면 `git log origin/main --oneline` 전체로 만든다.

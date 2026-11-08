@@ -3,8 +3,8 @@
 # --parse: 판정 없이 stdin 에서 해석한 "PR번호 match-head-commit" 만 출력한다 (자체 검사용).
 deny() { echo "merge 차단: $*" >&2; exit 2; }
 
-# stdin JSON 의 tool_input.command (JSON 이스케이프된 그대로)
-cmd=$(sed -n 's/.*"command" *: *"\(\([^"\\]\|\\.\)*\)".*/\1/p' | head -n 1)
+# stdin JSON 의 tool_input.command (JSON 이스케이프된 그대로). BSD sed 도 읽도록 ERE 로 쓴다 (BRE 의 \| 는 GNU 확장).
+cmd=$(sed -nE 's/.*"command" *: *"(([^"\\]|\\.)*)".*/\1/p' | head -n 1)
 [ -n "$cmd" ] || deny "명령을 읽지 못함"
 # 첫 gh pr merge 뒤만 본다 → --body 안에 같은 글자가 있어도 대상이 바뀌지 않는다.
 rest=${cmd#*gh pr merge}
