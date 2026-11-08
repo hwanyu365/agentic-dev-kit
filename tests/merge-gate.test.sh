@@ -36,6 +36,7 @@ case "$1 $2" in
   *) echo "stub: 모르는 호출 $*" >&2; exit 1 ;;
 esac
 GH
+chmod +x "$r/bin/gh"
 (cd "$r/repo" && git init -q)
 bot='user:{login:"claude[bot]",type:"Bot"},performed_via_github_app:{slug:"claude"}'
 usr='user:{login:"me",type:"User"},performed_via_github_app:null'

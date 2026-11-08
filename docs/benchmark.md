@@ -26,6 +26,7 @@ add-project 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에�
 | [Claude Code Code Review](https://code.claude.com/docs/en/code-review-pull-requests.md), [code-review 플러그인](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-review) | 기존 결함 분리, 재리뷰는 이전 리뷰 이후 변경분만, Nits 상한, 규칙 위반은 원문 인용·동작 주장은 `파일:라인`, linter·일부러 끈 규칙·변경 밖 일반 품질 제외 | 기존 결함과 바뀌지 않은 코드의 새 지적이 Should Fix 로 올라오면 고친 것과 무관하게 재리뷰가 이어짐. 이름으로 짐작한 지적 하나가 왕복 한 번을 씀 | `skills/ship/review.md`, `claude-review.yml` prompt (재리뷰 변경분 한정은 local 리뷰만. CI 리뷰는 이전 HEAD 를 받지 않음) |
 | [Qodo PR-Agent](https://github.com/qodo-ai/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml) | 덜 심각한 지적은 구체적 트리거 시나리오가 있을 때만 | 오탐이 몰리는 곳은 "재현하지 못한 결함 가능성" 이 들어가는 Should Fix. (추정) 항목에 실패 시나리오를 요구 | 같음 |
 | [gstack](https://github.com/garrytan/gstack) `/review`, [pr-review-toolkit](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/pr-review-toolkit) | 테스트·검사 약화를 하나씩 이름으로 보고, 주석이 코드와 맞는지 | Red 테스트 삭제만 보면 기존 테스트의 skip·timeout 확대·snapshot 갱신·suppression 이 통과함. 틀린 주석은 agent 가 사실로 읽음 | 같음 |
+| [MountainUnicorn/add](https://github.com/MountainUnicorn/add) | 플러그인 저장소 자체 CI (validate·자체 검사) | 검증 명령이 로컬에서만 돌면 검증 없이 merge 될 수 있고, 공개 후 외부 PR 은 확인할 수단이 없음. ubuntu 의 `sh`·`awk` 에서도 같은 결과인지 확인됨 | 루트 `.github/workflows/test.yml` |
 
 ## 채택하지 않음
 

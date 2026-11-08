@@ -1,0 +1,33 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: npx -y @anthropic-ai/claude-code@2.1.319 plugin validate .
+      # merge-gate 검사는 코멘트 jq 필터를 실제 gh 로 돌린다 → gh 인증에 읽기 전용 job 토큰을 쓴다.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          readlink -f "$(command -v sh)" "$(command -v awk)"
+          for t in tests/*.test.sh; do echo "== $t"; sh "$t" || exit 1; done
+      # 템플릿 YAML 은 자리표시자 치환 전에도 파싱돼야 한다 (CLAUDE.md 수정 규칙).
+      - run: |
+          python3 -m pip install -q --break-system-packages pyyaml==6.0.3
+          python3 -c "
+          import glob, sys, yaml
+          fs = glob.glob('plugins/add/template/.github/**/*.yml', recursive=True)
+          for f in fs: yaml.safe_load(open(f, encoding='utf-8'))
+          print('yaml ok', len(fs))
+          sys.exit(0 if fs else 1)
+          "

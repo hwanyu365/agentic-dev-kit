@@ -25,6 +25,7 @@ sh tests/readonly-agent.test.sh
 ```
 
 - 템플릿 YAML(`plugins/add/template/.github/**/*.yml`)이 치환 전에도 파싱되는지 확인한다
+- PR·main push 마다 `.github/workflows/test.yml` 이 위 검증을 돌린다. 검증 명령을 바꾸면 이 workflow 도 함께 고친다
 - 버전은 `plugins/add/.claude-plugin/plugin.json` 의 `version` 을 올린다 (사용자 쪽 `plugin update` 기준)
 
 ## GIT
