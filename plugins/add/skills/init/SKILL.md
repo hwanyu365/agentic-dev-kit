@@ -1,6 +1,6 @@
 ---
 name: init
-description: 현재 저장소에 ADD 프로젝트 틀(CLAUDE.md, 스펙 골격, CI·Claude 워크플로, 이슈·PR 템플릿)을 복사하고 자리표시자를 인터뷰로 채운다. 새 프로젝트를 ADD 로 시작하거나 기존 저장소에 ADD 를 도입할 때 쓴다. --update 는 이미 적용된 저장소를 현재 템플릿에 맞춘다.
+description: 현재 저장소에 SDD + TDD 프로젝트 틀(CLAUDE.md, 스펙 골격, CI·Claude 워크플로, 이슈·PR 템플릿)을 복사하고 자리표시자를 인터뷰로 채운다. 새 프로젝트를 이 틀로 시작하거나 기존 저장소에 도입할 때 쓴다. --update 는 이미 적용된 저장소를 현재 템플릿에 맞춘다.
 argument-hint: "[--quick | --update]"
 disable-model-invocation: true
 ---

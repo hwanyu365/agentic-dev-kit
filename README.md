@@ -1,6 +1,7 @@
-# add-project
+# specgate
 
-ADD(Agent Driven Development) 프로젝트 틀과 절차 스킬을 담은 Claude Code 플러그인.
+Claude Code agent 가 SDD(Spec-Driven Development) + TDD 로 개발하게 하는 프로젝트 틀과 절차 스킬.
+agent 가 건너뛸 수 없는 단계(단일 검증 명령과 그 안의 스펙 ↔ TC ↔ 테스트 추적성 검사, 읽기 전용 리뷰, merge 게이트)는 hook·CI 로 강제한다. 강도는 프로젝트별 성숙도로 조절한다.
 
 - 사람: 요구사항, 결정, 리뷰
 - agent: 스펙, 테스트, 구현, 검증, PR, 릴리스
@@ -17,13 +18,14 @@ private 저장소라 git 이 묻지 않고 인증할 수 있어야 한다 (Claud
 - GitHub SSH 키가 없으면 `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` 을 설정한다 → 세션 안의 `/plugin` 설치와 `plugin update` 는 HTTPS 로 다시 시도하지 않는다
 
 ```sh
-claude plugin marketplace add hwanyu365/add-project
-claude plugin install add@add-project
+claude plugin marketplace add hwanyu365/specgate
+claude plugin install add@specgate
 ```
 
-- 갱신: `claude plugin marketplace update add-project` → `claude plugin update add@add-project` (자동 갱신은 기본으로 꺼져 있다)
+- 플러그인 이름은 `add` 이고 명령은 `/add:*` 다
+- 갱신: `claude plugin marketplace update specgate` → `claude plugin update add@specgate` (자동 갱신은 기본으로 꺼져 있다)
   - 플러그인만 갱신하면 이미 적용한 저장소의 틀(hook·CI·CLAUDE.md)은 그대로다 → 그 저장소에서 `/add:init --update` 로 맞춘다
-- 플러그인 hook: 세션 시작 시 main 클론의 `.add/handoff.md` 를 컨텍스트에 넣고, 아래 두 agent 의 Bash 를 조회 명령으로 제한하고, `add:reviewer` 의 반환 양식을 검사하고, 컨텍스트 압축 때 ADD 진행 상태(이슈·리뷰 항목·소유자 결정)를 요약에 남기게 한다
+- 플러그인 hook: 세션 시작 시 main 클론의 `.add/handoff.md` 를 컨텍스트에 넣고, 아래 두 agent 의 Bash 를 조회 명령으로 제한하고, `add:reviewer` 의 반환 양식을 검사하고, 컨텍스트 압축 때 진행 상태(이슈·리뷰 항목·소유자 결정)를 요약에 남기게 한다
 - 플러그인 agent: `add:reviewer`(local 리뷰), `add:spec-verifier`(스펙 대조)
   - 편집 도구(Edit·Write)가 없고, Bash 는 hook 이 허용 목록으로 제한함: git·gh 조회, 읽기 도구, 자체 검사·검증 래퍼만 통과
   - 판정은 셸이 실제로 넘기는 단어(따옴표·backslash 를 푼 것)로 함. 목록 밖의 명령과 확장(`$`·중괄호·glob)·치환·괄호·파일 리다이렉트·셸 감싸기는 모두 막음

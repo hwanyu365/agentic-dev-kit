@@ -2,7 +2,7 @@
 
 {{SUMMARY}}
 
-이 저장소는 ADD(Agent Driven Development)로 개발한다.
+이 저장소는 agent 가 SDD(Spec-Driven Development) + TDD 로 개발한다.
 사람은 요구사항·결정·리뷰를 맡고, agent 는 스펙·테스트·구현·검증·PR 을 맡는다.
 
 ## 절차 도구

@@ -1,5 +1,5 @@
 {
-  "description": "세션 시작 시 main 클론의 .add/handoff.md 를 컨텍스트에 넣고, 읽기 전용 agent 의 Bash 를 허용 목록의 조회 명령으로 제한하고, add:reviewer 의 반환 양식을 검사하고, 압축 요약에 남길 ADD 진행 상태를 지시한다",
+  "description": "세션 시작 시 main 클론의 .add/handoff.md 를 컨텍스트에 넣고, 읽기 전용 agent 의 Bash 를 허용 목록의 조회 명령으로 제한하고, add:reviewer 의 반환 양식을 검사하고, 압축 요약에 남길 진행 상태를 지시한다",
   "hooks": {
     "SessionStart": [
       {

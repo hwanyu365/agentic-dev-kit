@@ -1,10 +1,10 @@
 {
-  "name": "add-project",
+  "name": "specgate",
   "owner": {
     "name": "hwanyu365"
   },
   "metadata": {
-    "description": "ADD(Agent Driven Development) 프로젝트 틀과 절차 스킬"
+    "description": "Claude Code agent 가 SDD + TDD 로 개발하게 하는 프로젝트 틀과 절차 스킬"
   },
   "plugins": [
     {

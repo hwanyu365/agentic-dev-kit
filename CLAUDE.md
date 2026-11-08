@@ -1,6 +1,6 @@
-# add-project
+# specgate
 
-ADD 프로젝트 틀(`plugins/add/template/`)과 절차 스킬(`plugins/add/skills/`)을 담은 Claude Code 플러그인 저장소다.
+agent 가 SDD + TDD 로 개발하게 하는 프로젝트 틀(`plugins/add/template/`)과 절차 스킬(`plugins/add/skills/`)을 담은 Claude Code 플러그인 저장소다.
 
 ## 수정 규칙
 
