@@ -12,9 +12,6 @@ agent 가 건너뛸 수 없는 단계(단일 검증 명령과 그 안의 스펙 
 
 ## 설치
 
-private 저장소라 git 이 묻지 않고 인증할 수 있어야 한다 (Claude Code 는 git 을 비대화식으로 실행한다).
-
-- HTTPS: `gh auth login` → `gh auth setup-git` 으로 credential helper 에 저장
 - GitHub SSH 키가 없으면 `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` 을 설정한다 → 세션 안의 `/plugin` 설치와 `plugin update` 는 HTTPS 로 다시 시도하지 않는다
 
 ```sh
