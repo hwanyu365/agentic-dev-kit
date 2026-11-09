@@ -26,7 +26,7 @@ jobs:
           python3 -m pip install -q --break-system-packages pyyaml==6.0.3
           python3 -c "
           import glob, sys, yaml
-          fs = glob.glob('plugins/add/template/.github/**/*.yml', recursive=True)
+          fs = glob.glob('plugins/adk/template/.github/**/*.yml', recursive=True)
           for f in fs: yaml.safe_load(open(f, encoding='utf-8'))
           print('yaml ok', len(fs))
           sys.exit(0 if fs else 1)

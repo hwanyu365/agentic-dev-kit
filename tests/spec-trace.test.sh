@@ -1,7 +1,7 @@
 #!/bin/sh
 # 템플릿 .github/spec-trace.sh 검사: 템플릿 양식 스펙 + 결함을 심은 fixture 저장소에서 기대 출력과 비교한다.
 set -eu
-st=$(cd "$(dirname "$0")/.." && pwd)/plugins/add/template/.github/spec-trace.sh
+st=$(cd "$(dirname "$0")/.." && pwd)/plugins/adk/template/.github/spec-trace.sh
 r=$(mktemp -d); trap 'rm -rf "$r"' EXIT
 cd "$r"; git init -q; git config user.email t@t; git config user.name t
 mkdir docs src

@@ -1,6 +1,6 @@
 # 참고한 방법론
 
-specgate 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에서 실제로 쓴 절차를 기준으로, 아래 방법론에서 효과가 분명한 것만 더했다.
+agentic-dev-kit 은 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에서 실제로 쓴 절차를 기준으로, 아래 방법론에서 효과가 분명한 것만 더했다.
 기준: 개인·소규모 저장소에서 유지 비용 없이 agent 의 실수를 줄이는가.
 
 ## 채택
@@ -45,5 +45,5 @@ specgate 는 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)에서 
 | claude-plugins-official code-review, Qodo PR-Agent | 신뢰도 점수(0–100) | 리뷰어가 스스로 매긴 값이라 검증되지 않음. (재현함)/(원문 확인)/(추정) 근거 표시가 같은 역할을 더 구체적으로 함 |
 | [Trail of Bits 감사 보고서](https://github.com/trailofbits/publications), [Conventional Comments](https://conventionalcomments.org/) | 감사 보고서식 항목 필드(심각도·난이도·유형·권고 단기/장기), praise·question 등 코멘트 라벨 | 리뷰 양식의 뼈대(등급·판정·라운드 추적)가 업계 관행과 큰 차이가 없음. 필드를 늘리면 PR 마다 출력만 길어지고 merge 판정은 같음 |
 | Qodo PR-Agent | 리뷰 난이도 점수, PR 분할 제안 | 소규모 저장소에서 merge 판정의 입력이 되지 않음 |
-| [superpowers](https://github.com/obra/superpowers) v7 | 스펙 builder check: 대화 이력 없는 subagent 가 스펙만 읽고 구현 전에 물어야 할 것을 나열 | 스펙마다 subagent 실행 사용량이 늘어남. `[확인필요]` 0건 점검과 `/add:verify` 의 스펙 대조가 같은 빈칸을 구현 전·후에 잡음 |
+| [superpowers](https://github.com/obra/superpowers) v7 | 스펙 builder check: 대화 이력 없는 subagent 가 스펙만 읽고 구현 전에 물어야 할 것을 나열 | 스펙마다 subagent 실행 사용량이 늘어남. `[확인필요]` 0건 점검과 `/adk:verify` 의 스펙 대조가 같은 빈칸을 구현 전·후에 잡음 |
 | MountainUnicorn/add, [Factory.ai](https://docs.factory.ai/agent-driven-development) | "ADD(Agent Driven Development)" 명칭 | 정착된 용어가 아니고 쓰는 곳마다 뜻이 다름(다중 agent 협업, agent 의 내부 루프). 소프트웨어 공학에서 정착된 ADD 는 SEI 의 [Attribute-Driven Design](https://en.wikipedia.org/wiki/Attribute-driven_design). 내용은 SDD + TDD 와 게이트 강제이므로 그 용어로 소개 |

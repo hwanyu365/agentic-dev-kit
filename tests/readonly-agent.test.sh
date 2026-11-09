@@ -1,14 +1,14 @@
 #!/bin/sh
 # 플러그인 hooks/readonly-agent.sh 검사: PreToolUse 입력(JSON 원문)의 agent_type·command 를 바꿔 끼워 종료 코드를 비교한다.
 # 허용 목록 방식이다 → 통과 경우는 리뷰어가 쓰는 조회 명령, 차단 경우는 우회 변형과 쓰기 명령이다.
-h=$(cd "$(dirname "$0")/.." && pwd)/plugins/add/hooks/readonly-agent.sh
+h=$(cd "$(dirname "$0")/.." && pwd)/plugins/adk/hooks/readonly-agent.sh
 fail=0
 j() { printf '{"session_id":"s","agent_type":"%s","tool_name":"Bash","tool_input":{"command":"%s","description":"d"}}' "$1" "$2"; }
 t() { # 기대종료코드 agent 명령(JSON 문자열 안의 원문)
   j "$2" "$3" | sh "$h" 2>/dev/null; rc=$?
   [ $rc -eq "$1" ] || { echo "FAIL [$2] $3: 기대 $1, 실제 $rc"; fail=1; }
 }
-r=add:reviewer
+r=adk:reviewer
 
 # 통과: 조회
 t 0 $r 'gh pr view 16 --comments'
@@ -30,12 +30,12 @@ t 0 $r 'git diff --stat | wc -l'
 t 0 $r 'git rev-parse HEAD && git merge-base origin/main HEAD'
 t 0 $r 'cd E:/01_dev/x && git status --short'
 t 0 $r 'grep -n \"git push; echo\" README.md'
-t 0 $r 'ls plugins/add/hooks'
+t 0 $r 'ls plugins/adk/hooks'
 t 0 $r 'sh tests/spec-trace.test.sh'
 t 0 $r 'sh .claude/hooks/verify.sh'
-t 0 add:spec-verifier 'git grep -n -w --untracked \"TC#3\"'
-t 2 add:spec-verifier 'gh pr edit 16 --body x'
-t 2 add:spec-verifier 'git commit -qm x'
+t 0 adk:spec-verifier 'git grep -n -w --untracked \"TC#3\"'
+t 2 adk:spec-verifier 'gh pr edit 16 --body x'
+t 2 adk:spec-verifier 'git commit -qm x'
 t 2 $r 'gh api http://127.0.0.1:8766/leak-x'
 t 2 $r 'gh api https://example.com/x --jq .'
 t 2 $r 'gh api --hostname example.com repos/o/r'
@@ -245,5 +245,5 @@ t 0 $r 'git fetch -q origin'
 # 다른 agent·메인 세션은 이 hook 의 대상이 아니다
 t 0 general-purpose 'gh pr comment 16 --body \"x\"'
 t 0 '' 'git push'
-printf '{"agent_type":"add:reviewer","tool_input":{}}' | sh "$h" 2>/dev/null; [ $? -eq 2 ] || { echo "FAIL 명령 없음은 차단"; fail=1; }
+printf '{"agent_type":"adk:reviewer","tool_input":{}}' | sh "$h" 2>/dev/null; [ $? -eq 2 ] || { echo "FAIL 명령 없음은 차단"; fail=1; }
 [ $fail -eq 0 ] && echo PASS || exit 1

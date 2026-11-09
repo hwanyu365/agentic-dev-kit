@@ -1,6 +1,6 @@
 #!/bin/sh
 # 템플릿 .claude/hooks/verify.sh 검사: 검증 명령을 바꿔 끼워 기록·--check 결과를 기대값과 비교한다.
-W=$(cd "$(dirname "$0")/.." && pwd)/plugins/add/template
+W=$(cd "$(dirname "$0")/.." && pwd)/plugins/adk/template
 r=$(mktemp -d); trap 'rm -rf "$r"' EXIT
 cd "$r"; git init -q; git config user.email t@t; git config user.name t
 mkdir -p docs .github .claude/hooks src

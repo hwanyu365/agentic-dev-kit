@@ -1,6 +1,6 @@
 #!/bin/sh
 # 템플릿 .claude/hooks/merge-gate.sh 의 merge 명령 해석 검사 (네트워크 없이 --parse 로).
-g=$(cd "$(dirname "$0")/.." && pwd)/plugins/add/template/.claude/hooks/merge-gate.sh
+g=$(cd "$(dirname "$0")/.." && pwd)/plugins/adk/template/.claude/hooks/merge-gate.sh
 fail=0
 t() { # 기대값 JSON
   got=$(printf '%s' "$2" | sh "$g" --parse 2>&1); rc=$?
