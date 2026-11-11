@@ -71,7 +71,13 @@ disable-model-invocation: true
 ## 5. 사람이 할 일 목록 출력
 
 - `main` 브랜치 보호: CI job 필수, PR 로만 merge, 관리자 포함 (`gh api` 로 대신 설정할지 묻는다)
-  - 브랜치가 최신인지 요구하는 설정은 켠다 → 낡은 CI 결과로 merge 되는 것을 막는다.
+  - 브랜치가 최신인지 요구하는 설정은 재승인이 생기는 저장소에서만 끈다. 나머지는 켠다 → 낡은 CI 결과로 merge 되는 것을 막는다.
+    - 재승인이 생기는 저장소: 승인이 필요하고(필요 승인 수 1 이상 또는 Code Owner 승인 필수), 새 push 때 승인 해제나 마지막 push 승인 중 하나가 켜져 있다. 아래 둘 중 하나라도 맞으면 해당한다.
+      - 브랜치 보호(`gh api repos/{owner}/{repo}/branches/main/protection`)의 `required_pull_request_reviews`: `required_approving_review_count`, `require_code_owner_reviews`, `dismiss_stale_reviews`, `require_last_push_approval`
+      - ruleset(`gh api repos/{owner}/{repo}/rules/branches/main`)의 `pull_request` 규칙: `required_approving_review_count`, `require_code_owner_review`, `dismiss_stale_reviews_on_push`, `require_last_push_approval`
+      - 조회가 404(설정 없음)나 플랜 미지원 403 이 아닌 이유로 실패하면 해당으로 본다 → 모르는 채로 켜라고 권하지 않는다.
+    - 끄는 이유: PR 하나가 merge 될 때마다 열린 PR 전부가 rebase·push → 승인 해제 → 재승인 대기가 된다. 파일이 겹치지 않는 PR 도 같다.
+    - 끄면 합친 결과는 `main` push CI 가 merge 뒤에 잡는다. merge 전에 막아야 하면 merge queue 를 쓸 수 있는지 먼저 조회한다 → PR 브랜치에 push 하지 않으므로 승인이 유지된다.
   - `github` 리뷰면 `claude-review.yml` 의 `review` job 도 필수 check 로 둔다 → 브라우저에서 merge 해도 리뷰 실패·진행 중이면 막힌다.
   - 브랜치 보호를 쓸 수 없는 저장소(private 무료 플랜: `gh api repos/{owner}/{repo}/branches/main/protection` 이 403)는 이 항목을 건너뛴다 → 설정을 시도하지 않고, merge 조건은 merge 게이트 hook 만 확인한다고 알린다.
   - **미해결 리뷰 대화를 merge 차단 요건으로 만드는 설정은 켜지 않는다.** 지적 하나하나가 차단 요건이 되고, 반영 push 가 리뷰를 다시 깨워 라운드가 끝나지 않는다. 지적은 조사해 판단하고 근거를 남긴다.
