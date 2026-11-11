@@ -40,6 +40,7 @@ agentic-dev-kit 은 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)
 | Kiro | `design.md` 분리 | rules_spec §0.7: 설계 결정은 스펙 §6 에 둬야 요구사항과 근거가 함께 고쳐짐 |
 | Kiro | EARS 표기 | Given-When-Then 이 그대로 TC 가 되어 같은 역할 |
 | GitHub branch protection | 미해결 리뷰 대화를 merge 차단 요건으로 두기 | 지적 하나하나가 차단 요건이 되고, 반영 push 가 리뷰를 다시 깨워 라운드가 끝나지 않음. 적용 저장소에서 한 PR 이 아홉 라운드를 돌고 마지막엔 지적이 서로를 되돌렸다 |
+| GitHub branch protection | 재승인이 생기는 저장소에서 브랜치 최신 요구 | PR 하나가 merge 될 때마다 열린 PR 전부가 rebase·push → 승인 해제 → 재승인 대기가 된다. 적용 저장소에서 켠 직후 1줄짜리 PR merge 로 리뷰 중이던 PR 5건이 모두 rebase 대상이 되어 소유자가 껐다. 합친 결과는 기본 브랜치 push CI 가 확인한다. 재승인이 없는 저장소는 그대로 켠다 (`/adk:init` 5) |
 | [claude-code-action](https://github.com/anthropics/claude-code-action) | `@claude` 에게 코드 수정 위임 | push 의 actor 가 bot 으로 기록되어 워크플로가 승인 대기가 되고 리뷰는 bot actor 로 거부됨. 사람이 매번 승인해야 하므로 자율 범위 `merge` 가 끊긴다. 결과물 품질과는 무관 |
 | [AGENTS.md](https://agents.md) | 도구 중립 규칙 파일 | OpenAI Codex 에서 시작한 형식. Claude Code 만 쓰므로 CLAUDE.md 하나로 충분. 다른 agent 를 들이면 CLAUDE.md 내용을 AGENTS.md 로 옮기고 CLAUDE.md 에서 `@AGENTS.md` 로 import |
 | claude-plugins-official code-review, Qodo PR-Agent | 신뢰도 점수(0–100) | 리뷰어가 스스로 매긴 값이라 검증되지 않음. (재현함)/(원문 확인)/(추정) 근거 표시가 같은 역할을 더 구체적으로 함 |
