@@ -57,5 +57,6 @@
   - 예: 브랜치 보호(`gh api repos/{owner}/{repo}/branches/main/protection`), Dependabot 알림(`gh api repos/{owner}/{repo}/vulnerability-alerts`, 204 면 켜짐)
   - 브랜치 최신 요구는 5의 재승인 판정으로 켤지 끌지 정한다. 재승인이 생기는 저장소에서 켜져 있으면 끄는 것을 "사람이 할 일" 에 넣는다.
     - 켜짐 여부: 브랜치 보호의 `required_status_checks.strict`, ruleset 의 `required_status_checks` 규칙 `strict_required_status_checks_policy`
+- 세션 보고 표기는 갱신한 CLAUDE.md 자율 범위 절의 보고 규칙을 따른다 (`PR#N`·`GH#N` + 링크, 결론 먼저).
 - 커밋·PR 은 그 저장소의 자율 범위 규칙을 따른다 (`/adk:ship`).
   - 갱신이 CLAUDE.md 의 자율 범위·성숙도 절을 바꾸면 그 저장소의 "먼저 묻는 예외" 대상이다 → 저장소 소유자가 직접 merge 한다. 문구만 바뀌고 값이 그대로여도 같다.
