@@ -1,7 +1,10 @@
 # 리뷰 기준
 
 리뷰 방식 `local` 에서 subagent 에게 그대로 전달한다.
-`template/.github/workflows/claude-review.yml` 의 prompt 와 같은 기준이다.
+`template/.github/workflows/claude-review.yml` 의 prompt 와 같은 기준이다. 실행 환경에 따른 부분만 다르다.
+- 요약 전달: CI 는 파일에 써서 PR 코멘트로 올리고, 여기서는 반환한다.
+- 이전 HEAD: CI 는 `fetch-depth: 1` 이라 이전 HEAD 를 읽지 못해 전체를 본다.
+- 결론의 검증 실행: CI 리뷰는 러너에 런타임이 없고 같은 PR 의 CI 가 검증을 돌리므로 돌리지 않는다.
 
 ```
 REPO: <owner/repo>
