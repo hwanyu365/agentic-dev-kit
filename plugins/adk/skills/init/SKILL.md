@@ -58,7 +58,7 @@ disable-model-invocation: true
 ## 4. 확인
 
 - `git grep -n -I '{{'` 결과가 0건이어야 한다 (GitHub Actions 의 `${{ }}` 는 제외). `-I` 로 바이너리를 뺀다.
-- `sh .claude/hooks/verify.sh` 를 한 번 실행하고 출력을 보여 준다. 실패하면 원인을 보고하고 멈춘다.
+- `sh .claude/hooks/verify.sh` 를 한 번 실행하고 출력을 보여 준다. 이때 git hook 경로(`core.hooksPath`)가 `.githooks` 로 설정된다. 실패하면 원인을 보고하고 멈춘다.
   - 기존 스펙이 있으면 추적성 검사가 형식(`docs/rules_spec.md` §2.3) 위반을 낼 수 있다 → 위반 목록을 보여 주고, 스펙을 고칠지 성숙도를 `poc` 로 둘지 묻는다.
     - 고치기로 하면 형식 이전은 이 적용과 별도 이슈·PR 로 먼저 한다 → TC 번호 변경은 테스트 이름까지 바뀌어 틀 적용과 섞으면 리뷰할 수 없다.
     - 형식 이전 PR 은 같은 스펙 파일을 고치는 열린 PR 이 있는지 먼저 조회한다.

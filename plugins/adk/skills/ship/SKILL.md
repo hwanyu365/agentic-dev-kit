@@ -17,9 +17,10 @@ argument-hint: "[이슈 번호]"
 - 작업 브랜치(`{category}/GH-{번호}`, 하위 이슈는 `GH-{상위}-{하위}`)에서 커밋한다. 아직 `main` 이면 `git switch -c` 로 브랜치를 만든다 → 커밋하지 않은 변경이 그대로 따라온다.
 - 리뷰 반영·CI 수정이 동작을 바꾸면(스펙 항목·TC 가 바뀌어야 하면) 커밋 전에 `/adk:spec` → `/adk:tdd` → `/adk:verify` 를 거친다.
 - 커밋 전 확인
-  - `sh .claude/hooks/verify.sh` 가 통과한 뒤 파일을 고치지 않음 → 고쳤으면 커밋 직전 hook 이 막으므로 다시 돌린다
+  - `sh .claude/hooks/verify.sh` 가 통과한 뒤 파일을 고치지 않음 → 고쳤으면 pre-commit 이 막으므로 다시 돌린다
   - `git diff --cached --stat` 에 비밀 파일·대용량 파일·의도하지 않은 파일 없음
   - 테스트·검사가 지워지거나 약화되지 않음: Red 에서 만든 테스트, 기존 테스트의 skip·timeout 확대·snapshot 갱신, lint·검사 suppression
+- pre-commit 을 건너뛰는 커밋은 하지 않는다 (`CLAUDE.md` "검증" 의 deny 목록).
 - 커밋 메시지는 `CLAUDE.md` 형식. 스펙 문구를 옮기지 않고 실제로 구현·검증한 것만 적는다.
 
 ## 1-1. push 전 사전 리뷰 (차단 장치·보안 경계를 바꿀 때)

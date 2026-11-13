@@ -16,7 +16,7 @@ argument-hint: "[spec_{function}.md]"
 ## 1. 검증 명령
 
 - `sh .claude/hooks/verify.sh` 를 실행하고 요약 출력을 보여 준다. 실패하면 여기서 멈춘다.
-  - CI 와 같은 추적성 검사(`.github/spec-trace.sh`)와 `CLAUDE.md` "검증" 의 명령을 돌리고, 통과한 작업 트리를 기록한다 → 그 뒤에 파일을 고치면 커밋 직전 hook 이 막는다.
+  - CI 와 같은 추적성 검사(`.github/spec-trace.sh`)와 `CLAUDE.md` "검증" 의 명령을 돌리고, 통과한 작업 트리를 기록한다 → 그 뒤에 파일을 고치면 커밋 직전 pre-commit 이 막는다.
 - CI 의 비밀 파일 가드를 아직 추적하지 않은 파일까지 넓혀 돌린다 → 로컬 통과가 CI 통과를 뜻하게 한다.
   - `git -c core.quotePath=false ls-files --cached --others --exclude-standard | grep -Ef .github/secret-files.regex | grep -vE '\.example$'` 결과 0건
 

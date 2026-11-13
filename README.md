@@ -62,12 +62,15 @@ flowchart LR
 | `docs/specification.md` | 색인 + 공통 제약 |
 | `docs/spec_{function}.md` | 기능별 스펙 (§1~§7) |
 | `docs/rules_spec.md` | 스펙 작성 규칙 |
-| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, 커밋 직전 hook (비밀 파일, 검증 뒤 변경), merge 게이트 hook. hook 이 실패해도 막음 |
-| `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음 |
-| `.claude/hooks/verify.sh` | 추적성 검사 + 검증 명령. 통과한 작업 트리를 기록하고, 커밋 직전에 달라졌으면 막음 |
+| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, pre-commit 을 건너뛰는 명령 거부, 세션 시작 때 git hook 경로 설정(실패해도 세션은 진행), 커밋 명령 직전 hook 경로 확인, 모든 Bash 명령 직전의 merge 게이트 hook. 두 PreToolUse hook 은 실패해도 막음 |
+| `.githooks/pre-commit` | git 이 커밋하는 작업 트리에서 비밀 파일과 검증 뒤 변경을 확인하고 아니면 커밋을 막음. hook 경로는 `hooks-path.sh` 가 설정 |
+| `.claude/hooks/hooks-path.sh` | git hook 경로를 `.githooks` 로 맞춤. 기존 `.git/hooks` 가 있거나 다른 경로면 바꾸지 않고 실패. 세션 시작 hook 과 `verify.sh` 가 부르고, `--check` 는 커밋 명령 직전 hook 이 부름 |
+| `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음. gh 는 merge 글자가 보이면 허용 하위 명령이어야 하고, 그 밖의 명령(허용 명령 `git`·`echo` 등 제외)은 낱말 `merge`·`gh…merge` 가 보이면 막음 |
+| `.claude/hooks/segments.awk`·`hook-lib.sh` | merge 게이트가 쓰는 명령 해석. 따옴표·heredoc 본문은 데이터로, `$(...)`·`` `...` ``·서브셸 안은 명령으로 읽고, 셸 예약어와 env·timeout 같은 감싸기를 벗김 |
+| `.claude/hooks/verify.sh` | 추적성 검사 + 검증 명령. 통과한 작업 트리를 기록하고, 커밋 직전(pre-commit)에 달라졌으면 막음. git hook 경로가 맞지 않으면 실패 |
 | `.github/workflows/ci.yml` | 비밀 파일 가드 + 추적성 검사 + 검증 명령 |
 | `.github/spec-trace.sh` | 스펙 ↔ TC ↔ 테스트 이름 대조 (누락, 고아 TC, `[확인필요]`, 형식 위반, 테스트 삭제 경고). 성숙도 `poc` 는 보고만 |
-| `.github/secret-files.regex` | 커밋되면 안 되는 파일 목록. CI 가드와 `.claude/settings.json` 의 커밋 직전 hook 이 함께 읽음 |
+| `.github/secret-files.regex` | 커밋되면 안 되는 파일 목록. CI 가드와 `.githooks/pre-commit` 이 함께 읽음 |
 | `.github/workflows/claude.yml` | 이슈·PR 의 `@claude` (소유자·협업자만, 리뷰·질의응답 전용으로 커밋·push 차단). 리뷰 `github` 일 때만 |
 | `.github/workflows/claude-review.yml` | PR 자동 리뷰 (같은 저장소 브랜치만, 양식 고정). 리뷰 `github` 일 때만. `local` 이면 `/adk:ship` 이 로컬 subagent 로 리뷰 |
 | 두 워크플로 공통 | 코멘트·PR 본문의 prompt injection 이 러너의 비밀을 읽어 게시하는 경로를 줄임: 파일 도구의 저장소 밖 읽기 차단(`blockReadsOutsideWorkingDirectories`), 하위 프로세스 환경의 자격 증명 제거(`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`). 남는 경로: GitHub 앱 토큰(`gh` 가 쓰고 `.git/config` 의 origin URL 에도 들어감), 하위 프로세스가 부모 프로세스의 `/proc/<pid>/environ` 을 읽는 경로(PID 격리 없음) |
