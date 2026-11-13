@@ -31,7 +31,7 @@ why() { jq -r '"     is_error=\(.is_error) subtype=\(.subtype) denials=\([.permi
 cl default "Reply with the single word OK." start
 [ "$(git config --get core.hooksPath)" = .githooks ] && ok "세션 시작 hook 이 hook 경로를 .githooks 로 설정" || { ng "세션 시작 hook 이 hook 경로를 설정하지 않음"; why start; }
 
-# 기본 모드는 git 에 쓰는 명령을 허용 규칙과 무관하게 승인 대기로 둔다 → 대조군이 성립하도록 우회 모드에서 deny 가 막는지 본다
+# 아직 trust 를 기록하지 않아 기본 모드에서는 프로젝트 allow 가 적용되지 않는다 → 대조군이 성립하도록 우회 모드에서 deny 가 막는지 본다
 sh .claude/hooks/verify.sh >/dev/null 2>&1 || ng "렌더 저장소 verify.sh 실패"
 n0=$(git rev-list --count HEAD)
 cl bypassPermissions "Run exactly this shell command with the Bash tool and nothing else: git commit --allow-empty -m allowed" allow
@@ -40,6 +40,20 @@ n1=$(git rev-list --count HEAD)
 [ "$n1" -eq $((n0 + 1)) ] && ok "우회 모드의 일반 커밋은 실행됨 (대조군)" || { ng "우회 모드의 일반 커밋이 실행되지 않음 → deny 확인이 공허함"; why allow; }
 cl bypassPermissions "Run exactly this shell command with the Bash tool and nothing else: git commit --allow-empty --no-verify -m denied" deny
 [ "$(git rev-list --count HEAD)" -eq "$n1" ] && ok "우회 모드에서도 deny 규칙이 --no-verify 커밋을 막음" || { ng "--no-verify 커밋이 실행됨"; why deny; }
+
+# 기본 모드의 프로젝트 allow 는 workspace trust 를 수락한 경로에만 적용된다 → trust 전후로 같은 허용 커밋을 비교한다
+n2=$(git rev-list --count HEAD)
+cl default "Run exactly this shell command with the Bash tool and nothing else: git commit --allow-empty -m untrusted" untrusted
+[ "$(git rev-list --count HEAD)" -eq "$n2" ] && ok "trust 전 기본 모드: 허용 규칙의 커밋도 승인 대기 (대조군)" || { ng "trust 전 기본 모드에서 커밋이 실행됨 → trust 확인이 공허함"; why untrusted; }
+# trust 기록은 매번 새로 만드는 runner 에서만 한다 → 사용자의 ~/.claude.json 을 건드리지 않는다
+if [ "${GITHUB_ACTIONS-}" = true ]; then
+  c="$HOME/.claude.json"; [ -f "$c" ] || echo '{}' > "$c"
+  jq --arg p "$(pwd -P)" '.projects[$p] = ((.projects[$p] // {}) + {hasTrustDialogAccepted: true})' "$c" > "$c.new" && mv "$c.new" "$c"
+  cl default "Run exactly this shell command with the Bash tool and nothing else: git commit --allow-empty -m trusted" trusted
+  [ "$(git rev-list --count HEAD)" -eq $((n2 + 1)) ] && ok "trust 뒤 기본 모드: 허용 규칙의 커밋이 실행됨" || { ng "trust 뒤에도 기본 모드에서 허용 규칙의 커밋이 승인 대기"; why trusted; }
+else
+  ng "trust 시나리오는 GitHub Actions 에서만 돈다"
+fi
 
 # 2. 시험 저장소: 렌더 결과를 main 에 두고 시험 PR 에서 리뷰가 head 마다 요약을 남기는지
 export GH_TOKEN=$ADK_TEST_TOKEN
