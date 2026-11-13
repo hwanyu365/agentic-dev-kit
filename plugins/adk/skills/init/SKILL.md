@@ -67,6 +67,7 @@ disable-model-invocation: true
     - 틀 적용 PR 은 draft 로 올려 두고, 형식 이전이 merge 된 뒤 rebase 해서 검증을 통과시킨다.
   - 테스트가 하나도 없어서 실패하는 것이면 스모크 테스트 하나를 만들어 통과시킨다. 스펙이 없으므로 `TC#n` 이름 규칙의 예외이고, 첫 스펙의 TC 테스트가 생기면 지운다.
 - 비밀 파일 정규식이 예시 파일명(`.env`, `release.jks`, `service-account.json`)을 잡고 일반 파일(`README.md`)은 잡지 않는지 `printf ... | grep -Ef .github/secret-files.regex` 로 확인한다.
+- `github` 리뷰면 Claude 워크플로를 바꾼 이 적용 PR 의 `review` 통과는 리뷰가 돌았다는 뜻이 아니다 → `claude-code-action` 은 워크플로 파일을 바꾸는 PR 에서 실행을 건너뛰고, 요약 확인 단계는 notice 만 남기고 통과한다. merge 뒤 다음 PR 에서 현재 head 의 리뷰 요약이 생기는지 확인한다.
 
 ## 5. 사람이 할 일 목록 출력
 

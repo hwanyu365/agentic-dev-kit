@@ -45,6 +45,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
+      # 하위 프로세스 격리에 필요한 도구다. 이유는 claude-review.yml 의 같은 단계와 같다.
+      - if: steps.secret.outputs.ok == 'true'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends bubblewrap socat
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       # agent 가 검증 명령을 직접 돌릴 수 있도록 CI 와 같은 런타임을 준비한다.
       # {{CI_SETUP}}
       - if: steps.secret.outputs.ok == 'true'
