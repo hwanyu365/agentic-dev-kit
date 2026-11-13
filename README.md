@@ -62,7 +62,7 @@ flowchart LR
 | `docs/specification.md` | 색인 + 공통 제약 |
 | `docs/spec_{function}.md` | 기능별 스펙 (§1~§7) |
 | `docs/rules_spec.md` | 스펙 작성 규칙 |
-| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, pre-commit 을 건너뛰는 명령 거부, 세션 시작 때 git hook 경로 설정(실패해도 세션은 진행), 커밋 명령 직전 hook 경로 확인, 모든 Bash 명령 직전의 merge 게이트 hook. 두 PreToolUse hook 은 실패해도 막음 |
+| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, pre-commit 을 건너뛰는 명령 거부, 세션 시작 때 git hook 경로 설정(실패해도 세션은 진행), 커밋 명령 직전 hook 경로 확인, 모든 Bash 명령 직전의 merge 게이트 hook. 두 PreToolUse hook 은 실패해도 막음. 저장소 최상위가 아닌 곳에서 연 세션에는 적용되지 않음 |
 | `.githooks/pre-commit` | git 이 커밋하는 작업 트리에서 비밀 파일과 검증 뒤 변경을 확인하고 아니면 커밋을 막음. hook 경로는 `hooks-path.sh` 가 설정 |
 | `.claude/hooks/hooks-path.sh` | git hook 경로를 `.githooks` 로 맞춤. 기존 `.git/hooks` 가 있거나 다른 경로면 바꾸지 않고 실패. 세션 시작 hook 과 `verify.sh` 가 부르고, `--check` 는 커밋 명령 직전 hook 이 부름 |
 | `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음. gh 는 merge 글자가 보이면 허용 하위 명령이어야 하고, 그 밖의 명령(허용 명령 `git`·`echo` 등 제외)은 낱말 `merge`·`gh…merge` 가 보이면 막음 |
