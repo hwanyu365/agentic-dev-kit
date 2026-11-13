@@ -27,6 +27,7 @@ sh tests/skill-size.test.sh
 sh tests/render.test.sh
 sh tests/mutation.test.sh
 sh tests/runtime.test.sh
+sh tests/probe.test.sh
 ```
 
 - 템플릿 YAML(`plugins/adk/template/.github/**/*.yml`)이 치환 전에도 파싱되는지 확인한다
@@ -45,7 +46,7 @@ main 에 merge 된 version 이 곧 배포다. 적용 저장소는 adk 의 검증
 - adk 변경은 adk 안에서 확인한 뒤 merge 한다. 확인할 수단이 없으면 배포 전에 그 수단부터 만든다
 - 이슈의 닫는 조건에 "적용 저장소에서 관측" 을 쓰지 않는다
 - 확인하지 못한 항목이 남은 변경은 `version` 을 올리지 않는다
-- `version` 을 올린 PR 은 `test.yml` 의 `runtime` job 이 Claude Code 와 시험 저장소(`hwanyu365/agentic-dev-kit-test`, private)로 렌더한 틀의 세션 시작 hook·deny 규칙·리뷰 워크플로를 확인한다 (`tests/runtime.sh`)
+- `version` 을 올린 PR 은 `test.yml` 의 `runtime` job 이 Claude Code 와 시험 저장소(`hwanyu365/agentic-dev-kit-test`, private)로 렌더한 틀의 세션 시작 hook·deny 규칙·trust 전후 allow·리뷰 워크플로·리뷰 job 의 격리(하위 셸 자격 증명 scrub, 저장소 밖 읽기 거부)를 확인한다 (`tests/runtime.sh`)
   - 시험 저장소의 main 은 매 실행마다 렌더 결과로 덮인다. 손으로 고치지 않는다
   - secret: adk `CLAUDE_CODE_OAUTH_TOKEN`·`ADK_TEST_TOKEN`(시험 저장소 한정 fine-grained PAT), 시험 저장소 `CLAUDE_CODE_OAUTH_TOKEN`
 
