@@ -24,6 +24,8 @@ plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$found" ] || deny	:	tests
 plugins/adk/template/.claude/hooks/merge-gate.sh	*) for a in "$@"; do case $a in *merge*) deny	*) ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case $a in merge) deny	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	-R|--repo|-R*|--repo=*) deny	-R|--repo|-R*|--repo=*) ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	-*) deny "허용하지 않는 gh pr merge 플래그	    -*) ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$sq" ] || deny	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$n" ] || deny	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$n" ] || deny	*[!0-9]*) n=$(printf '%s' "$a" | sed -n 's#^https://[^ ]*/pull/\([0-9][0-9]*\).*#\1#p') ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case "$sha" in "$mh"*)	:	tests/merge-gate.test.sh
