@@ -19,6 +19,49 @@ t deny '{"tool_input":{"command":"gh pr merge -R other/repo 12"}}'
 t deny '{"tool_input":{"command":"gh pr merge 12 13"}}'
 t '12 abcdef0' '{"tool_input":{"command":"gh pr merge --squash 12 --delete-branch --match-head-commit abcdef0 --subject \\"x\\""}}'
 t deny '{"tool_input":{}}'
+# 모든 Bash 명령에서 돈다 → merge 가 아닌 명령은 판정 없이 통과한다.
+t none '{"tool_input":{"command":"gh pr view 12 --json mergeable"}}'
+t none '{"tool_input":{"command":"git merge origin/main"}}'
+t none '{"tool_input":{"command":"gh pr comment 12 --body \"gh pr merge 12 할 예정\""}}'
+t none '{"tool_input":{"command":"cat > f <<'"'"'EOF'"'"'\ngh pr merge 12\nEOF"}}'
+t none '{"tool_input":{"command":"echo \"닫히지 않음"}}'
+t '12 x' '{"tool_input":{"command":"H=$(gh pr view 12 -q .x); gh pr merge 12 --match-head-commit x"}}'
+t deny '{"tool_input":{"command":"gh -R o/r pr merge 12"}}'
+t deny '{"tool_input":{"command":"gh pr merge 12 --body \"닫히지 않음"}}'
+# 셸 문법·감싸기를 벗겨 안쪽 gh pr merge 를 찾는다
+t '12 -' '{"tool_input":{"command":"if true; then gh pr merge --squash 12; fi"}}'
+t '12 -' '{"tool_input":{"command":"env gh pr merge 12"}}'
+t '12 -' '{"tool_input":{"command":"timeout 60 gh pr merge 12"}}'
+# 인자는 찾은 단순 명령의 낱말에서 읽는다 → 주석·따옴표 안의 글자가 대상이 되지 않는다
+t '12 -' '{"tool_input":{"command":"# gh pr merge 99 --match-head-commit aaa\ngh pr merge 12"}}'
+t '12 -' '{"tool_input":{"command":"gh pr merge --squash 12 --subject \"x README\" --body y"}}'
+t none '{"tool_input":{"command":"echo merge"}}'
+t none '{"tool_input":{"command":"npm run merge-reports"}}'
+# 허용 목록 밖의 merge, 다른 저장소 지정, 대상이 둘 이상이면 막는다
+t deny '{"tool_input":{"command":"sh -c \"gh pr merge 12\""}}'
+t deny '{"tool_input":{"command":"$(echo gh) pr merge 12"}}'
+t deny '{"tool_input":{"command":"xargs gh pr merge"}}'
+t deny '{"tool_input":{"command":"GH_REPO=o/r gh pr merge 12"}}'
+t deny '{"tool_input":{"command":"export GH_REPO=o/r; gh pr merge 12"}}'
+t deny '{"tool_input":{"command":"gh pr merge 12 && gh pr merge 13"}}'
+t none '{"tool_input":{"command":"gh pr view 12 --json merge"}}'
+# gh 에서 merge 글자가 보이면 gh pr merge 이거나 조회 하위 명령이어야 한다
+t none '{"tool_input":{"command":"gh pr view 12 --json mergeable,mergeStateStatus"}}'
+t none '{"tool_input":{"command":"gh pr list --search merged"}}'
+t deny '{"tool_input":{"command":"gh api -X PUT repos/o/r/pulls/12/merge"}}'
+t deny '{"tool_input":{"command":"gh api graphql -f query='"'"'mutation{mergePullRequest}'"'"'"}}'
+t deny '{"tool_input":{"command":"m=merge; gh pr $m 12"}}'
+t deny '{"tool_input":{"command":"gh pr $(echo merge) 12"}}'
+# ${...} 안의 명령 치환은 해석하지 않으므로 merge 글자가 있으면 막는다
+t deny '{"tool_input":{"command":"echo ${X:-$(gh pr merge 12)}"}}'
+t none '{"tool_input":{"command":"echo ${HOME}"}}'
+# 글자를 쪼갠 merge: gh 의 하위 명령 자리에 확장이 있으면, 해석 실패에 gh 가 보이면 막는다
+t deny '{"tool_input":{"command":"m=mer; gh pr ${m}ge 12"}}'
+t deny '{"tool_input":{"command":"X=\"pr mer\"ge; gh $X 12"}}'
+t deny '{"tool_input":{"command":"echo ${X:-$(gh pr mer\"\"ge 12)}"}}'
+t '12 -' '{"tool_input":{"command":"gh pr merge 12"}}'
+t none '{"tool_input":{"command":"gh pr view $N --json state"}}'
+t none '{"tool_input":{"command":"echo ${X:-$(date)}"}}'
 [ $fail -eq 0 ] && echo PASS || exit 1
 
 # 판정: gh 를 흉내 내는 stub 을 PATH 앞에 둔다. 코멘트 jq 필터는 실제 gh 의 jq 로 돌린다 → gh 인증이 없으면 실패로 끝낸다.

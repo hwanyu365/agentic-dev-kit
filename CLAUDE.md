@@ -18,6 +18,7 @@ agent 가 SDD + TDD 로 개발하게 하는 프로젝트 틀(`plugins/adk/templa
 ```sh
 claude plugin validate .
 sh tests/merge-gate.test.sh
+sh tests/pre-commit.test.sh
 sh tests/spec-trace.test.sh
 sh tests/verify.test.sh
 sh tests/review-format.test.sh
