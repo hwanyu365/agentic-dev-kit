@@ -1,6 +1,6 @@
 {
   "name": "adk",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "description": "SDD + TDD — 단일 검증 명령·추적성 검사·merge 게이트를 hook·CI 로 강제, 프로젝트별 성숙도·자율 범위",
   "author": {
     "name": "hwanyu365"

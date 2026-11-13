@@ -90,7 +90,7 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
 | 값 | agent 가 묻지 않고 하는 일 | 저장소 소유자 지시 후 |
 | --- | --- | --- |
 | `pr` | 이슈 → 스펙 → TDD → 커밋 → draft PR → CI(실패 수정은 기존 커밋 amend + `push --force-with-lease`) → 리뷰 조사·항목별 보고 | 리뷰 반영(기존 커밋 amend + `push --force-with-lease`), ready, merge |
-| `merge` | 이슈 → 스펙 → TDD → 커밋 → draft PR → CI → 리뷰 조사 → 리뷰 반영(새 커밋, 사람 리뷰·승인 저장소는 기존 커밋 amend) → ready → squash merge | 아래 "먼저 묻는 예외" |
+| `merge` | 이슈 → 스펙 → TDD → 커밋 → draft PR → CI(실패 수정은 새 커밋, 사람 리뷰·승인 저장소는 기존 커밋 amend) → 리뷰 조사 → 리뷰 반영(새 커밋, 사람 리뷰·승인 저장소는 기존 커밋 amend) → ready → squash merge | 없음 (아래 "먼저 묻는 예외" 는 두 값 공통) |
 
 - 이 표는 사용자 전역 규칙과 다르면 이 저장소에 한해 그 규칙을 대체한다.
   - `pr`: "커밋·PR 은 지시할 때만" 을 대체한다.
@@ -142,6 +142,7 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
   - 같은 유형의 지적이 두 번째로 나오면 규칙으로 올린다 (`/adk:ship` 3-3). 기계로 막을 수 있으면 hook·CI, 아니면 이 파일에 한 줄.
   - `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막는다.
     - gh 명령에 merge 글자가 보이면 `gh pr merge` 이거나 허용 하위 명령이어야 한다. 그 밖의 명령(허용 명령 `git`·`echo`·`grep` 등 제외)은 낱말 `merge` 또는 `gh…merge` 가 보이면 막는다. gh 하위 명령 자리의 확장과 gh 가 보이는 해석 실패도 막는다.
+    - `gh pr merge` 의 플래그는 허용 목록(`-s`·`-d`·`--match-head-commit`·`-t`·`-b`·`-F`·`-A`)만 받고 `--squash` 가 있어야 한다 → `--admin`(브랜치 보호 우회)·`--auto`(판정 뒤 다른 시점에 merge)·짧은 옵션 묶음 등은 막는다.
     - 막지 못하는 범위: 스크립트 파일·gh alias 안의 merge, 글자를 감춘 merge, REST API 직접 호출(`curl … /pulls/N/merge` 등). 브랜치 보호(CI 필수)가 있으면 그것이 최종 경계이고, 없는 저장소는 이 게이트가 유일한 경계다.
 - **코드 변경은 세션이 직접 커밋한다. `@claude` 에게 맡기지 않는다.**
   - `claude-code-action` 의 push 는 actor 가 bot 으로 기록된다 → 워크플로가 승인 대기가 되고 리뷰는 bot actor 로 거부된다. 저장소 Actions 승인 정책을 느슨하게 해도 그대로다.

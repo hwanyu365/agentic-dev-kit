@@ -116,7 +116,7 @@ argument-hint: "[이슈 번호]"
 - 반영 커밋으로 head 가 바뀌면 3의 리뷰를 다시 받는다. 언제 멈추는지는 3-4 를 따른다.
 - CI 통과, 현재 head SHA 의 리뷰 요약 존재, 3-4 판정이 merge 가능(미해결 Blocking·Should Fix 0건)인지 조회로 확인한 뒤 `gh pr ready` → `gh pr merge --squash <번호> --delete-branch --match-head-commit <현재 head SHA> --subject "<PR 제목>" --body "<최종 결과 기준 [ISSUE]/[DESC]>"`
   - 메시지를 지정하지 않으면 저장소 설정에 따라 PR 의 커밋 메시지가 이어 붙어 중간 상태가 남는다.
-- merge 게이트: `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, 그 요약의 Blocking 0건을 다시 확인하고 아니면 막는다.
+- merge 게이트: `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, 그 요약의 Blocking 0건을 다시 확인하고 아니면 막는다. 위 명령의 플래그 밖(`--admin`·`--auto` 등)을 붙이면 막는다.
   - hook 은 Should Fix 를 보지 않는다 → Should Fix 는 조사로 반박한 항목이 섞여 있어 기계로 셀 수 없다. 위 조회로 확인한다.
   - 요약 작성자는 `github` 이면 Claude App, `local` 이면 세션의 gh 계정만 인정한다.
   - `--match-head-commit` 이 검사한 head 와 같아야 한다 → 검사 뒤 끼어든 push 는 gh 가 거부한다.

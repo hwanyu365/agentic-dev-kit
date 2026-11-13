@@ -65,7 +65,7 @@ flowchart LR
 | `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, pre-commit 을 건너뛰는 명령 거부, 세션 시작 때 git hook 경로 설정(실패해도 세션은 진행), 커밋 명령 직전 hook 경로 확인, 모든 Bash 명령 직전의 merge 게이트 hook. 두 PreToolUse hook 은 실패해도 막음. 저장소 최상위가 아닌 곳에서 연 세션에는 적용되지 않음 |
 | `.githooks/pre-commit` | git 이 커밋하는 작업 트리에서 비밀 파일과 검증 뒤 변경을 확인하고 아니면 커밋을 막음. hook 경로는 `hooks-path.sh` 가 설정 |
 | `.claude/hooks/hooks-path.sh` | git hook 경로를 `.githooks` 로 맞춤. 기존 `.git/hooks` 가 있거나 다른 경로면 바꾸지 않고 실패. 세션 시작 hook 과 `verify.sh` 가 부르고, `--check` 는 커밋 명령 직전 hook 이 부름 |
-| `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음. gh 는 merge 글자가 보이면 허용 하위 명령이어야 하고, 그 밖의 명령(허용 명령 `git`·`echo` 등 제외)은 낱말 `merge`·`gh…merge` 가 보이면 막음 |
+| `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음. 플래그는 허용 목록만 받고 `--squash` 필수(`--admin`·`--auto` 등은 막음). gh 는 merge 글자가 보이면 허용 하위 명령이어야 하고, 그 밖의 명령(허용 명령 `git`·`echo` 등 제외)은 낱말 `merge`·`gh…merge` 가 보이면 막음 |
 | `.claude/hooks/segments.awk`·`hook-lib.sh` | merge 게이트가 쓰는 명령 해석. 따옴표·heredoc 본문은 데이터로, `$(...)`·`` `...` ``·서브셸 안은 명령으로 읽고, 셸 예약어와 env·timeout 같은 감싸기를 벗김 |
 | `.claude/hooks/verify.sh` | 추적성 검사 + 검증 명령. 통과한 작업 트리를 기록하고, 커밋 직전(pre-commit)에 달라졌으면 막음. git hook 경로가 맞지 않으면 실패 |
 | `.github/workflows/ci.yml` | 비밀 파일 가드 + 추적성 검사 + 검증 명령 |
