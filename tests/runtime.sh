@@ -66,6 +66,9 @@ st "새 main 준비" git checkout -q --orphan main-new
 git rm -rqf . >/dev/null 2>&1
 st "렌더" env ADK_RENDER_OWNER_REPO="$TB" sh "$A/tests/render.sh" "$w/r"
 cp -R "$w/r/." . && git add -A
+# 격리 확인용 워크플로(리뷰와 같은 격리 설정, scrub 변형·대조군)를 함께 둔다 → 첫 head 에서 한 번씩 돈다
+st "격리 확인 워크플로 생성" python3 "$A/tests/probe.py" .
+git add -A
 st "렌더 커밋" git commit -qm "adk ${GITHUB_SHA:-local} 렌더"
 st "main 갱신" git push -qf origin HEAD:main
 br="probe-$(date +%s)"
@@ -91,10 +94,26 @@ review() {
   k=$(gh api "repos/$TB/issues/$pr/comments" --paginate -q "[.[] | select(.performed_via_github_app.slug == \"claude\" and (.body | startswith(\"HEAD: $sha\")))] | length")
   [ "${k:-0}" -ge 1 ] && ok "$2: head $sha 의 Claude 리뷰 요약 있음" || ng "$2: head $sha 의 Claude 리뷰 요약 없음"
 }
+# 격리 확인: scrub 변형은 하위 셸에 워크플로 토큰이 없고 저장소 밖 읽기가 막혀야 하며, scrub 만 뺀 대조군은 워크플로 토큰이 있어야 한다. OAuth 토큰은 둘 다 없어야 한다
+probe() {
+  sha=$1; wf=$2; want=$3; i=0; id=""
+  while [ $i -lt 120 ]; do
+    l=$(gh run list -R "$TB" --workflow "$wf" --commit "$sha" --json databaseId,status -q '.[0] | "\(.databaseId) \(.status)"' 2>/dev/null)
+    case "$l" in *" completed") id=${l%% *}; break ;; esac
+    i=$((i + 1)); sleep 15
+  done
+  [ -n "$id" ] || { ng "$wf: $sha 의 run 이 30분 안에 끝나지 않음"; return; }
+  echo "     run https://github.com/$TB/actions/runs/$id"
+  got=$(gh run view -R "$TB" "$id" --log 2>/dev/null | grep -o 'ADK-PROBE [^"]*' | tail -n 1)
+  [ "$got" = "$want" ] && ok "$wf: $got" || ng "$wf: 기대 '$want', 실제 '${got:-판정 줄 없음}'"
+}
+h1=$(git rev-parse HEAD)
 review "$(git rev-parse HEAD)" "첫 리뷰"
 printf -- '- 두 번째 head\n' >> probe/notes.md
 st "반영 커밋" git commit -qam "probe 2"
 st "반영 push" git push -q origin "$br"
 review "$(git rev-parse HEAD)" "재리뷰"
+probe "$h1" adk-probe.yml "ADK-PROBE oauth=absent workflow_token=absent read_environ=blocked read_settings=blocked"
+probe "$h1" adk-probe-noscrub.yml "ADK-PROBE oauth=absent workflow_token=present read_environ=blocked read_settings=blocked"
 
 exit "$fail"
