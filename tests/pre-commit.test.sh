@@ -55,6 +55,9 @@ git checkout -q -- a.txt
 t "워크트리 미추적 비밀 파일" "$(c -C ../wt commit -m e)" 1
 rm "$r/wt/.env"; v "$r/wt" >/dev/null
 t "비밀 파일 제거 뒤" "$(c -C ../wt commit -m e)" 0
+mv "$r/wt/.github/secret-files.regex" "$r/sf"; echo f > "$r/wt/f.txt"; git -C "$r/wt" add -A; v "$r/wt" >/dev/null
+t "비밀 파일 정규식이 없으면 커밋 차단" "$(c -C ../wt commit -m f)" 1
+mv "$r/sf" "$r/wt/.github/secret-files.regex"
 
 # 기존 .git/hooks 가 있으면 hook 경로를 바꾸지 않고 실패한다 → 기존 hook 이 조용히 꺼지지 않는다
 mkdir -p "$r/n/.claude/hooks" "$r/n/.githooks" && cp "$r/m/.claude/hooks/"* "$r/n/.claude/hooks/" && cp -r "$r/m/.github" "$r/m/docs" "$r/n/" && cp "$W/.githooks/pre-commit" "$r/n/.githooks/"

@@ -7,7 +7,8 @@ mkdir -p docs .github .claude/hooks src
 cp "$W/.github/spec-trace.sh" .github/
 mkdir -p .githooks; cp "$W/.githooks/pre-commit" .githooks/; cp "$W/.claude/hooks/hooks-path.sh" .claude/hooks/
 fail=0
-mk() { awk -v c="$1" '{ if ($0 == "{{VERIFY_CMD}}") print c; else print }' "$W/.claude/hooks/verify.sh" > .claude/hooks/verify.sh; }
+# macOS awk 는 -v 값의 줄바꿈을 거부한다 → 여러 줄 검증 명령은 환경 변수로 넘긴다
+mk() { C="$1" awk '{ if ($0 == "{{VERIFY_CMD}}") print ENVIRON["C"]; else print }' "$W/.claude/hooks/verify.sh" > .claude/hooks/verify.sh; }
 v() { sh .claude/hooks/verify.sh >/dev/null 2>&1; echo $?; }
 c() { sh .claude/hooks/verify.sh --check >/dev/null 2>&1; echo $?; }
 t() { [ "$2" = "$3" ] || { echo "FAIL $1: 기대 $3, 실제 $2"; fail=1; }; }

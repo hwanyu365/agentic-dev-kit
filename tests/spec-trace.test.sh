@@ -4,6 +4,8 @@ set -eu
 st=$(cd "$(dirname "$0")/.." && pwd)/plugins/adk/template/.github/spec-trace.sh
 r=$(mktemp -d); trap 'rm -rf "$r"' EXIT
 cd "$r"; git init -q; git config user.email t@t; git config user.name t
+# BSD sed 의 -i 는 다음 인자를 백업 확장자로 읽는다 → 제자리 수정은 이 함수로 한다
+sedi() { sed "$1" "$2" > "$2.sedi" && cat "$2.sedi" > "$2" && rm "$2.sedi"; }
 mkdir docs src
 cat > docs/spec_pay.md <<'MD'
 ## 3. 요구사항
@@ -36,9 +38,9 @@ Given `FR#9` 코드블록 안은 정의가 아니다
 MD
 printf 'test("TC#1 결제", ()=>{})\ntest("TC#2 영수증", ()=>{})\ntest("TC#4 x", ()=>{})\ntest("TC#5 y", ()=>{})\n' > src/pay.test.js
 git add -A; git commit -qm base
-sed -i 's/test("TC#2 영수증", ()=>{})//' src/pay.test.js
+sedi 's/test("TC#2 영수증", ()=>{})//' src/pay.test.js
 printf 'test("TC#6 고아", ()=>{})\n' > src/new.test.js
-sed -i 's/3초 안 \[요구사항\]/3초 안 [확인필요] 측정 방법 미정/' docs/spec_pay.md
+sedi 's/3초 안 \[요구사항\]/3초 안 [확인필요] 측정 방법 미정/' docs/spec_pay.md
 got=$(sh "$st" -b HEAD | sed "s/ $(git rev-parse HEAD) / BASE /" || true)
 want='E NO_TC docs/spec_pay.md:3 US#2
 E NO_TC docs/spec_pay.md:6 FR#3
@@ -85,7 +87,7 @@ got=$(sh "$st" | sort || true)
 want=$(printf '%s\n' 'E DUP_ID docs/spec_b c.md:4 FR#1' 'E DUP_TC docs/spec_b c.md:9 TC#1' 'E NO_TC docs/specification.md:4 BR#2' 'E UNCONFIRMED docs/spec_b c.md:3 -' 'W UNCONFIRMED_MENTION docs/specification.md:5 -' | sort)
 [ "$got" = "$want" ] && echo PASS-multi || { echo FAIL-multi; printf '%s\n' "$want" > w; printf '%s\n' "$got" > g; diff w g || true; exit 1; }
 git add -A; git commit -qm base
-sed -i 's/TC#1 x/TC#1 y/' src/b.test.js
+sedi 's/TC#1 x/TC#1 y/' src/b.test.js
 sh "$st" -b HEAD | grep -q "^W TEST_NAME_GONE $(git rev-parse HEAD) TC#1 x" && echo PASS-rename || { echo FAIL-rename; exit 1; }
 
 # 참조 줄: 들여쓴 글머리·백틱 없는 글머리의 ID 는 정의가 아니다
@@ -169,7 +171,7 @@ W UNCONFIRMED_OLD docs/spec_a.md:2 -'
 [ "$got" = "$want" ] && [ $rc -eq 1 ] && echo PASS-hunk || { echo "FAIL-hunk rc=$rc: $got"; exit 1; }
 git add -A; git commit -qm add
 # 지운 줄 바로 앞 줄(FR#4)에 [확인필요] 가 있다 → 삭제 hunk 를 한 줄로 세면 E 로 바뀐다
-sed -i '/^- `FR#5`/d; s/, FR#5//' docs/spec_a.md
+sedi '/^- `FR#5`/d; s/, FR#5//' docs/spec_a.md
 got=$(sh "$st" -b HEAD 2>&1) && rc=0 || rc=$?
 want='W UNCONFIRMED_OLD docs/spec_a.md:2 -
 W UNCONFIRMED_OLD docs/spec_a.md:5 -'
