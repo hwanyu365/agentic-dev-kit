@@ -16,6 +16,7 @@ t '12 -' '{"tool_input":{"command":"gh pr merge 12 --body '"'"'a 99 b'"'"' --squ
 t deny '{"tool_input":{"command":"gh pr merge --squash *"}}'
 t deny '{"tool_input":{"command":"gh pr merge feat/GH-9 --squash"}}'
 t deny '{"tool_input":{"command":"gh pr merge -R other/repo 12"}}'
+t deny '{"tool_input":{"command":"gh pr merge --repo=other/repo 12"}}'
 t deny '{"tool_input":{"command":"gh pr merge 12 13"}}'
 t '12 abcdef0' '{"tool_input":{"command":"gh pr merge --squash 12 --delete-branch --match-head-commit abcdef0 --subject \\"x\\""}}'
 t deny '{"tool_input":{}}'
@@ -62,6 +63,10 @@ t deny '{"tool_input":{"command":"echo ${X:-$(gh pr mer\"\"ge 12)}"}}'
 t '12 -' '{"tool_input":{"command":"gh pr merge 12"}}'
 t none '{"tool_input":{"command":"gh pr view $N --json state"}}'
 t none '{"tool_input":{"command":"echo ${X:-$(date)}"}}'
+# 명령 해석기를 실행하지 못하면 막는다
+x=$(mktemp -d) && cp "$g" "$(dirname "$g")/hook-lib.sh" "$x/"
+printf '%s' '{"tool_input":{"command":"gh pr merge 12"}}' | sh "$x/merge-gate.sh" --parse >/dev/null 2>&1; rc=$?; rm -rf "$x"
+[ $rc -eq 2 ] || { echo "FAIL(deny 기대) 해석기 없음 → $rc"; fail=1; }
 [ $fail -eq 0 ] && echo PASS || exit 1
 
 # 판정: gh 를 흉내 내는 stub 을 PATH 앞에 둔다. 코멘트 jq 필터는 실제 gh 의 jq 로 돌린다 → gh 인증이 없으면 실패로 끝낸다.
@@ -105,4 +110,6 @@ j 0 local abc1234 "{$usr,body:$ok}"
 j 2 local abc1234 "{$usr,body:$bl},{$oth,body:$ok}"
 quoted='"HEAD: abc1234def\n## 개요\n```md\n## 🔴 Blocking (merge 전 수정 필수)\n없음.\n```\n## 🔴 Blocking (merge 전 수정 필수)\n### [B1] 실제 지적\n"'
 j 2 github abc1234 "{$bot,body:$quoted}"
+nobl='"HEAD: abc1234def\n## 개요\n- x\n"'
+j 2 github abc1234 "{$bot,body:$nobl}"
 [ $fail -eq 0 ] && echo PASS-판정 || exit 1

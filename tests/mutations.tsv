@@ -1,0 +1,65 @@
+# 보안 경계 조건 목록. 칸: 파일 / 바꿀 줄에 든 문자열(정확히 한 줄) / 대신 넣을 줄 / 실패해야 할 테스트
+# 경계 조건을 고치거나 더하면 이 목록도 고친다 → tests/mutation.sh 가 적용되지 않은 행과 살아남은 행을 실패시킨다.
+# 넣지 않은 조건: 지워도 바로 뒤 검사가 같은 종료 코드로 막아 동작이 같다 → 살아남는 것이 결함이 아니다.
+#   verify.sh 의 작업 트리 해시 실패(빈 해시는 기록과 달라 막힘), hooks-path.sh 의 pre-commit 없음(chmod 실패로 막힘),
+#   merge-gate.sh 의 PR 조회 실패(빈 head 는 --match-head-commit 검사에서 막힘)·코멘트 조회 실패(빈 결과는 요약 없음으로 막힘)
+plugins/adk/template/.githooks/pre-commit	[ -s "$r" ] ||	:	tests/pre-commit.test.sh
+plugins/adk/template/.githooks/pre-commit	[ -z "$f" ] ||	:	tests/pre-commit.test.sh
+plugins/adk/template/.githooks/pre-commit	exec sh "$top/.claude/hooks/verify.sh" --check	exit 0	tests/pre-commit.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	[ "$(cat "$stamp" 2>/dev/null)" = "$now" ] && exit 0	exit 0	tests/verify.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	sh .claude/hooks/hooks-path.sh || exit 2	:	tests/pre-commit.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	else sh .github/spec-trace.sh; fi || exit	:	tests/verify.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	[ "$r" -eq 0 ] || exit "$r"	:	tests/verify.test.sh
+plugins/adk/template/.claude/hooks/hooks-path.sh	[ "$hp" = .githooks ] && [ -x .githooks/pre-commit ] && exit 0	exit 0	tests/pre-commit.test.sh
+plugins/adk/template/.claude/hooks/hooks-path.sh	[ -z "$own" ] ||	:	tests/pre-commit.test.sh
+plugins/adk/template/.claude/hooks/hooks-path.sh	*) echo "core.hooksPath 가 $hp	*) ;;	tests/pre-commit.test.sh
+plugins/adk/template/.claude/hooks/hooks-path.sh	[ -x .githooks/pre-commit ] || chmod	:	tests/pre-commit.test.sh
+plugins/adk/template/.claude/hooks/hook-lib.sh	segs=$(printf '%s' "$input" | LC_ALL=C awk -f	  segs=$(printf '%s' "$input" | LC_ALL=C awk -f "$here/segments.awk")	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/hook-lib.sh	[ "$e" = "명령을 읽지 못함" ] && deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/hook-lib.sh	case "$input" in *"$1"*) deny "$e"	  case "$input" in *) pass ;; esac	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	case "${1-} ${2-}" in *'$'*	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	case "$envs" in *" GH_REPO "*	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$ghexp" ] || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$found" ] || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	*) for a in "$@"; do case $a in *merge*) deny	*) ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	case $a in merge) deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	-R|--repo|-R*|--repo=*) deny	-R|--repo|-R*|--repo=*) ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$n" ] || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$n" ] || deny	*[!0-9]*) n=$(printf '%s' "$a" | sed -n 's#^https://[^ ]*/pull/\([0-9][0-9]*\).*#\1#p') ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	case "$sha" in "$mh"*)	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	gh pr checks "$n" >/dev/null 2>&1 || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	who='.user.type == "Bot"	  who='true'	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	who=".user.login ==	  who='true'	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	blocking) deny	  blocking) exit 0 ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	format) deny	  format) exit 0 ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	*) deny "현재 head($sha)	  *) exit 0 ;;	tests/merge-gate.test.sh
+plugins/adk/hooks/readonly-agent.sh	grep -qE '"agent_type"	exit 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (raw == "") no(	  x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	else no("JSON escape	      else c = d	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	no("치환·확장")	      x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (c == ">" && !wq &&	    if (c == ">" && (!inword || cur == "1" || cur == "2")) {	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (substr(o, i, 10) == ">/dev/null" && sep(i + 10))	      if (substr(o, i, 10) == ">/dev/null") { cur = ""; inword = 0; i += 9; continue }	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (c == "&" && substr(o, i + 1, 1) == ">") no	    x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (c == ">" || c == "<") no	    x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (e > 1 && substr(o, i + 1, e - 2)	      if (e > 1) { cur = cur substr(o, i, e); i += e - 1; continue }	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	no("치환·괄호·확장")	    x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	no("glob")	    x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	no("주석")	    x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	no("닫히지 않은 따옴표")	  x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	no("sh " W[t, 2])	      continue	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (x ~ /^--(out|ext|op|upl|exec)/) return 0	  x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (gs == "grep" && x ~ /^-[^-]*O/) return 0	  x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (a != "tag" && a ~	          continue	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (sub_ !~ /^(log|diff	      x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	for (x = j + 1; x <= nw; x++) if (!word_ok_git	      x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (index(a, "://")) no("gh " a)	        x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	else if (a ~ /^-[^-]/ && index(a, "R")) no	        else if (0) x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	no("gh -R " rp)	        x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	a ~ /^--hostname/) no	          x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (a ~ /^--(method|field|raw-field|input|header)/) no	          x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	a ~ /^-[A-Za-z]*[XfFH]/) no	          x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	if (W[t, x] ~ /^--web(=|$)/	      x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	{ a = W[t, x]; if (a !~ /^[A-Za-z0-9_.,=-]+	        x_ = 0	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	no("gh " g " " h)	      continue	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	    no(w1)	    continue	tests/readonly-agent.test.sh
+plugins/adk/hooks/readonly-agent.sh	OK) exit 0 ;;	  *) exit 0 ;;	tests/readonly-agent.test.sh

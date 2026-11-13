@@ -8,7 +8,8 @@ printf '%s' "$in" | grep -qE '"agent_type" *: *"adk:(reviewer|spec-verifier)"' |
 # BSD sed 도 읽도록 ERE 로 쓴다 (BRE 의 \| 는 GNU 확장).
 cmd=$(printf '%s' "$in" | sed -nE 's/.*"command" *: *"(([^"\\]|\\.)*)".*/\1/p' | head -n 1)
 
-v=$(printf '%s' "$cmd" | awk '
+# macOS awk 는 UTF-8 locale 에서 문자열 == 를 정렬 규칙으로 비교해 서로 다른 한글을 같다고 본다 → 바이트로 비교하게 C locale 로 돈다.
+v=$(printf '%s' "$cmd" | LC_ALL=C awk '
 function no(m) { print "DENY " m; bad = 1; exit }
 function sep(j,   d) { if (j > n) return 1; d = substr(o, j, 1); return d == " " || d == "\t" || d == ";" || d == "|" || d == "&" || d == "\n" }
 function endword() { if (inword) { k++; W[s, k] = cur; C[s] = k } cur = ""; inword = 0; wq = 0 }
