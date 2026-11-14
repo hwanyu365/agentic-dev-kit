@@ -50,6 +50,10 @@ t 2 'git config set core.hooksPath x'
 t 2 'git config --add alias.ci \"commit -n\"'
 t 2 'git config --local IncludeIf.gitdir:x.path f'
 t 0 'git config user.name x'
+# 조회·해제와 값 자리의 글자도 막는다 → 인자 위치를 해석하지 않는 쪽(막는 쪽)으로 둔다
+t 2 'git config --get core.hooksPath'
+t 2 'git config --unset alias.x'
+t 2 'git config user.name alias.foo'
 # TC#36 해석에 실패하면 commit 글자가 있을 때만 막는다
 t 2 'echo \"unclosed git commit'
 t 0 'echo \"unclosed'
