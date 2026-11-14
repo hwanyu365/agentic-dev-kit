@@ -117,7 +117,7 @@ argument-hint: "[이슈 번호]"
 
 ## 4-b. 자율 범위 `merge`
 
-- 4의 ready 뒤 4의 확인과 3-5 해당 여부를 다시 조회하고(해당이면 보고하고 멈춤) `gh pr merge --squash <번호> --delete-branch --match-head-commit <현재 head SHA> --subject "<PR 제목>" --body "<최종 결과 기준 [ISSUE]/[DESC]>"`
+- 4의 ready 뒤 4의 확인과 3-5 해당 여부를 다시 조회하고(해당이면 보고하고 멈춤) `gh pr merge --squash <번호> --match-head-commit <현재 head SHA> --subject "<PR 제목>" --body "<최종 결과 기준 [ISSUE]/[DESC]>"`
   - 메시지를 지정하지 않으면 저장소 설정에 따라 PR 의 커밋 메시지가 이어 붙어 중간 상태가 남는다.
 - merge 게이트: `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, 그 요약의 Blocking 0건을 다시 확인하고 아니면 막는다. 위 명령의 플래그 밖(`--admin`·`--auto` 등)을 붙이면 막는다.
   - hook 은 Should Fix 를 보지 않는다 → Should Fix 는 조사로 반박한 항목이 섞여 있어 기계로 셀 수 없다. 위 조회로 확인한다.
@@ -129,5 +129,5 @@ argument-hint: "[이슈 번호]"
 
 ## 5. 정리
 
-- merge 됐으면 워크트리와 로컬 브랜치를 지우고 `main` 을 갱신한다.
+- merge 됐으면 워크트리·로컬·원격 브랜치를 지우고 `main` 을 갱신한다 → [cleanup.md](cleanup.md). 4-b 는 `--delete-branch` 를 붙이지 않는다.
 - 상위 이슈(UC)의 하위 이슈가 모두 끝났으면 UC 단위로 보고한다.
