@@ -11,7 +11,7 @@ agent 가 SDD + TDD 로 개발하게 하는 프로젝트 틀(`plugins/adk/templa
   - adk 자체 PR 리뷰 `.github/workflows/claude-review.yml` 도 맞춘다. 템플릿과 다른 곳은 확인할 것의 첫 두 항목(스펙이 저장소 밖에 있음)과 merge 게이트를 가리키는 주석(adk 에는 hook 이 없음)뿐이다
 - 템플릿에는 특정 프로젝트의 경로·이름·이슈 번호를 넣지 않는다. 사례는 `docs/benchmark.md` 나 적용 예 저장소로 보낸다
 - 새 방법론 요소를 들일 때는 `docs/benchmark.md` 에 출처·이유·위치를 적고, 들이지 않기로 한 것도 이유와 함께 남긴다
-- `plugins/adk/template/docs/rules_spec.md` 사본은 사용자 전역 규칙(`E:\01_dev\_docs\rules_spec.md`)과 같은 내용을 유지한다. 특정 프로젝트 사례는 양쪽 모두 넣지 않는다
+- `plugins/adk/template/docs/rules_spec.md` 가 스펙 작성 규칙의 원본이다. 특정 프로젝트 사례는 넣지 않는다
 - 스킬 안의 다른 스킬 참조는 `/adk:<이름>` 전체 이름으로 쓴다
 
 ## 검증
@@ -56,5 +56,23 @@ main 에 merge 된 version 이 곧 배포다. 적용 저장소는 adk 의 검증
 
 ## GIT
 
-- 커밋 메시지·문서 작성은 사용자 전역 규칙을 따른다
 - 커밋·PR 은 저장소 소유자 지시가 있을 때 한다
+- 브랜치: `{feat|bugfix|chore}/GH-{이슈}`, 워크트리: `../agentic-dev-kit-GH-{이슈}`
+- 커밋 메시지 (squash merge 의 메시지도 같다)
+
+  ```text
+  {feat|bugfix|chore}:[GH-{이슈}] 요약
+
+  [ISSUE] https://github.com/hwanyu365/agentic-dev-kit/issues/{이슈}
+
+  [DESC]
+
+  feat: [요구사항] [구현사항] / bugfix: [문제현상] [원인] [수정사항] / chore: 태그 없이 내용
+  ```
+
+- PR 은 draft 로 만들고, 구조가 바뀌면 AS-IS/TO-BE 를 mermaid 도식 하나(바깥 `TB`, 두 subgraph 안은 `LR`, 사이 `~~~`)에 담는다
+- 문서·커밋·PR 본문
+  - 한 문장을 한 줄에 쓴다. 문단을 폭에 맞춰 강제 개행하지 않는다 → diff 와 grep 이 문장 단위로 맞는다
+  - 서술형 문단 대신 글머리 계층으로 쓰고, 인과는 `→` 로, 비교는 표로 쓴다
+  - 최종 커밋의 diff 로 설명되는 것만 남긴다. 중간 시행착오·되돌린 시도는 쓰지 않는다
+- 주석은 기본적으로 쓰지 않는다. 코드로 드러나지 않는 "이 자리의 이유" 만 쓰고, 이력·이슈 번호·현재 구현 나열은 쓰지 않는다

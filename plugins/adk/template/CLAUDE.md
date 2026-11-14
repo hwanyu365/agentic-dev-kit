@@ -94,9 +94,9 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
 | `pr` | 팀원 리뷰가 있음 | 이슈 → 스펙 → TDD → 커밋 → draft PR → CI·리뷰 조사·반영(기존 커밋 amend + `push --force-with-lease`) → ready → 리뷰 요청 확인·보고 | `/adk:watch`: 팀원 리뷰 반영(기존 커밋 amend + `push --force-with-lease`) → 회신·resolve → 재리뷰 요청 → 승인 뒤 squash merge |
 | `merge` | 팀원 리뷰가 없음 | 이슈 → 스펙 → TDD → 커밋 → draft PR → CI·리뷰 조사·반영(새 커밋) → ready → squash merge | 없음 (아래 "먼저 묻는 예외" 는 두 값 공통) |
 
-- 이 표는 사용자 전역 규칙과 다르면 이 저장소에 한해 그 규칙을 대체한다.
-  - `pr`: "커밋·PR 은 지시할 때만", "PR 피드백은 조사 → 보고 → 지시 → 진행", "resolve 는 리뷰어가 한다" 를 대체한다. `/adk:watch` 실행이 팀원 리뷰 대응의 지시다.
-  - `merge`: "커밋·PR 은 지시할 때만", "PR 피드백은 조사 → 보고 → 지시 → 진행", "리뷰 반영은 기존 커밋에 amend" 를 대체한다.
+- 이 표는 사용자 전역 규칙과 다르면 이 저장소에 한해 그 규칙을 대체한다 → 커밋·PR 을 지시 뒤로 미루는 규칙, 리뷰 피드백을 보고한 뒤 지시를 받아 처리하는 규칙, 반영 방식·resolve 주체를 달리 정한 규칙도 이 표를 따른다.
+  - `pr`: `/adk:watch` 실행이 팀원 리뷰 대응의 지시다. 리뷰 반영은 기존 커밋 amend 이고, 팀원 리뷰 스레드는 agent 가 회신한 뒤 resolve 한다.
+  - `merge`: 리뷰 반영은 새 커밋이다.
   - `merge` 인데 사람 리뷰·승인이 조회되면 merge 하지 않고 보고한다 (`/adk:ship` 3-5) → 팀원 리뷰 저장소는 `pr` 이다.
 - Dependabot PR 은 `/adk:deps` 로 처리한다 (두 값 공통). 저장소 소유자에게 수동 merge 를 요청하지 않는다.
   - `merge`: patch·minor 이고 리뷰의 Blocking·Should Fix 가 0건이면 squash merge 한다. major·CI 실패·리뷰 지적은 보고하고 멈춘다.
