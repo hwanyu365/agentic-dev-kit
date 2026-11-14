@@ -99,7 +99,8 @@ sec != "A" && index($0, "[확인필요]") {
 }
 # 태그는 [확인필요] 하나뿐이다 → 설명을 붙인 변형([확인필요: …])이 위 검사에서 조용히 빠지지 않게 형식 위반으로 낸다.
 sec != "A" && badtag($0) {
-  if (scoped && !((f ":" FNR) in changed)) print "W BAD_UNCONFIRMED_OLD " f ":" FNR " -"
+  if (!isitem) print "W BAD_UNCONFIRMED_MENTION " f ":" FNR " -"
+  else if (scoped && !((f ":" FNR) in changed)) print "W BAD_UNCONFIRMED_OLD " f ":" FNR " -"
   else print "E BAD_UNCONFIRMED " f ":" FNR " -"
 }
 # 정의 자리(§3·§4, 색인의 번호 없는 절)의 줄 머리 글머리가 형식을 어긴 ID 로 시작하면 막는다 → 정의가 검사에서 조용히 빠지지 않는다.

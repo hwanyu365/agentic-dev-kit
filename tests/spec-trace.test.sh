@@ -197,12 +197,12 @@ cat > docs/spec_a.md <<'MD'
 MD
 echo 'test("TC#1 x", ()=>{})' > src/a.test.js
 got=$(sh "$st" 2>&1 | sort) && rc=0 || rc=$?
-want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:2 -' 'E BAD_UNCONFIRMED docs/spec_a.md:3 -' 'E BAD_UNCONFIRMED docs/spec_a.md:7 -' 'E UNCONFIRMED docs/spec_a.md:4 -' | sort)
+want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:2 -' 'E BAD_UNCONFIRMED docs/spec_a.md:3 -' 'W BAD_UNCONFIRMED_MENTION docs/spec_a.md:7 -' 'E UNCONFIRMED docs/spec_a.md:4 -' | sort)
 [ "$got" = "$want" ] && echo PASS-badtag || { echo "FAIL-badtag: $got"; exit 1; }
 sh "$st" >/dev/null 2>&1 && { echo "FAIL-badtag: 종료 코드 0"; exit 1; }
-# -b: 범위 밖에 원래 있던 변형 표기는 W 로 보고만 한다
+# TC#44 -b: 범위 밖에 원래 있던 변형 표기는 W 로 보고만 한다
 git add -A; git commit -qm base
 awk '{ print } /^- `FR#4`/ { print "- `FR#5` 다섯 [확인필요(측정)]" }' docs/spec_a.md > docs/x && mv docs/x docs/spec_a.md
 got=$(sh "$st" -b HEAD 2>&1 | grep UNCONFIRMED | sort)
-want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:6 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:2 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:3 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:8 -' 'W UNCONFIRMED_OLD docs/spec_a.md:4 -' | sort)
+want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:6 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:2 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:3 -' 'W BAD_UNCONFIRMED_MENTION docs/spec_a.md:8 -' 'W UNCONFIRMED_OLD docs/spec_a.md:4 -' | sort)
 [ "$got" = "$want" ] && echo PASS-badtag-scoped || { echo "FAIL-badtag-scoped: $got"; exit 1; }
