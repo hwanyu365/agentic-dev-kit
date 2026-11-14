@@ -97,7 +97,7 @@ sec != "A" && index($0, "[확인필요]") {
   else if (scoped && !((f ":" FNR) in changed)) print "W UNCONFIRMED_OLD " f ":" FNR " -"
   else print "E UNCONFIRMED " f ":" FNR " -"
 }
-# 태그는 [확인필요] 하나뿐이다 → 설명을 붙인 변형([확인필요: …])이 위 검사에서 조용히 빠지지 않게 형식 위반으로 낸다.
+# 태그는 [확인필요] 하나뿐이다 → 설명을 붙인 변형([확인필요: …])이 위 검사에서 조용히 빠지지 않게 형식 위반으로 낸다. 항목이 아닌 줄은 정상형과 같이 W 다.
 sec != "A" && badtag($0) {
   if (!isitem) print "W BAD_UNCONFIRMED_MENTION " f ":" FNR " -"
   else if (scoped && !((f ":" FNR) in changed)) print "W BAD_UNCONFIRMED_OLD " f ":" FNR " -"
