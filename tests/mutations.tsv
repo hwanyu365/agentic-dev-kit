@@ -2,7 +2,7 @@
 # 경계 조건을 고치거나 더하면 이 목록도 고친다 → tests/mutation.sh 가 적용되지 않은 행과 살아남은 행을 실패시킨다.
 # 넣지 않은 조건: 지워도 바로 뒤 검사가 같은 종료 코드로 막아 동작이 같다 → 살아남는 것이 결함이 아니다.
 #   verify.sh 의 작업 트리 해시 실패(빈 해시는 기록과 달라 막힘), hooks-path.sh 의 pre-commit 없음(chmod 실패로 막힘),
-#   merge-gate.sh 의 PR 조회 실패(빈 head 는 --match-head-commit 검사에서 막힘)·코멘트 조회 실패(빈 결과는 요약 없음으로 막힘)
+#   merge-gate.sh 의 PR 조회 실패(빈 head 는 --match-head-commit 검사에서 막힘)·코멘트 조회 실패(빈 결과는 요약 없음으로 막힘)·Dependabot 커밋 조회 실패(빈 결과는 ok 가 아니어서 막힘)
 plugins/adk/template/.githooks/pre-commit	[ -s "$r" ] ||	:	tests/pre-commit.test.sh
 plugins/adk/template/.githooks/pre-commit	[ -z "$f" ] ||	:	tests/pre-commit.test.sh
 plugins/adk/template/.githooks/pre-commit	exec sh "$top/.claude/hooks/verify.sh" --check	exit 0	tests/pre-commit.test.sh
@@ -31,7 +31,19 @@ plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$n" ] || deny	*[!0-9]*) n
 plugins/adk/template/.claude/hooks/merge-gate.sh	case "$sha" in "$mh"*)	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	gh pr checks "$n" >/dev/null 2>&1 || deny	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	who='.user.type == "Bot"	  who='true'	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/merge-gate.sh	who=".user.login ==	  who='true'	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	.user.login == \"$me\""	  who='true'	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	.[] | if .author.login != "dependabot[bot]" then "author"	.[] | if false then "author"	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	elif .commit.verification.verified != true then "author"	  elif false then "author"	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	| if $u then ($u == "version-update:semver-patch"	        | if $u then true	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	| $x != null and $x == $y) end] as $r	            | true) end] as $r	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[$vs[] | select(.n == $n)] | length > 0 and all(	          else [$vs[] | select(.n == $n)] | all(.[]; (.a | maj) as $x | (.b | maj) as $y	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	| if ($r | length) == 0 or any(	      | if any($r[]; . != true) then "version" else "ok" end end end'	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	*author*) deny	    *author*) dep=1 ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	*) deny "patch·minor	    *) dep=1 ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	if [ -z "$who" ] || [ -n "$dep" ]; then	if true; then	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	if [ "$by" = app/dependabot ]; then	if false; then	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	"ok ") dep=1 ;;	    "ok ") ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	if ($p | length) != 2 then "version" else	    | if false then "version" else	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	blocking) deny	  blocking) exit 0 ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	format) deny	  format) exit 0 ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	*) deny "현재 head($sha)	  *) exit 0 ;;	tests/merge-gate.test.sh

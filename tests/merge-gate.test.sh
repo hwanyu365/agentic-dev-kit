@@ -89,9 +89,10 @@ mkdir -p "$r/bin" "$r/repo"
 cat > "$r/bin/gh" <<'GH'
 #!/bin/sh
 case "$1 $2" in
-  "pr view") echo "12 abc1234def" ;;
+  "pr view") echo "12 abc1234def ${FAKE_AUTHOR:-me}" ;;
   "pr checks") exit "${FAKE_CHECKS:-0}" ;;
   "api user") echo me ;;
+  api\ repos/*/pulls/*/commits) [ -z "$FAKE_COMMITS_FAIL" ] || exit 1; exec "$REAL_GH" api rate_limit --jq "$FAKE_COMMITS as \$d | \$d | $5" ;;
   api\ repos/*) exec "$REAL_GH" api rate_limit --jq "$FAKE_COMMENTS as \$d | \$d | $5" ;;
   *) echo "stub: 모르는 호출 $*" >&2; exit 1 ;;
 esac
@@ -107,7 +108,7 @@ old='"HEAD: 0000000000\n## 🔴 Blocking\n\n없음.\n"'
 j() { # 기대종료코드 모드(github|local) mh 코멘트들 [checks]
   rm -rf "$r/repo/.github"; [ "$2" = github ] && mkdir -p "$r/repo/.github/workflows" && : > "$r/repo/.github/workflows/claude-review.yml"
   got=$(cd "$r/repo" && printf '{"tool_input":{"command":"gh pr merge --squash 12 --match-head-commit %s"}}' "$3" |
-    PATH="$r/bin:$PATH" REAL_GH="$real" FAKE_COMMENTS="[$4]" FAKE_CHECKS="${5:-0}" sh "$g" 2>&1); rc=$?
+    PATH="$r/bin:$PATH" REAL_GH="$real" FAKE_COMMENTS="[$4]" FAKE_CHECKS="${5:-0}" FAKE_AUTHOR="${A-}" FAKE_COMMITS="[${C-}]" FAKE_COMMITS_FAIL="${CF-}" sh "$g" 2>&1); rc=$?
   [ $rc -eq "$1" ] || { echo "FAIL 판정($1) $2 mh=$3 → $rc $got"; fail=1; }
 }
 j 0 github abc1234 "{$bot,body:$ok}"
@@ -124,4 +125,51 @@ quoted='"HEAD: abc1234def\n## 개요\n```md\n## 🔴 Blocking (merge 전 수정 
 j 2 github abc1234 "{$bot,body:$quoted}"
 nobl='"HEAD: abc1234def\n## 개요\n- x\n"'
 j 2 github abc1234 "{$bot,body:$nobl}"
+# Dependabot PR: 작성자 app/dependabot, 커밋 조회 결과를 C 로 준다
+A=app/dependabot
+db='author:{login:"dependabot[bot]"},commit:{verification:{verified:true},message:'
+tail='\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>"}'
+grp() { # update-type 줄 하나짜리 그룹 커밋
+  C="{$db\"Bumps the github-actions group with 1 update.\n\nUpdates \`a/b\` from 1.0.269 to 1.0.271\n\n---\nupdated-dependencies:\n- dependency-name: a/b\n  dependency-version: 1.0.271\n  dependency-type: direct:production\n  update-type: $1\n  dependency-group: github-actions$tail}"
+}
+ind() { # update-type 없는 커밋. $1 본문 버전 줄, $2 메타데이터 항목들
+  C="{$db\"$1\n\n---\nupdated-dependencies:\n$2$tail}"
+}
+fu='- dependency-name: fast-uri\n  dependency-version: 3.1.9\n  dependency-type: indirect'
+dj() { # 기대종료코드 [사유에 들어 있어야 할 글자]
+  j "$1" github abc1234 "{$usr,body:$ok}"
+  [ -z "${2-}" ] || case "$got" in *"$2"*) ;; *) echo "FAIL 사유에 '$2' 없음 → $got"; fail=1 ;; esac
+}
+# TC#23 Dependabot 이 아닌 커밋(작성자·서명)이 있으면 막고 recreate 를 안내한다
+grp version-update:semver-patch; C="$C,{author:{login:\"me\"},commit:{verification:{verified:true},message:\"Merge branch main\"}}"; dj 2 recreate
+C="{author:null,commit:{verification:{verified:true},message:\"x\"}}"; dj 2 recreate
+C="{author:{login:\"dependabot[bot]\"},commit:{verification:{verified:false},message:\"x\"}}"; dj 2 recreate
+C=""; dj 2
+# TC#24 update-type 은 patch·minor 만 통과한다
+grp version-update:semver-patch; dj 0
+grp version-update:semver-minor; dj 0
+grp version-update:semver-major; dj 2 patch
+grp version-update:semver-weird; dj 2
+C="{${db}\"Bump x from 1.0.0 to 1.0.1\n\nSigned-off-by: dependabot[bot] <support@github.com>\"}}"; dj 2 patch
+ind 'Bumps the g group with 2 updates.\n\nUpdates `p` from 1.0.0 to 1.1.0\n\nUpdates `q` from 1.0.0 to 2.0.0' '- dependency-name: p\n  update-type: version-update:semver-minor\n- dependency-name: q\n  update-type: version-update:semver-major'; dj 2
+grp version-update:semver-patch; g1=$C; grp version-update:semver-major; C="$g1,$C"; dj 2
+ind 'Bumps [fast-uri](https://github.com/fastify/fast-uri) from 3.1.8 to 3.1.9.' ''; dj 2 patch
+# TC#25 update-type 이 없으면 본문의 from A to B 의 첫 숫자 자리로 판정한다
+ind 'Bumps [fast-uri](https://github.com/fastify/fast-uri) from 3.1.8 to 3.1.9.\n- [Release notes](https://github.com/fastify/fast-uri/releases)' "$fu"; dj 0
+ind 'Bumps [vite](https://github.com/vitejs/vite/tree/HEAD/packages/vite) from 5.4.21 to 6.4.5.' '- dependency-name: vite\n  dependency-version: 6.4.5\n  dependency-type: direct:development'; dj 2 patch
+two='- dependency-name: fast-uri\n  dependency-version: 3.1.9\n  dependency-type: indirect\n- dependency-name: fast-uri\n  dependency-version: 4.2.3\n  dependency-type: indirect'
+ind 'Bumps  and [fast-uri](https://github.com/fastify/fast-uri). These dependencies needed to be updated together.\nUpdates `fast-uri` from 3.1.3 to 3.1.9\n\nUpdates `fast-uri` from 4.1.0 to 4.2.3' "$two"; dj 0
+ind 'Bumps  and [fast-uri](https://github.com/fastify/fast-uri). These dependencies needed to be updated together.\nUpdates `fast-uri` from 3.1.3 to 3.1.9\n\nUpdates `fast-uri` from 4.1.0 to 5.0.0' "$two"; dj 2
+ind 'Bumps [fast-uri](https://github.com/fastify/fast-uri) from main to dev.' "$fu"; dj 2
+ind 'Bumps [other](https://example.com) from 3.1.8 to 3.1.9.' "$fu"; dj 2
+ind 'Bumps [fast-uri](https://github.com/fastify/fast-uri) from v3.1.8 to v3.2.0.' "$fu"; dj 0
+# TC#26 Dependabot PR 은 github 방식에서도 세션 계정 요약을 인정한다. 다른 계정 요약·Blocking 은 그대로 막는다
+grp version-update:semver-minor
+j 0 github abc1234 "{$bot,body:$ok}"
+j 2 github abc1234 "{$oth,body:$ok}"
+j 2 github abc1234 "{$usr,body:$bl}"
+j 0 local abc1234 "{$usr,body:$ok}"
+A=; C=; j 2 github abc1234 "{$usr,body:$ok}"
+# TC#27 Dependabot 판정 조회가 실패하면 막는다
+A=app/dependabot; grp version-update:semver-minor; CF=1; dj 2; CF=; A=; C=
 [ $fail -eq 0 ] && echo PASS-판정 || exit 1
