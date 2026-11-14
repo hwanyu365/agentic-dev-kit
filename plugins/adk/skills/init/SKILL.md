@@ -36,6 +36,7 @@ disable-model-invocation: true
 | `{{RELEASE_CMD}}` | 태그 시 산출물 빌드·배포 명령 | 없으면 step 삭제 |
 | `{{MATURITY}}` | poc / alpha / beta / ga | alpha |
 | `{{AUTONOMY}}` | 팀원 리뷰가 있는지 → pr (ready 까지 자동, 팀원 리뷰 대응·merge 는 `/adk:watch`) / merge (팀원 리뷰 없음, merge 까지 자동) | pr |
+| `{{BRANCH_STRICT}}` | merge 전 브랜치 최신 요구(strict) → 켬 (합친 결과를 merge 전에 검사, merge 마다 열린 PR rebase·CI) / 끔 (대기 없음, merge 뒤 `main` CI) | 끔. 5 의 재승인 판정·merge queue 안내를 함께 보여 준다 |
 | `{{REVIEWER}}` | GitHub 에서 Claude(`@claude`·자동 리뷰)를 쓸 수 있고 쓰려는지 → github (로컬 리뷰 없이 PR 의 Claude 리뷰) / local (push 전 로컬 세션의 subagent 리뷰) | github |
 
 ## 3. 적용
@@ -71,7 +72,7 @@ disable-model-invocation: true
 ## 5. 사람이 할 일 목록 출력
 
 - `main` 브랜치 보호: CI job 필수, PR 로만 merge, 관리자 포함 (`gh api` 로 대신 설정할지 묻는다)
-  - 브랜치가 최신인지 요구하는 설정은 재승인이 생기는 저장소에서만 끈다. 나머지는 켠다 → 낡은 CI 결과로 merge 되는 것을 막는다.
+  - 브랜치가 최신인지 요구하는 설정은 고른 `{{BRANCH_STRICT}}` 값대로 둔다. 재승인이 생기는 저장소는 끔을 권한다.
     - 재승인이 생기는 저장소: 승인이 필요하고(필요 승인 수 1 이상 또는 Code Owner 승인 필수), 새 push 때 승인 해제나 마지막 push 승인 중 하나가 켜져 있다. 아래 둘 중 하나라도 맞으면 해당한다.
       - 브랜치 보호(`gh api repos/{owner}/{repo}/branches/main/protection`)의 `required_pull_request_reviews`: `required_approving_review_count`, `require_code_owner_reviews`, `dismiss_stale_reviews`, `require_last_push_approval`
       - ruleset(`gh api repos/{owner}/{repo}/rules/branches/main`)의 `pull_request` 규칙: `required_approving_review_count`, `require_code_owner_review`, `dismiss_stale_reviews_on_push`, `require_last_push_approval`

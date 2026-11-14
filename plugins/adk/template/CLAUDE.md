@@ -158,7 +158,7 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
   - 작업 품질과 무관한 제약이다. `@claude` 는 이슈·PR 에서 리뷰와 질의응답만 맡고, `claude.yml` 이 커밋·push 를 막는다.
 - **후속으로 미룬 것과 확인하지 못한 것은 merge 전에 이슈로 등록한다.** 세션은 끝나면 사라지고 handoff 는 로컬에만 남으므로, 다른 사람·다른 기기와 공유되는 자리는 이슈뿐이다.
   - 미루는 것이 기본은 아니다. 등록 대상·적을 내용은 `/adk:ship` 3-1 을 따른다.
-- `main` 브랜치 보호: 저장소가 지원하면 CI 필수, PR 로만 merge 로 둔다. private 무료 플랜처럼 지원하지 않으면 두지 않는다 → merge 조건은 merge 게이트 hook 이 확인한다.
+- `main` 브랜치 보호: 저장소가 지원하면 CI 필수, PR 로만 merge 로 둔다. 브랜치 최신 요구: `{{BRANCH_STRICT}}` (켬: 합친 결과를 merge 전에 검사하고 merge 마다 열린 PR 을 rebase·CI 재실행 / 끔: 열린 PR 대기 없음, 합친 결과는 merge 뒤 `main` push CI 가 검사). private 무료 플랜처럼 지원하지 않으면 두지 않는다 → merge 조건은 merge 게이트 hook 이 확인한다.
 
 ## 문서·주석
 

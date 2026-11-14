@@ -17,6 +17,7 @@
 | `{{SECRET_FILES_REGEX}}` | `.github/secret-files.regex` 의 기본 목록 밖 줄 |
 | `{{CI_SETUP}}`·`{{RELEASE_CMD}}` | `ci.yml`·`release.yml` 의 해당 step |
 | `{{MATURITY}}`·`{{AUTONOMY}}` | `CLAUDE.md` 의 성숙도·자율 범위 절 제목 |
+| `{{BRANCH_STRICT}}` | `CLAUDE.md` GIT 절 `main` 브랜치 보호 줄의 `브랜치 최신 요구:` 바로 뒤 백틱 값 (그 뒤 괄호는 설명). 없으면 브랜치 보호·ruleset 의 strict 현재 값을 기본값으로 묻는다 |
 | `{{REVIEWER}}` | `CLAUDE.md` 의 리뷰 줄. 없으면 `claude-review.yml` 이 있으면 `github`, 없으면 `local` 을 기본값으로 묻는다 |
 
 - 읽은 값은 표로 보여 주고 확인받는다.
@@ -55,7 +56,7 @@
 - 4의 확인을 그대로 한다. 템플릿 YAML 을 바꿨으면 YAML 파싱도 확인한다.
 - 5의 "사람이 할 일" 은 항목마다 현재 설정을 조회해 이미 된 것을 뺀다.
   - 예: 브랜치 보호(`gh api repos/{owner}/{repo}/branches/main/protection`), Dependabot 알림(`gh api repos/{owner}/{repo}/vulnerability-alerts`, 204 면 켜짐)
-  - 브랜치 최신 요구는 5의 재승인 판정으로 켤지 끌지 정한다. 재승인이 생기는 저장소에서 켜져 있으면 끄는 것을 "사람이 할 일" 에 넣는다.
+  - 브랜치 최신 요구는 고른 `{{BRANCH_STRICT}}` 값과 브랜치 보호·ruleset 의 현재 값을 비교해 다르면 "사람이 할 일" 에 넣는다. 재승인이 생기는 저장소에서 켬을 고르면 5의 끄는 이유를 함께 보여 준다.
     - 켜짐 여부: 브랜치 보호의 `required_status_checks.strict`, ruleset 의 `required_status_checks` 규칙 `strict_required_status_checks_policy`
 - 세션 보고 표기는 갱신한 CLAUDE.md 자율 범위 절의 보고 규칙을 따른다 (`PR#N`·`GH#N` + 링크, 결론 먼저).
 - 커밋·PR 은 그 저장소의 자율 범위 규칙을 따른다 (`/adk:ship`).
