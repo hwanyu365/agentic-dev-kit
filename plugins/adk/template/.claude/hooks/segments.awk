@@ -1,5 +1,5 @@
 # PreToolUse hook 입력 JSON 에서 tool_input.command 와 cwd 를 꺼내 셸 명령을 단순 명령 단위로 나눈다.
-# 출력(필드 구분 \037): "C cwd" 한 줄, 단순 명령마다 "S 낱말...", 해석 실패면 "E 이유".
+# 출력(필드 구분 \037): "C cwd" 한 줄, 단순 명령마다 "S 낱말...", 해석 실패면 "E 이유". -v needle 글자가 명령에 있으면 "H" 한 줄.
 # 서브셸 (...)·$(...)·`...` 의 시작과 끝은 "P"·"Q" 줄로 알린다 → 그 안의 cd 가 밖으로 번지지 않게 읽는 쪽이 되돌린다.
 # 따옴표 안은 한 낱말의 글자이고, heredoc 본문과 주석은 버린다 → 데이터 안의 글자가 명령으로 읽히지 않는다.
 # $(...)·`...` 는 따옴표 안에서도 실행되므로 그 안을 별도 단순 명령으로 읽는다.
@@ -67,9 +67,12 @@ function skip_heredocs(    k, line, e) {
 END {
   if (bad) exit
   cwd = jstr("cwd"); if (cwd == "\001") cwd = ""
+  # 출력은 줄 단위다 → cwd 의 줄바꿈이 H·S 줄처럼 읽히지 않게 지운다.
+  gsub("[\n\r" US "]", "", cwd)
   if (cwd ~ /^[A-Za-z]:\\/) gsub(/\\/, "/", cwd)
   s = jstr("command"); if (s == "\001") fail("명령을 읽지 못함")
   print "C" US cwd
+  if (needle != "" && index(s, needle)) print "H"
   n = length(s); i = 1; mode = "n"; sp = 0; nw = 0; cur = ""; inw = 0; nh = 0
   while (i <= n) {
     c = substr(s, i, 1); c2 = substr(s, i, 2)

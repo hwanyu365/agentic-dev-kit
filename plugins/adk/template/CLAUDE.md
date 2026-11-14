@@ -148,7 +148,7 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
   - 팀원 리뷰는 `/adk:watch` 가 반영 후 amend·push → 지적 스레드마다 답글·resolve 와 "리뷰 대응" 코멘트 → 재리뷰 요청 순서로 처리하고, 현재 head 의 승인을 확인한 뒤 merge 한다 (`/adk:ship` 3-5).
   - 같은 유형의 지적이 두 번째로 나오면 규칙으로 올린다 (`/adk:ship` 3-3). 기계로 막을 수 있으면 hook·CI, 아니면 이 파일에 한 줄.
   - `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막는다.
-    - gh 명령에 merge 글자가 보이면 `gh pr merge` 이거나 허용 하위 명령이어야 한다. 그 밖의 명령(허용 명령 `git`·`echo`·`grep` 등 제외)은 낱말 `merge` 또는 `gh…merge` 가 보이면 막는다. gh 하위 명령 자리의 확장과 gh 가 보이는 해석 실패도 막는다.
+    - gh 명령에 merge 글자가 보이면 `gh pr merge` 이거나 허용 하위 명령이어야 한다. 그 밖의 명령(허용 명령 `git`·`echo`·`grep` 등 제외)은 낱말 `merge` 또는 `gh…merge` 가 보이면 막는다. gh 하위 명령 자리의 확장과, 명령에 gh 가 보이는 해석 실패도 막는다 (hook 입력의 `cwd`·`transcript_path` 는 보지 않는다).
     - Dependabot PR(작성자 `app/dependabot`)은 리뷰 방식과 관계없이 세션 gh 계정의 요약도 인정한다. 대신 모든 커밋이 Dependabot 작성·서명이고 모든 업데이트가 patch·minor 여야 한다 → 세션이 그 브랜치에 더한 코드를 스스로 승인하지 못한다.
     - `gh pr merge` 의 플래그는 허용 목록(`-s`·`-d`·`--match-head-commit`·`-t`·`-b`·`-F`·`-A`)만 받고 `--squash` 가 있어야 한다 → `--admin`(브랜치 보호 우회)·`--auto`(판정 뒤 다른 시점에 merge)·짧은 옵션 묶음 등은 막는다.
     - 막지 못하는 범위: 스크립트 파일·gh alias 안의 merge, 글자를 감춘 merge, REST API 직접 호출(`curl … /pulls/N/merge` 등). 브랜치 보호(CI 필수)가 있으면 그것이 최종 경계이고, 없는 저장소는 이 게이트가 유일한 경계다.
