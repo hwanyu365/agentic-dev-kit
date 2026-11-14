@@ -1,4 +1,4 @@
-# merge-gate.sh 가 쓰는 명령 해석 단계. 부르는 쪽이 deny·pass 를 먼저 정의한다.
+# merge-gate.sh·commit-gate.sh 가 쓰는 명령 해석 단계. 부르는 쪽이 deny·pass 를 먼저 정의한다.
 us=$(printf '\037')
 
 # stdin 을 읽어 segments.awk 로 나눈다. 해석 실패는 $1 글자가 명령에 있을 때만 막는다 → 해석기의 빈틈이 모든 명령을 막지 않게 한다.

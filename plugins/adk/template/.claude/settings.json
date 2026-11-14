@@ -78,6 +78,11 @@
           {
             "type": "command",
             "onFailure": "block",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/commit-gate.sh\""
+          },
+          {
+            "type": "command",
+            "onFailure": "block",
             "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/merge-gate.sh\""
           }
         ]
