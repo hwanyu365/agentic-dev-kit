@@ -74,6 +74,26 @@ t deny '{"cwd":"/w/other","tool_input":{"command":"echo ${X:-$(gh pr merge --squ
 x=$(mktemp -d) && cp "$g" "$(dirname "$g")/hook-lib.sh" "$x/"
 printf '%s' '{"tool_input":{"command":"gh pr merge 12"}}' | sh "$x/merge-gate.sh" --parse >/dev/null 2>&1; rc=$?; rm -rf "$x"
 [ $rc -eq 2 ] || { echo "FAIL(deny 기대) 해석기 없음 → $rc"; fail=1; }
+# TC#42 리다이렉션 연산자·fd 번호·대상은 인자가 아니다
+t '17 abc1234' '{"cwd":"/w","tool_input":{"command":"gh pr merge --squash 17 --match-head-commit abc1234 2>&1 | tail -2"}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge --squash 17 --match-head-commit abc1234 2>/dev/null"}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge --squash 17 --match-head-commit abc1234 2> /dev/null"}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge --squash 17 --match-head-commit abc1234 > out.txt"}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge --squash 17 --match-head-commit abc1234 >>log 2>&1"}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge --squash 17 --match-head-commit abc1234 &>out.txt"}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge --squash 17 --match-head-commit abc1234 </dev/null"}}'
+t '17 -' '{"tool_input":{"command":"gh pr merge --squash 17 > 18"}}'
+t '17 -' '{"tool_input":{"command":"gh pr merge --squash 17 2>18"}}'
+# 따옴표로 감싼 숫자는 fd 가 아니라 인자다 → 대상 PR 이 빠져 현재 브랜치 PR 로 판정되지 않는다
+t '2 -' '{"tool_input":{"command":"gh pr merge --squash \"2\">x"}}'
+t deny '{"tool_input":{"command":"gh pr merge --squash 17 \"2\">x"}}'
+# 리다이렉션 대상 자리의 명령 치환은 명령이다
+t '12 -' '{"tool_input":{"command":"echo > $(gh pr merge --squash 12)"}}'
+t '12 -' '{"tool_input":{"command":"echo 2>\"$(gh pr merge --squash 12)\""}}'
+# 대상 없이 끝난 리다이렉션이 다음 명령의 첫 낱말을 지우지 않는다
+t '12 -' '{"tool_input":{"command":"echo > ; gh pr merge --squash 12"}}'
+# here-string 은 데이터다
+t none '{"tool_input":{"command":"cat <<< \"gh pr merge 12\""}}'
 # TC#10 허용 목록 밖의 플래그는 막는다 → 브랜치 보호 우회(--admin)·판정과 merge 시점 분리(--auto) 등
 for f in --admin --auto --disable-auto -m --merge -r --rebase -sd -- --unknown -x; do
   t deny "{\"tool_input\":{\"command\":\"gh pr merge 12 --squash $f --match-head-commit abc1234\"}}"
