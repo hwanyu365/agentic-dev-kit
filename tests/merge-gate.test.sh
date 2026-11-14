@@ -65,9 +65,9 @@ t deny '{"tool_input":{"command":"gh pr merge 12"}}'
 t none '{"tool_input":{"command":"gh pr view $N --json state"}}'
 t none '{"tool_input":{"command":"echo ${X:-$(date)}"}}'
 # TC#40 해석 실패의 gh 글자는 명령에서만 찾는다 → cwd·transcript_path 의 gh 는 보지 않는다
-t none '{"session_id":"s","transcript_path":"/home/gh/.claude/x.jsonl","cwd":"E:\\x\\Foresight","tool_input":{"command":"echo ${X:-$(date)}"}}'
-t none '{"cwd":"/w/Foresight","tool_input":{"command":"echo \"unclosed"}}'
-t deny '{"cwd":"/w/Foresight","tool_input":{"command":"m=mer; gh pr ${m}ge 12"}}'
+t none '{"session_id":"s","transcript_path":"/home/gh/.claude/x.jsonl","cwd":"E:\\x\\highway","tool_input":{"command":"echo ${X:-$(date)}"}}'
+t none '{"cwd":"/w/highway","tool_input":{"command":"echo \"unclosed"}}'
+t deny '{"cwd":"/w/highway","tool_input":{"command":"m=mer; gh pr ${m}ge 12"}}'
 t none '{"cwd":"/w/a\nH","tool_input":{"command":"echo \"unclosed"}}'
 t deny '{"cwd":"/w/other","tool_input":{"command":"echo ${X:-$(gh pr merge --squash 12)}"}}'
 # 명령 해석기를 실행하지 못하면 막는다
