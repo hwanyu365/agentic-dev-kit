@@ -18,12 +18,12 @@ argument-hint: "[PR 번호]"
 - merge 게이트가 보는 조건을 먼저 조회한다. 하나라도 어긋나면 리뷰 전에 아래대로 처리한다.
 
   ```sh
-  gh pr view <번호> --json author,headRefOid,mergeStateStatus,title
-  gh api --paginate repos/{owner}/{repo}/pulls/<번호>/commits --jq '.[] | [.author.login, .commit.verification.verified, .commit.message] | @json'
+  gh pr view <번호> --json author,headRefOid,mergeStateStatus,title,commits
   ```
 
 - 작성자가 `app/dependabot` 이 아니면 이 스킬의 대상이 아니다 → 알리고 끝낸다.
-- `dependabot[bot]` 이 아니거나 서명이 확인되지 않은 커밋이 있으면 `gh pr comment <번호> --body "@dependabot recreate"` 를 남긴다.
+- `commits[].authors[].login` 에 `dependabot[bot]` 이 아닌 작성자가 있으면 `gh pr comment <번호> --body "@dependabot recreate"` 를 남긴다.
+  - 서명은 `gh pr view` 로 보이지 않는다 → merge 게이트가 확인한다. 게이트가 작성·서명 사유로 막아도 recreate 를 남긴다.
 - `mergeStateStatus` 가 `BEHIND`·`DIRTY` 면 `@dependabot rebase` 를 남긴다.
 - recreate·rebase 뒤에는 head 가 바뀔 때까지 5분 주기로 조회하고, 바뀌면 1 부터 다시 한다. 30분 안에 바뀌지 않으면 보고한다.
 - 업데이트 종류는 커밋 메시지 `updated-dependencies` 의 항목마다 `update-type` 으로 본다. 없으면 본문의 `` `{이름}` from A to B `` 또는 `[{이름}](...) from A to B` 의 첫 숫자 자리를 비교한다.

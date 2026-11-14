@@ -109,7 +109,6 @@ if [ "$by" = app/dependabot ]; then
 fi
 
 # github 리뷰는 Claude App 이, local 리뷰는 세션의 gh 계정이 쓴 요약만 인정한다 → 같은 양식을 다른 계정이 남겨도 통과하지 않는다.
-
 who=""
 if [ -f .github/workflows/claude-review.yml ]; then
   who='.user.type == "Bot" and .performed_via_github_app.slug == "claude"'
