@@ -18,5 +18,5 @@
 - 대상: 리뷰 항목에 `(반복)` 이 붙었거나, 이 PR 의 이전 라운드·최근 PR 리뷰에서 같은 유형이 이미 나온 것
 - 최근 PR 은 `gh pr list --state merged --limit 10` 으로 목록을 얻고, 각 PR 의 리뷰 요약을 `gh pr view <번호> --comments` 로 읽는다.
 - 기계로 막을 수 있으면 hook·CI·`.github/spec-trace.sh` 검사로, 아니면 CLAUDE.md 에 한 줄로 올린다.
-- 이 PR 범위를 넓히지 않는다. chore 이슈로 등록하고 반복된 PR·항목 ID 를 적는다. `pr` 이면 후보만 4-a 보고에 넣는다.
+- 이 PR 범위를 넓히지 않는다. chore 이슈로 등록하고 반복된 PR·항목 ID 를 적는다.
 - CLAUDE.md 원칙·자율 범위·성숙도를 바꾸는 규칙이면 먼저 묻는 예외다.

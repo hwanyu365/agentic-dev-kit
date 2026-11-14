@@ -43,7 +43,7 @@
   - 플러그인 저장소(`hwanyu365/agentic-dev-kit`) 클론이 있으면 그 줄을 템플릿 이력에서 찾는다 (`git log -S '<줄>' -- plugins/adk/template plugins/add/template`). 나오면 옛 템플릿 문구다. 자리표시자가 치환된 줄은 이력에 없으므로 안 나와도 저장소가 넣은 줄로 단정하지 않는다.
   - 템플릿 이전 구조의 저장소는 대부분이 이 경우다 → 줄 대신 절 단위로 묶어 새 렌더의 대응 절과 함께 보여 준다.
 - 6-1 에서 값을 바꿨으면 옛 값으로 3이 더하거나 남기던 것을 제거 후보로 먼저 보여 준다.
-  - 예: `AUTONOMY` 를 `merge` 에서 바꾸면 merge 전용 allow, `REVIEWER` 를 `local` 로 바꾸면 `claude.yml`·`claude-review.yml` 과 `@claude` 글머리
+  - 예: `REVIEWER` 를 `local` 로 바꾸면 `claude.yml`·`claude-review.yml` 과 `@claude` 글머리
 - 현재 값으로는 3이 복사하지 않는 파일이 저장소에 있으면 제거 후보로 묻는다. 위에서 이미 물은 것은 뺀다.
 - 템플릿에 없는 기존 파일(예전 hook·워크플로 등)은 지우지 않고 목록만 보고한다.
 - 이전 플러그인 이름(`add`)으로 적용된 저장소
