@@ -65,7 +65,10 @@ git config user.email adk-runtime@users.noreply.github.com && git config user.na
 st "새 main 준비" git checkout -q --orphan main-new
 git rm -rqf . >/dev/null 2>&1
 st "렌더" env ADK_RENDER_OWNER_REPO="$TB" sh "$A/tests/render.sh" "$w/r"
-cp -R "$w/r/." . && git add -A
+cp -R "$w/r/." .
+# 시험 저장소는 매번 main 을 덮어쓰므로 의존성 갱신 PR 이 쓸모없고 시험 PR 사이에 섞인다
+rm -f .github/dependabot.yml
+git add -A
 # 격리 확인용 워크플로(리뷰와 같은 격리 설정, scrub 변형·대조군)를 함께 둔다 → 첫 head 에서 한 번씩 돈다
 st "격리 확인 워크플로 생성" python3 "$A/tests/probe.py" .
 git add -A
