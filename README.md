@@ -52,6 +52,7 @@ flowchart LR
 | `/adk:verify` | 검증 명령 + 스펙 항목별 구현 위치·TC·Then 단언 대조와 diff → 스펙 역대조(대화 이력 없는 subagent) + 보안 경계 mutation 표 + 차단 장치의 이전 버전 비교 + 변경 범위 점검. chore 는 대조 생략 |
 | `/adk:ship` | 커밋(리뷰 `local` 이면 push 전 로컬 리뷰) → draft PR → CI·리뷰 조사·반영 → 후속 건 이슈 등록 → 반복 지적은 규칙화 이슈로 → 멈춤 판정(B·S 는 재리뷰 2라운드까지, Nits 만 남으면 merge 가능) → ready → 자율 범위 `pr` 은 리뷰 요청 확인·보고, `merge` 는 squash merge |
 | `/adk:watch <PR>` | 자율 범위 `pr` 에서 ready 된 PR 감시 → 팀원 리뷰 조사·반영(amend·push) → 스레드 회신·resolve → 재리뷰 요청 → 현재 head 승인 뒤 squash merge. PRD·스펙 변경을 부르는 지적은 멈추고 보고 |
+| `/adk:deps [PR]` | Dependabot PR 대상 확인(작성자·서명·patch·minor, 어긋나면 `@dependabot recreate`·`rebase`) → CI → 로컬 subagent 리뷰 → 요약 코멘트 → 자율 범위 `merge` 는 Blocking·Should Fix 0 이면 squash merge, `pr` 은 보고. major 는 리뷰 후 보고 |
 | `/adk:release <버전>` | 자동 테스트가 없는 TC 확인 → 태그 → 릴리스 워크플로 확인 → 배포 후 확인 목록 |
 | `/adk:handoff` | main 클론의 `.adk/handoff.md` 에 현재 상태 기록 |
 
@@ -66,7 +67,7 @@ flowchart LR
 | `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, pre-commit 을 건너뛰는 명령 거부, 세션 시작 때 git hook 경로 설정(실패해도 세션은 진행), 커밋 명령 직전 hook 경로 확인, 모든 Bash 명령 직전의 merge 게이트 hook. 두 PreToolUse hook 은 실패해도 막음. 저장소 최상위가 아닌 곳에서 연 세션에는 적용되지 않음. allow 는 workspace trust 를 수락한 경로에만 적용됨 |
 | `.githooks/pre-commit` | git 이 커밋하는 작업 트리에서 비밀 파일과 검증 뒤 변경을 확인하고 아니면 커밋을 막음. hook 경로는 `hooks-path.sh` 가 설정 |
 | `.claude/hooks/hooks-path.sh` | git hook 경로를 `.githooks` 로 맞춤. 기존 `.git/hooks` 가 있거나 다른 경로면 바꾸지 않고 실패. 세션 시작 hook 과 `verify.sh` 가 부르고, `--check` 는 커밋 명령 직전 hook 이 부름 |
-| `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음. 플래그는 허용 목록만 받고 `--squash` 필수(`--admin`·`--auto` 등은 막음). gh 는 merge 글자가 보이면 허용 하위 명령이어야 하고, 그 밖의 명령(허용 명령 `git`·`echo` 등 제외)은 낱말 `merge`·`gh…merge` 가 보이면 막음 |
+| `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음. Dependabot PR 은 세션 계정 요약도 인정하되 모든 커밋의 Dependabot 작성·서명과 patch·minor 를 확인. 플래그는 허용 목록만 받고 `--squash` 필수(`--admin`·`--auto` 등은 막음). gh 는 merge 글자가 보이면 허용 하위 명령이어야 하고, 그 밖의 명령(허용 명령 `git`·`echo` 등 제외)은 낱말 `merge`·`gh…merge` 가 보이면 막음 |
 | `.claude/hooks/segments.awk`·`hook-lib.sh` | merge 게이트가 쓰는 명령 해석. 따옴표·heredoc 본문은 데이터로, `$(...)`·`` `...` ``·서브셸 안은 명령으로 읽고, 셸 예약어와 env·timeout 같은 감싸기를 벗김 |
 | `.claude/hooks/verify.sh` | 추적성 검사 + 검증 명령. 통과한 작업 트리를 기록하고, 커밋 직전(pre-commit)에 달라졌으면 막음. git hook 경로가 맞지 않으면 실패 |
 | `.github/workflows/ci.yml` | 비밀 파일 가드 + 추적성 검사 + 검증 명령 |
