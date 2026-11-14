@@ -56,6 +56,11 @@ function ids(s, out,   n, t, p, a, b, i) {
   }
   return n
 }
+function badtag(s,   t, k) {
+  t = "[확인필요"
+  while ((k = index(s, t)) > 0) { s = substr(s, k + length(t)); if (substr(s, 1, 1) != "]") return 1 }
+  return 0
+}
 function covered(key,   p, r, m, j) {
   if (key in ref) return 1
   if (!(key in arrow)) return 0
@@ -91,6 +96,12 @@ sec != "A" && index($0, "[확인필요]") {
   if (!isitem) print "W UNCONFIRMED_MENTION " f ":" FNR " -"
   else if (scoped && !((f ":" FNR) in changed)) print "W UNCONFIRMED_OLD " f ":" FNR " -"
   else print "E UNCONFIRMED " f ":" FNR " -"
+}
+# 태그는 [확인필요] 하나뿐이다 → 설명을 붙인 변형([확인필요: …])이 위 검사에서 조용히 빠지지 않게 형식 위반으로 낸다. 항목이 아닌 줄은 정상형과 같이 W 다.
+sec != "A" && badtag($0) {
+  if (!isitem) print "W BAD_UNCONFIRMED_MENTION " f ":" FNR " -"
+  else if (scoped && !((f ":" FNR) in changed)) print "W BAD_UNCONFIRMED_OLD " f ":" FNR " -"
+  else print "E BAD_UNCONFIRMED " f ":" FNR " -"
 }
 # 정의 자리(§3·§4, 색인의 번호 없는 절)의 줄 머리 글머리가 형식을 어긴 ID 로 시작하면 막는다 → 정의가 검사에서 조용히 빠지지 않는다.
 (sec == 3 || sec == 4 || (f == idx && sec == "?")) && $0 ~ /^(-[ \t]*|[*+][ \t]+|[0-9]+\.[ \t]*)(\*\*|\[)?`?[A-Z]+#[0-9]/ && $0 !~ /^- `[A-Z]+#[0-9]+[a-z]?`/ {

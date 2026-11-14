@@ -176,3 +176,33 @@ got=$(sh "$st" -b HEAD 2>&1) && rc=0 || rc=$?
 want='W UNCONFIRMED_OLD docs/spec_a.md:2 -
 W UNCONFIRMED_OLD docs/spec_a.md:5 -'
 [ "$got" = "$want" ] && [ $rc -eq 0 ] && echo PASS-hunk-del || { echo "FAIL-hunk-del rc=$rc: $got"; exit 1; }
+
+# TC#44 [확인필요 로 시작하지만 ] 로 바로 닫히지 않는 표기는 형식 위반이다 → 미확인 항목에서 조용히 빠지지 않는다
+r5=$(mktemp -d); trap 'rm -rf "$r" "$r2" "$r3" "$r4" "$r5"' EXIT
+cd "$r5"; git init -q; git config user.email t@t; git config user.name t; mkdir docs src
+cat > docs/spec_a.md <<'MD'
+## 3. 요구사항
+- `FR#1` 하나 [확인필요: 파티 실측]
+- `FR#2` 둘 [확인필요 측정]
+- `FR#3` 셋 [요구사항] 측정 방법 미정 [확인필요]
+- `FR#4` 넷 [요구사항]
+
+설명 문단 [확인필요: 메타]
+## 7. 테스트
+| TC | 대상 | 비고 |
+| --- | --- | --- |
+| `TC#1` | [FR#1, FR#2, FR#3, FR#4] | |
+## 부록
+- [확인필요: 부록은 검사하지 않음]
+MD
+echo 'test("TC#1 x", ()=>{})' > src/a.test.js
+got=$(sh "$st" 2>&1 | sort) && rc=0 || rc=$?
+want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:2 -' 'E BAD_UNCONFIRMED docs/spec_a.md:3 -' 'W BAD_UNCONFIRMED_MENTION docs/spec_a.md:7 -' 'E UNCONFIRMED docs/spec_a.md:4 -' | sort)
+[ "$got" = "$want" ] && echo PASS-badtag || { echo "FAIL-badtag: $got"; exit 1; }
+sh "$st" >/dev/null 2>&1 && { echo "FAIL-badtag: 종료 코드 0"; exit 1; }
+# TC#44 -b: 범위 밖에 원래 있던 변형 표기는 W 로 보고만 한다
+git add -A; git commit -qm base
+awk '{ print } /^- `FR#4`/ { print "- `FR#5` 다섯 [확인필요(측정)]" }' docs/spec_a.md > docs/x && mv docs/x docs/spec_a.md
+got=$(sh "$st" -b HEAD 2>&1 | grep UNCONFIRMED | sort)
+want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:6 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:2 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:3 -' 'W BAD_UNCONFIRMED_MENTION docs/spec_a.md:8 -' 'W UNCONFIRMED_OLD docs/spec_a.md:4 -' | sort)
+[ "$got" = "$want" ] && echo PASS-badtag-scoped || { echo "FAIL-badtag-scoped: $got"; exit 1; }
