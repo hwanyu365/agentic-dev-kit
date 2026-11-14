@@ -72,7 +72,7 @@ flowchart LR
 | `.claude/hooks/segments.awk`·`hook-lib.sh` | 커밋·merge 게이트가 쓰는 명령 해석. 따옴표·heredoc·here-string 본문은 데이터로, 리다이렉션의 fd 번호·대상 낱말은 인자에서 빼고, `$(...)`·`` `...` ``·서브셸 안은 명령으로 읽고, 셸 예약어와 env·timeout 같은 감싸기를 벗김 |
 | `.claude/hooks/verify.sh` | 추적성 검사 + 검증 명령. 통과한 작업 트리를 기록하고, 커밋 직전(pre-commit)에 달라졌으면 막음. git hook 경로가 맞지 않으면 실패 |
 | `.github/workflows/ci.yml` | 비밀 파일 가드 + 추적성 검사 + 검증 명령 |
-| `.github/spec-trace.sh` | 스펙 ↔ TC ↔ 테스트 이름 대조 (누락, 고아 TC, `[확인필요]`, 형식 위반, 테스트 삭제 경고). 성숙도 `poc` 는 보고만 |
+| `.github/spec-trace.sh` | 스펙 ↔ TC ↔ 테스트 이름 대조 (문자열 `TC#n`, 정의 줄 식별자의 `tc{n}`. 누락, 고아 TC, `[확인필요]`, 형식 위반, 테스트 삭제 경고). 성숙도 `poc` 는 보고만 |
 | `.github/secret-files.regex` | 커밋되면 안 되는 파일 목록. CI 가드와 `.githooks/pre-commit` 이 함께 읽음 |
 | `.github/workflows/claude.yml` | 이슈·PR 의 `@claude` (소유자·협업자만, 리뷰·질의응답 전용으로 커밋·push 차단). 리뷰 `github` 일 때만 |
 | `.github/workflows/claude-review.yml` | PR 자동 리뷰 (같은 저장소 브랜치만, 양식 고정). 리뷰 `github` 일 때만. `local` 이면 `/adk:ship` 이 로컬 subagent 로 리뷰 |
