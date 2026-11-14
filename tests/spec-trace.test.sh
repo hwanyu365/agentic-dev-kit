@@ -207,7 +207,7 @@ got=$(sh "$st" -b HEAD 2>&1 | grep UNCONFIRMED | sort)
 want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:6 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:2 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:3 -' 'W BAD_UNCONFIRMED_MENTION docs/spec_a.md:8 -' 'W UNCONFIRMED_OLD docs/spec_a.md:4 -' | sort)
 [ "$got" = "$want" ] && echo PASS-badtag-scoped || { echo "FAIL-badtag-scoped: $got"; exit 1; }
 
-# TC#46 함수 이름이 테스트 이름인 언어: 정의 줄 식별자의 tc{n} 토큰을 TC#n 으로 센다
+# TC#46 함수 이름이 테스트 이름인 언어: 정의 줄 식별자의 tc{n} 토큰을 TC#n 으로 센다 (선행 0 은 빼고, 정의 줄이면 보조 함수도 센다)
 r6=$(mktemp -d); trap 'rm -rf "$r" "$r2" "$r3" "$r4" "$r5" "$r6"' EXIT
 cd "$r6"; git init -q; git config user.email t@t; git config user.name t; mkdir docs src
 cat > docs/spec_a.md <<'MD'
@@ -224,6 +224,8 @@ cat > docs/spec_a.md <<'MD'
 | `TC#6` | [FR#1] | |
 | `TC#7` | [FR#1] | |
 | `TC#8` | [FR#1] | |
+| `TC#9` | [FR#1] | |
+| `TC#11` | [FR#1] | |
 MD
 cat > src/test_a.py <<'PY'
 def test_tc1_login():
@@ -231,6 +233,10 @@ def test_tc1_login():
 async def test_TC8_async():
     pass
 def test_tc60_other():
+    pass
+def test_tc09_leading_zero():
+    pass
+def helper_tc11_value():
     pass
 PY
 cat > src/a_test.go <<'GO'
