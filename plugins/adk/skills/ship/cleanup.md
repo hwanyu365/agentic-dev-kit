@@ -7,7 +7,7 @@
   ```sh
   git -C <main 클론> worktree remove <워크트리>
   git -C <main 클론> branch -D <브랜치>
-  git -C <main 클론> ls-remote --exit-code --heads origin <브랜치> && git -C <main 클론> push origin --delete <브랜치>
+  if git -C <main 클론> ls-remote --exit-code --heads origin <브랜치> >/dev/null; then git -C <main 클론> push origin --delete <브랜치>; fi
   git -C <main 클론> pull --ff-only
   ```
 

@@ -31,6 +31,7 @@ sh tests/mutation.test.sh
 sh tests/runtime.test.sh
 sh tests/probe.test.sh
 sh tests/readme-commands.test.sh
+sh tests/cleanup.test.sh
 ```
 
 - 템플릿 YAML(`plugins/adk/template/.github/**/*.yml`)이 치환 전에도 파싱되는지 확인한다
