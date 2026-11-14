@@ -21,7 +21,7 @@ short() {
 }
 cfg() {
   k=$(printf '%s' "${1%%=*}" | LC_ALL=C tr '[:upper:]' '[:lower:]')
-  case $k in core.hookspath|alias.*) deny "git 설정 $k 는 hook 경로나 하위 명령을 바꾼다" ;; esac
+  case $k in core.hookspath|alias.*|include.*|includeif.*) deny "git 설정 $k 는 hook 경로나 하위 명령을 바꾼다" ;; esac
 }
 
 while IFS= read -r line; do
@@ -41,6 +41,8 @@ while IFS= read -r line; do
       *) sub=$1; shift; break ;;
     esac
   done
+  # 설정 이름은 대소문자를 가리지 않는다 → deny 의 철자 규칙을 지나 같은 명령 안에서 hook 경로를 바꾸고 커밋할 수 있다.
+  if [ "$sub" = config ]; then for a in "$@"; do cfg "$a"; done; continue; fi
   [ "$sub" = commit ] || continue
   # 값을 받는 긴 옵션은 정확한 이름만 다음 낱말을 건너뛴다 → 모르는 옵션을 값으로 오인해 뒤의 -n 을 놓치지 않는다.
   want=""; end=""
