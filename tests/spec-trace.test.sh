@@ -206,3 +206,52 @@ awk '{ print } /^- `FR#4`/ { print "- `FR#5` 다섯 [확인필요(측정)]" }' d
 got=$(sh "$st" -b HEAD 2>&1 | grep UNCONFIRMED | sort)
 want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:6 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:2 -' 'W BAD_UNCONFIRMED_OLD docs/spec_a.md:3 -' 'W BAD_UNCONFIRMED_MENTION docs/spec_a.md:8 -' 'W UNCONFIRMED_OLD docs/spec_a.md:4 -' | sort)
 [ "$got" = "$want" ] && echo PASS-badtag-scoped || { echo "FAIL-badtag-scoped: $got"; exit 1; }
+
+# TC#46 함수 이름이 테스트 이름인 언어: 정의 줄 식별자의 tc{n} 토큰을 TC#n 으로 센다 (선행 0 은 빼고, 정의 줄이면 보조 함수도 센다)
+r6=$(mktemp -d); trap 'rm -rf "$r" "$r2" "$r3" "$r4" "$r5" "$r6"' EXIT
+cd "$r6"; git init -q; git config user.email t@t; git config user.name t; mkdir docs src
+cat > docs/spec_a.md <<'MD'
+## 3. 요구사항
+- `FR#1` 하나 [요구사항]
+## 7. 테스트
+| TC | 대상 | 비고 |
+| --- | --- | --- |
+| `TC#1` | [FR#1] | |
+| `TC#2` | [FR#1] | |
+| `TC#3` | [FR#1] | |
+| `TC#4` | [FR#1] | |
+| `TC#5` | [FR#1] | |
+| `TC#6` | [FR#1] | |
+| `TC#7` | [FR#1] | |
+| `TC#8` | [FR#1] | |
+| `TC#9` | [FR#1] | |
+| `TC#11` | [FR#1] | |
+MD
+cat > src/test_a.py <<'PY'
+def test_tc1_login():
+    x = tc5_value
+async def test_TC8_async():
+    pass
+def test_tc60_other():
+    pass
+def test_tc09_leading_zero():
+    pass
+def helper_tc11_value():
+    pass
+PY
+cat > src/a_test.go <<'GO'
+func TestTC2Login(t *testing.T) {}
+func (s *S) TestTc3Method(t *testing.T) {}
+GO
+printf '%s\n' '#[test]' 'fn tc4_works() {}' > src/a.rs
+printf '%s\n' 'public async Task TC7_Async() {}' 'void batch6_x() {}' > src/ATests.cs
+got=$(sh "$st" 2>&1 | grep -E 'NO_TEST|ORPHAN' | sed 's/ [^ ]*:[0-9]* / @ /' | sort)
+want=$(printf '%s\n' 'E NO_TEST @ TC#5' 'E NO_TEST @ TC#6' 'E ORPHAN_TC @ TC#60' | sort)
+[ "$got" = "$want" ] && echo PASS-ident || { echo "FAIL-ident: $got"; exit 1; }
+# Red 삭제 검사도 식별자 이름을 읽는다: 지우면 TEST_REMOVED, 이름만 바꾸면 TEST_NAME_GONE
+git add -A; git commit -qm base
+sedi '/^def test_tc1_login/d' src/test_a.py
+sedi 's/fn tc4_works/fn tc4_renamed/' src/a.rs
+got=$(sh "$st" -b HEAD 2>&1 | grep -E 'TEST_REMOVED|TEST_NAME_GONE' | sed 's/ [0-9a-f]\{40\} / @ /' | sort)
+want=$(printf '%s\n' 'W TEST_NAME_GONE @ TC#4 tc4_works' 'W TEST_REMOVED @ TC#1 test_tc1_login' | sort)
+[ "$got" = "$want" ] && echo PASS-ident-removed || { echo "FAIL-ident-removed: $got"; exit 1; }
