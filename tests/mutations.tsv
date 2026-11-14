@@ -14,9 +14,10 @@ plugins/adk/template/.claude/hooks/hooks-path.sh	[ "$hp" = .githooks ] && [ -x .
 plugins/adk/template/.claude/hooks/hooks-path.sh	[ -z "$own" ] ||	:	tests/pre-commit.test.sh
 plugins/adk/template/.claude/hooks/hooks-path.sh	*) echo "core.hooksPath 가 $hp	*) ;;	tests/pre-commit.test.sh
 plugins/adk/template/.claude/hooks/hooks-path.sh	[ -x .githooks/pre-commit ] || chmod	:	tests/pre-commit.test.sh
-plugins/adk/template/.claude/hooks/hook-lib.sh	segs=$(printf '%s' "$input" | LC_ALL=C awk -f	  segs=$(printf '%s' "$input" | LC_ALL=C awk -f "$here/segments.awk")	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/hook-lib.sh	segs=$(printf '%s' "$input" | LC_ALL=C awk -v needle	  segs=$(printf '%s' "$input" | LC_ALL=C awk -v needle="$1" -f "$here/segments.awk")	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/hook-lib.sh	[ "$e" = "명령을 읽지 못함" ] && deny	:	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/hook-lib.sh	case "$input" in *"$1"*) deny "$e"	  case "$input" in *) pass ;; esac	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/hook-lib.sh	grep -qx H && deny "$e"	  :	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	if (needle != "" && index(s, needle)) print "H"	  x = 0	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case "${1-} ${2-}" in *'$'*	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case "$envs" in *" GH_REPO "*	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$ghexp" ] || deny	:	tests/merge-gate.test.sh
