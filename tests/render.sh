@@ -55,13 +55,13 @@ export R_VERIFY_CMD="true"
 export R_VERIFY_ALLOWED_TOOLS="Bash(true)"
 export R_TEST_LOCATION="소스 옆 {file}.test.sh"
 export R_RELEASE_CMD="echo release"
-export R_MATURITY=alpha R_AUTONOMY=pr R_REVIEWER=github
+export R_MATURITY=alpha R_AUTONOMY=pr R_REVIEWER=github R_BRANCH_STRICT=끔
 
 find "$out" -type f | while IFS= read -r f; do
   # 문자열 치환은 index 로 한다 → 값의 정규식 메타문자와 awk 구현 차이를 피한다
   awk '
     function rep(s, k, v,   i, o) { o = ""; while ((i = index(s, k)) > 0) { o = o substr(s, 1, i - 1) v; s = substr(s, i + length(k)) } return o s }
-    BEGIN { n = split("PROJECT OWNER_REPO SUMMARY STACK VERIFY_CMD VERIFY_ALLOWED_TOOLS TEST_LOCATION RELEASE_CMD MATURITY AUTONOMY REVIEWER", k, " ") }
+    BEGIN { n = split("PROJECT OWNER_REPO SUMMARY STACK VERIFY_CMD VERIFY_ALLOWED_TOOLS TEST_LOCATION RELEASE_CMD MATURITY AUTONOMY REVIEWER BRANCH_STRICT", k, " ") }
     {
       t = $0; sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
       if (t == "# {{CI_SETUP}}" || t == "{{SECRET_FILES_REGEX}}") next
