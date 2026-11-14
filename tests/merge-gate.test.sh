@@ -84,8 +84,18 @@ t '17 abc1234' '{"tool_input":{"command":"gh pr merge --squash 17 --match-head-c
 t '17 abc1234' '{"tool_input":{"command":"gh pr merge --squash 17 --match-head-commit abc1234 </dev/null"}}'
 t '17 -' '{"tool_input":{"command":"gh pr merge --squash 17 > 18"}}'
 t '17 -' '{"tool_input":{"command":"gh pr merge --squash 17 2>18"}}'
+# 연산자 뒤에 오는 인자는 대상 PR 이다 → &·| 를 명령 구분으로 읽어 대상이 다른 명령으로 넘어가지 않는다
+t '17 -' '{"tool_input":{"command":"gh pr merge --squash &>/dev/null 17"}}'
+t '17 -' '{"tool_input":{"command":"gh pr merge --squash >&2 17"}}'
+t '17 -' '{"tool_input":{"command":"gh pr merge --squash >|out 17"}}'
+t '17 -' '{"tool_input":{"command":"gh pr merge --squash >>out 17"}}'
+# heredoc 앞의 fd 번호도 인자가 아니다
+t '- -' '{"tool_input":{"command":"gh pr merge --squash 0<<EOF\nx\nEOF"}}'
+t '0 -' '{"tool_input":{"command":"gh pr merge --squash '"'"'0'"'"'<<EOF\nx\nEOF"}}'
 # 따옴표로 감싼 숫자는 fd 가 아니라 인자다 → 대상 PR 이 빠져 현재 브랜치 PR 로 판정되지 않는다
 t '2 -' '{"tool_input":{"command":"gh pr merge --squash \"2\">x"}}'
+t '2 -' '{"tool_input":{"command":"gh pr merge --squash '"'"'2'"'"'>x"}}'
+t '2 -' '{"tool_input":{"command":"gh pr merge --squash \\2>x"}}'
 t deny '{"tool_input":{"command":"gh pr merge --squash 17 \"2\">x"}}'
 # 리다이렉션 대상 자리의 명령 치환은 명령이다
 t '12 -' '{"tool_input":{"command":"echo > $(gh pr merge --squash 12)"}}'

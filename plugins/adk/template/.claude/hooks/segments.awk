@@ -23,6 +23,8 @@ function jstr(key,    p, i, c, out) {
 
 # drop: 리다이렉션 대상 낱말은 인자가 아니므로 버린다. wq: 지금 낱말에 따옴표·escape 가 있었는지.
 function word_end() { if (inw) { if (drop) drop = 0; else w[nw++] = cur; cur = ""; inw = 0 }; wq = 0 }
+# 따옴표 없이 연산자에 붙은 숫자는 fd 번호다 → 낱말로 남기지 않는다. 따옴표·escape 로 감싼 숫자는 인자다.
+function fdword() { if (inw && !wq && cur ~ /^[0-9]+$/) { cur = ""; inw = 0 } else word_end() }
 function seg_end(    i, line) {
   word_end(); drop = 0
   if (nw > 0) { line = "S"; for (i = 0; i < nw; i++) line = line US w[i]; print line }
@@ -97,7 +99,7 @@ END {
     if (c == ")" && sp > 0 && (sk[sp - 1] == ")" || sk[sp - 1] == "(")) { pop(); i++; continue }
     if (c == "#" && !inw) { while (i <= n && substr(s, i, 1) != "\n") i++; continue }
     if (substr(s, i, 2) == "<<" && substr(s, i, 3) != "<<<") {
-      word_end(); i += 2; strip = 0
+      fdword(); i += 2; strip = 0
       if (substr(s, i, 1) == "-") { strip = 1; i++ }
       while (substr(s, i, 1) ~ /[ \t]/) i++
       d = ""
@@ -113,8 +115,7 @@ END {
     }
     if (c2 == "&>") { word_end(); i += 2; if (substr(s, i, 1) == ">") i++; drop = 1; continue }
     if (c == ">" || c == "<") {
-      # 따옴표 없이 연산자에 붙은 숫자는 fd 번호다. 따옴표로 감싼 숫자는 인자다.
-      if (inw && !wq && cur ~ /^[0-9]+$/) { cur = ""; inw = 0 } else word_end()
+      fdword()
       i++; q = substr(s, i, 1)
       if (c == "<" && substr(s, i, 2) == "<<") i += 2
       else if (q == "&" || q == "|" || q == ">") i++

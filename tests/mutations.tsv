@@ -98,7 +98,13 @@ plugins/adk/template/.claude/hooks/commit-gate.sh	--) end=1 ;;	      --) ;;	test
 plugins/adk/template/.claude/hooks/commit-gate.sh	--message|--file|--template	      --never) want=1 ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	[ "${1-}" = S ] || continue	  continue	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	unwrap "$@"; shift "$drop"	  :	tests/commit-gate.test.sh
-plugins/adk/template/.claude/hooks/segments.awk	if (inw && !wq && cur ~ /^[0-9]+$/) { cur = ""; inw = 0 } else word_end()	      if (inw && cur ~ /^[0-9]+$/) { cur = ""; inw = 0 } else word_end()	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	if (inw && !wq && cur ~ /^[0-9]+$/) { cur = ""; inw = 0 } else word_end()	function fdword() { if (inw && cur ~ /^[0-9]+$/) { cur = ""; inw = 0 } else word_end() }	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	fdword(); i += 2; strip = 0	      word_end(); i += 2; strip = 0	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	if (c2 == "&>") { word_end(); i += 2;	    x = 0	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	if (c == "<" && substr(s, i, 2) == "<<") i += 2	      if (0) i += 2	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	else if (q == "&" || q == "|" || q == ">") i++	      else if (0) i++	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	mode = "s"; inw = 1; wq = 1; i++; continue	    if (c == "'") { mode = "s"; inw = 1; i++; continue }	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	cur = cur substr(s, i + 1, 1); inw = 1; wq = 1 }; i += 2; continue	    if (c == "\\") { if (substr(s, i + 1, 1) != "\n") { cur = cur substr(s, i + 1, 1); inw = 1 }; i += 2; continue }	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/segments.awk	sp++; mode = "n"; cur = ""; inw = 0; nw = 0; drop = 0; wq = 0	  sp++; mode = "n"; cur = ""; inw = 0; nw = 0; wq = 0	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/segments.awk	function word_end() { if (inw) { if (drop) drop = 0; else w[nw++] = cur;	function word_end() { if (inw) { cur = ""; inw = 0 }; wq = 0 }	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/segments.awk	word_end(); drop = 0	  word_end()	tests/merge-gate.test.sh
