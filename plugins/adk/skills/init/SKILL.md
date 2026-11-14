@@ -35,8 +35,8 @@ disable-model-invocation: true
 | `{{CI_SETUP}}` | CI 런타임 준비 step (setup-java, setup-node 등) | 스택 관례 |
 | `{{RELEASE_CMD}}` | 태그 시 산출물 빌드·배포 명령 | 없으면 step 삭제 |
 | `{{MATURITY}}` | poc / alpha / beta / ga | alpha |
-| `{{AUTONOMY}}` | pr (리뷰 반영·merge 는 지시 후) / merge (merge 까지 자동) | pr |
-| `{{REVIEWER}}` | GitHub 에서 Claude(`@claude`·자동 리뷰)를 쓸 수 있는지 → github / local (로컬 세션의 subagent 리뷰) | github |
+| `{{AUTONOMY}}` | 팀원 리뷰가 있는지 → pr (ready 까지 자동, 팀원 리뷰 대응·merge 는 `/adk:watch`) / merge (팀원 리뷰 없음, merge 까지 자동) | pr |
+| `{{REVIEWER}}` | GitHub 에서 Claude(`@claude`·자동 리뷰)를 쓸 수 있고 쓰려는지 → github (로컬 리뷰 없이 PR 의 Claude 리뷰) / local (push 전 로컬 세션의 subagent 리뷰) | github |
 
 ## 3. 적용
 
@@ -51,7 +51,6 @@ disable-model-invocation: true
   - `claude.yml` 의 `{{CI_SETUP}}` step 에는 `if: steps.secret.outputs.ok == 'true'` 를 붙인다.
   - dependabot 에 스택의 `package-ecosystem` 을 `github-actions` 항목과 같은 형식(월 1회, 생태계마다 group 하나)으로 추가한다.
   - `{{AUTONOMY}}` 는 CLAUDE.md 자율 범위 표와 대체 글머리에서 고르지 않은 값의 행·줄을 지운다. "리뷰 조사 (두 값 공통)" 은 남긴다.
-  - `merge` 면 `.claude/settings.json` allow 에 `Bash(gh pr ready:*)`, `Bash(gh pr merge --squash:*)`, `Bash(git worktree remove:*)` 를 더한다.
   - `{{REVIEWER}}` 는 CLAUDE.md "리뷰" 에서 고르지 않은 값의 글머리를 지운다. `local` 이면 `claude.yml`·`claude-review.yml` 을 복사하지 않고, CLAUDE.md GIT 절의 `@claude` 글머리 묶음도 지운다.
 - `docs/spec_{function}.md.example` 은 첫 UC 스펙을 쓸 때 복사하도록 그대로 둔다.
 

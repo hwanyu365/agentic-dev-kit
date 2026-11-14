@@ -39,8 +39,8 @@ claude plugin install adk@agentic-dev-kit
 flowchart LR
   I[요청 또는 GitHub Issue] --> S["/adk:spec"] --> T["/adk:tdd"] --> V["/adk:verify"] --> P["/adk:ship"]
   S -->|chore| V
-  P -->|자율 범위 pr| R[리뷰 보고 → 지시 → 반영 → merge]
-  P -->|자율 범위 merge| M[리뷰 반영 → squash merge]
+  P -->|자율 범위 pr| R["ready → 보고 → /adk:watch: 팀원 리뷰 반영 → 승인 → squash merge"]
+  P -->|자율 범위 merge| M[ready → squash merge]
   R & M --> L["/adk:release"]
 ```
 
@@ -50,7 +50,8 @@ flowchart LR
 | `/adk:spec [이슈]` | 워크트리·브랜치 생성·기준선 검증 → `docs/spec_{function}.md` 갱신, 요구사항 ID·TC 부여, `[확인필요]` 0건. 이슈가 없으면 확인받고 생성 |
 | `/adk:tdd` | TC 로 테스트 먼저(Red) → 최소 구현(Green) → 정리. 같은 TC 수정이 3번 실패하면 멈춤. 리뷰 지적은 같은 입력이 들어오는 자리를 전수로 세고 테스트부터 |
 | `/adk:verify` | 검증 명령 + 스펙 항목별 구현 위치·TC·Then 단언 대조와 diff → 스펙 역대조(대화 이력 없는 subagent) + 보안 경계 mutation 표 + 차단 장치의 이전 버전 비교 + 변경 범위 점검. chore 는 대조 생략 |
-| `/adk:ship` | 커밋(막는 장치를 바꾸면 push 전 사전 리뷰) → draft PR → CI·리뷰 조사 → 후속 건 이슈 등록(`pr` 은 후보 보고) → 반복 지적은 규칙화 이슈로 → 멈춤 판정(B·S 는 재리뷰 2라운드까지, Nits 만 남으면 merge 가능) → 사람 리뷰·승인이 필요하면 amend·push → 회신 → 재리뷰 요청 → 자율 범위에 따라 보고 또는 merge |
+| `/adk:ship` | 커밋(리뷰 `local` 이면 push 전 로컬 리뷰) → draft PR → CI·리뷰 조사·반영 → 후속 건 이슈 등록 → 반복 지적은 규칙화 이슈로 → 멈춤 판정(B·S 는 재리뷰 2라운드까지, Nits 만 남으면 merge 가능) → ready → 자율 범위 `pr` 은 리뷰 요청 확인·보고, `merge` 는 squash merge |
+| `/adk:watch <PR>` | 자율 범위 `pr` 에서 ready 된 PR 감시 → 팀원 리뷰 조사·반영(amend·push) → 스레드 회신·resolve → 재리뷰 요청 → 현재 head 승인 뒤 squash merge. PRD·스펙 변경을 부르는 지적은 멈추고 보고 |
 | `/adk:release <버전>` | 자동 테스트가 없는 TC 확인 → 태그 → 릴리스 워크플로 확인 → 배포 후 확인 목록 |
 | `/adk:handoff` | main 클론의 `.adk/handoff.md` 에 현재 상태 기록 |
 
@@ -81,8 +82,8 @@ flowchart LR
 
 | 값 | agent 가 묻지 않고 하는 일 |
 | --- | --- |
-| `pr` (기본) | draft PR, CI, 리뷰 조사·보고까지. 반영·merge 는 지시 후 |
-| `merge` | 리뷰 반영·squash merge 까지 |
+| `pr` (기본) | 팀원 리뷰가 있는 저장소. 리뷰·CI 반영 → ready 까지. 팀원 리뷰 대응·merge 는 `/adk:watch` 실행 후 |
+| `merge` | 팀원 리뷰가 없는 저장소. 리뷰 반영·squash merge 까지 |
 
 어느 쪽이든 스펙에 없는 결정, 비용, 클라우드·Secrets, 운영 데이터, 자율 범위·성숙도의 변경은 먼저 묻는다.
 

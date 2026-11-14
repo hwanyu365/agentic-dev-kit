@@ -60,11 +60,11 @@ HEAD: <PR head SHA>
 - 실제로 돌린 명령과 결과 / 돌리지 못한 것 (돌릴 수 있는 검증 명령·테스트는 돌린다. 남기는 것은 막힌 이유와 필요한 것을 적는다)
 ```
 
-## 사전 리뷰 (`/adk:ship` 1-1)
+## 로컬 리뷰 (`/adk:ship` 1-1)
 
-- 읽기 전용 subagent(`adk:reviewer`)에게 위 블록을 넘긴다. PR 이 아직 없으므로 필드를 이렇게 채운다.
-  - `PR NUMBER`: 없음. `HEAD`: 로컬 `git rev-parse HEAD`
-  - 범위: `git diff --merge-base origin/main` (커밋 전 변경 포함)과 미추적 파일
-  - "이전 라운드" 단계는 건너뛴다 → PR 코멘트가 아직 없다
-- Blocking·Should Fix 가 0건이 된 뒤 push 한다 → PR 리뷰는 고칠 것을 처음 찾는 자리가 아니라 확인하는 자리가 된다.
-- 사전 리뷰가 찾은 우회·오탐 입력은 테스트로 고정한다.
+- 읽기 전용 subagent(`adk:reviewer`)에게 위 블록을 넘긴다. push 전이므로 필드를 이렇게 채운다.
+  - `PR NUMBER`: 이 브랜치의 PR 번호, 아직 없으면 없음. `HEAD`: push 할 로컬 `git rev-parse HEAD`
+  - 범위: `git diff --merge-base origin/main` 과 미추적 파일
+  - "이전 라운드" 단계는 PR 이 없으면 건너뛴다 → PR 코멘트가 아직 없다
+- Blocking·Should Fix 가 0건이 된 뒤 push 한다. 반환된 요약은 push 뒤 PR 코멘트로 남긴다 (`/adk:ship` 3) → `HEAD:` 가 push 한 head 와 같아 merge 게이트가 현재 head 의 요약으로 읽는다.
+- 로컬 리뷰가 찾은 우회·오탐 입력은 테스트로 고정한다.
