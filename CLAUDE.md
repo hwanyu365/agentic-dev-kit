@@ -8,6 +8,7 @@ agent 가 SDD + TDD 로 개발하게 하는 프로젝트 틀(`plugins/adk/templa
 - 템플릿 자리표시자를 추가·삭제하면 `plugins/adk/skills/init/SKILL.md` 의 자리표시자 표와 `plugins/adk/skills/init/update.md` 의 "읽는 곳" 표를 함께 고친다
   - 자리표시자는 `{{NAME}}` 형식이다. YAML 안에서는 주석 줄이나 block scalar(`run: |`) 안에 둬서 치환 전에도 파싱되게 한다
 - 리뷰 기준을 바꾸면 `plugins/adk/template/.github/workflows/claude-review.yml` 의 prompt 와 `plugins/adk/skills/ship/review.md` 를 함께 고친다
+  - adk 자체 PR 리뷰 `.github/workflows/claude-review.yml` 도 맞춘다. 템플릿과 다른 곳은 확인할 것의 첫 두 항목(스펙이 저장소 밖에 있음)과 merge 게이트를 가리키는 주석(adk 에는 hook 이 없음)뿐이다
 - 템플릿에는 특정 프로젝트의 경로·이름·이슈 번호를 넣지 않는다. 사례는 `docs/benchmark.md` 나 적용 예 저장소로 보낸다
 - 새 방법론 요소를 들일 때는 `docs/benchmark.md` 에 출처·이유·위치를 적고, 들이지 않기로 한 것도 이유와 함께 남긴다
 - `plugins/adk/template/docs/rules_spec.md` 사본은 사용자 전역 규칙(`E:\01_dev\_docs\rules_spec.md`)과 같은 내용을 유지한다. 특정 프로젝트 사례는 양쪽 모두 넣지 않는다
