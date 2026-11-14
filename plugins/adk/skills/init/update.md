@@ -17,7 +17,7 @@
 | `{{SECRET_FILES_REGEX}}` | `.github/secret-files.regex` 의 기본 목록 밖 줄 |
 | `{{CI_SETUP}}`·`{{RELEASE_CMD}}` | `ci.yml`·`release.yml` 의 해당 step |
 | `{{MATURITY}}`·`{{AUTONOMY}}` | `CLAUDE.md` 의 성숙도·자율 범위 절 제목 |
-| `{{BRANCH_STRICT}}` | `CLAUDE.md` GIT 절의 `main` 브랜치 보호 줄. 없으면 브랜치 보호·ruleset 의 strict 현재 값을 기본값으로 묻는다 |
+| `{{BRANCH_STRICT}}` | `CLAUDE.md` GIT 절 `main` 브랜치 보호 줄의 `브랜치 최신 요구:` 바로 뒤 백틱 값 (그 뒤 괄호는 설명). 없으면 브랜치 보호·ruleset 의 strict 현재 값을 기본값으로 묻는다 |
 | `{{REVIEWER}}` | `CLAUDE.md` 의 리뷰 줄. 없으면 `claude-review.yml` 이 있으면 `github`, 없으면 `local` 을 기본값으로 묻는다 |
 
 - 읽은 값은 표로 보여 주고 확인받는다.
