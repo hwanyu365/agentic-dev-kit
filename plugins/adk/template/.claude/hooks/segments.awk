@@ -67,6 +67,8 @@ function skip_heredocs(    k, line, e) {
 END {
   if (bad) exit
   cwd = jstr("cwd"); if (cwd == "\001") cwd = ""
+  # 출력은 줄 단위다 → cwd 의 줄바꿈이 H·S 줄처럼 읽히지 않게 지운다.
+  gsub("[\n\r" US "]", "", cwd)
   if (cwd ~ /^[A-Za-z]:\\/) gsub(/\\/, "/", cwd)
   s = jstr("command"); if (s == "\001") fail("명령을 읽지 못함")
   print "C" US cwd

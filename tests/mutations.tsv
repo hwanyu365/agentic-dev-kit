@@ -18,6 +18,7 @@ plugins/adk/template/.claude/hooks/hook-lib.sh	segs=$(printf '%s' "$input" | LC_
 plugins/adk/template/.claude/hooks/hook-lib.sh	[ "$e" = "명령을 읽지 못함" ] && deny	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/hook-lib.sh	grep -qx H && deny "$e"	  :	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/segments.awk	if (needle != "" && index(s, needle)) print "H"	  x = 0	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/segments.awk	gsub("[\n\r" US "]", "", cwd)	  x = 0	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case "${1-} ${2-}" in *'$'*	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case "$envs" in *" GH_REPO "*	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$ghexp" ] || deny	:	tests/merge-gate.test.sh

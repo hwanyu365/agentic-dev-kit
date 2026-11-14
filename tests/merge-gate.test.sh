@@ -68,6 +68,7 @@ t none '{"tool_input":{"command":"echo ${X:-$(date)}"}}'
 t none '{"session_id":"s","transcript_path":"/home/gh/.claude/x.jsonl","cwd":"E:\\x\\Foresight","tool_input":{"command":"echo ${X:-$(date)}"}}'
 t none '{"cwd":"/w/Foresight","tool_input":{"command":"echo \"unclosed"}}'
 t deny '{"cwd":"/w/Foresight","tool_input":{"command":"m=mer; gh pr ${m}ge 12"}}'
+t none '{"cwd":"/w/a\nH","tool_input":{"command":"echo \"unclosed"}}'
 t deny '{"cwd":"/w/other","tool_input":{"command":"echo ${X:-$(gh pr merge --squash 12)}"}}'
 # 명령 해석기를 실행하지 못하면 막는다
 x=$(mktemp -d) && cp "$g" "$(dirname "$g")/hook-lib.sh" "$x/"
