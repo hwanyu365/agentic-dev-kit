@@ -110,7 +110,7 @@ t 0 'timeout --signal=KILL 5 make'
 # TC#36 해석에 실패하면 commit 글자가 있을 때만 막는다
 t 2 'echo \"unclosed git commit'
 t 0 'echo \"unclosed'
-# TC#40 해석 실패의 commit 글자는 명령에서만 찾는다 → 저장소 경로의 글자로 막지 않는다
+# TC#67 해석 실패의 commit 글자는 명령에서만 찾는다 → 저장소 경로의 글자로 막지 않는다
 got=$(printf '%s' '{"cwd":"/w/commit-tools","transcript_path":"/h/commit/x.jsonl","tool_input":{"command":"echo \"unclosed"}}' | sh "$g" 2>&1); rc=$?
 [ $rc -eq 0 ] || { echo "FAIL(0) cwd 에 commit → $rc $got"; fail=1; }
 [ $fail -eq 0 ] && echo PASS || exit 1
