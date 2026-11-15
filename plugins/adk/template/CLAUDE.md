@@ -69,7 +69,9 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
   - pre-commit 은 git 이 실제로 커밋하는 작업 트리에서 돈다 → 워크트리·`git -C`·alias 와 무관하게 그 트리의 비밀 파일과 검증 기록을 본다. hook 경로(`core.hooksPath`)는 세션 시작 hook 과 `verify.sh` 가 `.githooks` 로 맞춘다. `.git/hooks` 에 기존 hook 이 있거나 다른 경로면 바꾸지 않고 실패한다 → 사람이 정리한다. 정리될 때까지는 커밋 명령 직전 hook 이 `git commit`·`git … commit` 을 막는다.
     - pre-commit 을 건너뛰는 명령은 `.claude/settings.json` deny 가 막는다: `--no-verify`(약어 포함), `git commit -n`·`git … commit … -n`, `hooksPath`(소문자·대문자 표기), `GIT_CONFIG*`, `commit-tree`, `hash-object`.
     - 커밋 게이트(`.claude/hooks/commit-gate.sh`, 모든 Bash 명령 직전)는 `git … commit` 의 옵션을 해석해 짧은 옵션 묶음 안의 `-n`(`-anm`)과 `--no-verify` 약어를 막는다. 값 자리(`-m "-n"`)와 `--` 뒤 경로는 옵션으로 보지 않는다. git 전역 옵션 `-c`·`--config-env` 와 `git config` 로 `core.hooksPath`·`help.autocorrect`·`alias.*`·`include.*`·`includeIf.*` 를 바꾸는 명령, 명령 앞 `GIT_CONFIG*` 환경변수도 막는다 (설정·환경변수 이름은 대소문자 무관). `git config` 는 인자 위치를 가리지 않고 판정한다 → 그 이름의 조회(`--get`)·해제·값 자리 글자도 막힌다. deny 의 `hooksPath` 글자 규칙도 조회를 막는다. `git commit` 에 `--git-dir`·`--work-tree` 나 앞 환경변수 `GIT_DIR`·`GIT_WORK_TREE`·`GIT_COMMON_DIR` 가 있으면 값과 무관하게 막는다 → 다른 저장소의 hook 설정으로 커밋하지 않게 한다. 게이트가 모르는 git 전역 옵션은 값을 받는지 알 수 없다 → 뒤 낱말에 `commit`·`config`·`-c`·`--config-env` 가 있으면 막는다. 감싸는 명령(`env`·`time`·`exec`·`sudo`·`xargs` 등)의 옵션은 해석하지 않는다 → 벗긴 뒤 첫 낱말이 git 이 아닌데 남은 낱말에 `git` 이 있으면 막는다 (`env -u X git …`). `env -S`·`--split-string` 은 env 가 문자열 안의 이스케이프·변수를 펼치므로 내용과 무관하게 막는다.
-    - 막지 못하는 범위: 앞 명령의 `export GIT_DIR=…`·`export GIT_CONFIG_…=…`·`cd` 로 옮긴 다른 저장소, 게이트가 모르는 감싸는 명령 뒤의 git, 위에 적은 설정 밖의 `-c` 설정, 설정 파일에 정의된 git alias(`git ci -n`), `sh -c "git commit -n"`·스크립트 파일 안의 커밋은 명령 문자열로 판정할 수 없어 통과한다. 커밋 명령 직전 hook(`hooks-path.sh --check`)은 명령을 실행하기 전에 세션 작업 트리만 본다 → 한 명령 안에서 권한을 지우고 커밋하는 경우(`chmod -x … && git commit`), `.githooks/pre-commit` 이 없거나 실행할 수 없는 다른 워크트리의 `git -C … commit`, hook 경로가 틀린 클론에서 `env git commit`·`sh -c "git commit"` 처럼 `if` 패턴에 맞지 않는 커밋은 통과한다. rebase·cherry-pick·revert·merge 가 만드는 커밋은 pre-commit 을 거치지 않는다.
+    - 명령 해석은 셸과 같은 자리에서 끊는다: `(`·`{`·`}`·`!` 는 명령 자리(첫 낱말 앞, 예약어·`time`·`function 이름` 뒤)에서만 연산자이고, 함수 정의 `f() { …; }` 의 본문은 명령으로 읽으며, `<(…)`·`>(…)` 는 바깥 명령의 낱말 하나다 (`git commit 2> >(cat) -anm x` 도 막힘). 명령 자리 밖의 `(`(배열·extglob 등)는 해석하지 않으므로 `commit` 글자가 있으면 막는다.
+    - 실행할 때 정해지는 낱말(변수·`$(…)`·백틱·`$'…'`·glob·brace)은 펼친 뒤를 알 수 없다 → `git commit` 의 `--` 앞에서 따옴표 밖 확장은 자리와 무관하게, 따옴표 안 확장(`"$X"`)은 옵션 자리에서 막는다. 값 자리의 따옴표 안 확장(`-m "$(cat <<'EOF' …)"`, `-F "$F"`)은 통과한다. 확장이 명령 이름·git 전역 옵션 자리에 오고 뒤에 `commit`·`config` 가 있거나, git 전역 옵션·하위 명령 자리에 따옴표 밖 확장이 오거나(`git $S …`), 그 자리가 따옴표 안 확장이면 뒤 낱말을 commit 인자로 읽어(`git "$S" -nm x`) 막는다. 또 `-c`·`git config` 의 인자에 확장이 있어도 막는다.
+    - 막지 못하는 범위: 명령 전체가 확장에서 오는 경우(`$CMD`·`eval "…"`), 앞 명령의 `export GIT_DIR=…`·`export GIT_CONFIG_…=…`·`cd` 로 옮긴 다른 저장소, 게이트가 모르는 감싸는 명령 뒤의 git, git 전역 옵션 값의 따옴표 밖 확장(`git -C $D …`)이 쪼개져 `commit` 이 되는 경우, 위에 적은 설정 밖의 `-c` 설정, 설정 파일에 정의된 git alias(`git ci -n`), `sh -c "git commit -n"`·스크립트 파일 안의 커밋은 명령 문자열로 판정할 수 없어 통과한다. 커밋 명령 직전 hook(`hooks-path.sh --check`)은 명령을 실행하기 전에 세션 작업 트리만 본다 → 한 명령 안에서 권한을 지우고 커밋하는 경우(`chmod -x … && git commit`), `.githooks/pre-commit` 이 없거나 실행할 수 없는 다른 워크트리의 `git -C … commit`, hook 경로가 틀린 클론에서 `env git commit`·`sh -c "git commit"` 처럼 `if` 패턴에 맞지 않는 커밋은 통과한다. rebase·cherry-pick·revert·merge 가 만드는 커밋은 pre-commit 을 거치지 않는다.
 - CI(`.github/workflows/ci.yml`)도 같은 명령과 추적성 검사(`.github/spec-trace.sh`)를 실행한다.
 - 완료 판정은 스펙 §3·§4·§6 항목별로 구현 위치와 TC 를 대조하고, 반대로 diff 의 새 분기·문구마다 근거 스펙 ID 를 찾는다 (`docs/rules_spec.md` §2.2, `/adk:verify`).
 - 막는 장치를 바꿨으면 이전 버전들과 같은 입력으로 판정을 비교해, 다시 풀린 입력이 의도한 것인지 확인한다 (`/adk:verify` 2-3).
@@ -123,6 +125,7 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
 - 티켓: GitHub Issues. 표기 `GH-{번호}`
 - 브랜치: `{feat|bugfix|chore}/GH-{번호}`, 하위 이슈는 `{feat|bugfix|chore}/GH-{상위}-{하위}`
 - 워크트리: `../{{PROJECT}}-GH-{번호}`
+- 커밋·merge 명령의 변수·명령 치환은 큰따옴표로 감싼다 (`git commit -F "$F"`, `gh pr merge … -b "$BODY"`) → 따옴표 밖 확장은 커밋·merge 게이트가 막는다
 - 커밋 메시지
 
   ```
@@ -149,9 +152,10 @@ SDD + TDD: 이슈 → 스펙 갱신 → TC 작성(Red) → 구현(Green) → Ref
   - 같은 유형의 지적이 두 번째로 나오면 규칙으로 올린다 (`/adk:ship` 3-3). 기계로 막을 수 있으면 hook·CI, 아니면 이 파일에 한 줄.
   - `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막는다.
     - gh 명령에 merge 글자가 보이면 `gh pr merge` 이거나 허용 하위 명령이어야 한다. 그 밖의 명령(허용 명령 `git`·`echo`·`grep` 등 제외)은 낱말 `merge` 또는 `gh…merge` 가 보이면 막는다. gh 하위 명령 자리의 확장과, 명령에 gh 가 보이는 해석 실패도 막는다 (hook 입력의 `cwd`·`transcript_path` 는 보지 않는다).
-    - Dependabot PR(작성자 `app/dependabot`)은 리뷰 방식과 관계없이 세션 gh 계정의 요약도 인정한다. 대신 모든 커밋이 Dependabot 작성·서명이고 모든 업데이트가 patch·minor 여야 한다 → 세션이 그 브랜치에 더한 코드를 스스로 승인하지 못한다.
+    - Dependabot PR(작성자 `app/dependabot`)은 리뷰 방식과 관계없이 세션 gh 계정의 요약도 인정한다. 대신 모든 커밋이 Dependabot 작성이고 GitHub(`web-flow`)가 서명한 커밋이며 모든 업데이트가 patch·minor 여야 한다 → 세션이 그 브랜치에 더한 코드를 스스로 승인하지 못한다.
     - `gh pr merge` 의 플래그는 허용 목록(`-s`·`-d`·`--match-head-commit`·`-t`·`-b`·`-F`·`-A`)만 받고 `--squash` 가 있어야 한다 → `--admin`(브랜치 보호 우회)·`--auto`(판정 뒤 다른 시점에 merge)·짧은 옵션 묶음 등은 막는다.
-    - 막지 못하는 범위: 스크립트 파일·gh alias 안의 merge, 글자를 감춘 merge, REST API 직접 호출(`curl … /pulls/N/merge` 등). 브랜치 보호(CI 필수)가 있으면 그것이 최종 경계이고, 없는 저장소는 이 게이트가 유일한 경계다.
+    - `gh pr merge` 인자의 따옴표 밖 확장(`-b $X`)은 쪼개져 플래그가 될 수 있어 막는다. 값 자리의 따옴표 안 확장(`-b "$BODY"`)은 통과한다. 앞에서 확장 낱말을 `export` 한 뒤의 merge 도 막는다 (`export $V` 가 `GH_REPO` 를 정할 수 있다).
+    - 막지 못하는 범위: 스크립트 파일·gh alias 안의 merge, 글자를 감춘 merge, REST API 직접 호출(`curl … /pulls/N/merge` 등), REST API 로 Dependabot 브랜치에 만든 커밋(GitHub 가 `web-flow` 로 서명하고 작성자는 요청이 정한다). 브랜치 보호(CI 필수)가 있으면 그것이 최종 경계이고, 없는 저장소는 이 게이트가 유일한 경계다.
 - **코드 변경은 세션이 직접 커밋한다. `@claude` 에게 맡기지 않는다.**
   - `claude-code-action` 의 push 는 actor 가 bot 으로 기록된다 → 워크플로가 승인 대기가 되고 리뷰는 bot actor 로 거부된다. 저장소 Actions 승인 정책을 느슨하게 해도 그대로다.
   - 커밋 author 는 `claude[bot]` 으로 찍히지만 그 주소의 ID 는 bot 계정의 것이다 → author 로 actor 를 짐작할 수 없다.
