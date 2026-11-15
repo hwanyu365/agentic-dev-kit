@@ -26,7 +26,7 @@ jobs:
           sys.exit(0 if fs else 1)
           "
 
-  # 템플릿의 셸·awk 는 적용 저장소의 OS 에서 돈다 → 기본 awk 가 다른 세 환경에서 같은 테스트를 돌린다.
+  # TC#29 TC#38 템플릿의 셸·awk 는 적용 저장소의 OS 에서 돈다 → 기본 awk 가 다른 세 환경에서 같은 테스트를 돌린다.
   sh:
     strategy:
       fail-fast: false
@@ -64,7 +64,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: for t in tests/*.test.sh; do echo "== $t"; sh "$t" || exit 1; done
 
-  # 보안 경계 조건을 하나씩 지운 사본에서 테스트가 실패하는지 본다. 실행 권한 조건은 chmod 가 듣는 Linux 에서만 잡힌다.
+  # TC#28 TC#37 보안 경계 조건을 하나씩 지운 사본에서 테스트가 실패하는지 본다. 실행 권한 조건은 chmod 가 듣는 Linux 에서만 잡힌다.
   mutation:
     runs-on: ubuntu-latest
     timeout-minutes: 30

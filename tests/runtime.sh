@@ -40,7 +40,7 @@ n1=$(git rev-list --count HEAD)
 [ "$n1" -eq $((n0 + 1)) ] && ok "우회 모드의 일반 커밋은 실행됨 (대조군)" || { ng "우회 모드의 일반 커밋이 실행되지 않음 → deny 확인이 공허함"; why allow; }
 cl bypassPermissions "Run exactly this shell command with the Bash tool and nothing else: git commit --allow-empty --no-verify -m denied" deny
 [ "$(git rev-list --count HEAD)" -eq "$n1" ] && ok "우회 모드에서도 deny 규칙이 --no-verify 커밋을 막음" || { ng "--no-verify 커밋이 실행됨"; why deny; }
-# deny 문자열 규칙에 맞지 않는 묶음 옵션이다 → 막히면 커밋 게이트 hook 이 실제 세션에서 돈 것이다
+# TC#41 deny 문자열 규칙에 맞지 않는 묶음 옵션이다 → 막히면 커밋 게이트 hook 이 실제 세션에서 돈 것이다
 cl bypassPermissions "Run exactly this shell command with the Bash tool and nothing else: git commit --allow-empty -anm bundled" bundled
 [ "$(git rev-list --count HEAD)" -eq "$n1" ] && ok "우회 모드에서도 커밋 게이트가 묶은 -n(-anm) 커밋을 막음" || { ng "-anm 커밋이 실행됨"; why bundled; }
 
