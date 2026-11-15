@@ -14,7 +14,17 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # 추적성 검사가 분기점을 구한다. base 끝과 비교하면 분기 뒤 main 에 추가된 테스트가 삭제로 보인다.
+          fetch-depth: 0
       - run: npx -y @anthropic-ai/claude-code@2.1.319 plugin validate .
+      - name: Spec trace
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          # main push 는 직전 커밋이 기준이다 → 그 merge 가 더한 미확인 태그만 실패로 본다.
+          if [ -n "$BASE" ]; then b="origin/$BASE"; elif git rev-parse -q --verify HEAD^ >/dev/null; then b=HEAD^; else b=""; fi
+          sh plugins/adk/template/.github/spec-trace.sh ${b:+-b "$b"} -- ':(exclude)docs/' ':(exclude)*.md' ':(exclude)plugins/adk/template/docs/' ':(exclude)plugins/adk/template/.github/spec-trace.sh'
       # 템플릿 YAML 은 자리표시자 치환 전에도 파싱돼야 한다 (CLAUDE.md 수정 규칙).
       - run: |
           python3 -m pip install -q --break-system-packages pyyaml==6.0.3

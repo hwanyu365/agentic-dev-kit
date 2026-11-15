@@ -27,6 +27,6 @@ mk 'false
 true'; t "여러 줄 앞줄 실패" "$(v)" 1
 mk 'echo x | grep -q x && test -f a.txt'; t "파이프 + && 통과" "$(v)" 0
 mk 'cd src && true'; t "검증 명령 안의 cd" "$(v)" 0; t "검증 명령 안의 cd check" "$(c)" 0
-printf '## 7. t\n| TC | 대상 |\n| --- | --- |\n| `TC#1` | [FR#9] |\n' >> docs/specification.md
+printf '## 7. t\n| TC | 대상 |\n| --- | --- |\n| `TC''#1` | [FR#9] |\n' >> docs/specification.md
 mk true; t "스펙 결함" "$(v)" 1; t "스펙 결함 check" "$(c)" 2
 [ $fail -eq 0 ] && echo PASS || exit 1

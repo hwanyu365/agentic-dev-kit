@@ -1,7 +1,13 @@
 #!/bin/sh
 # 템플릿 .github/spec-trace.sh 검사: 템플릿 양식 스펙 + 결함을 심은 fixture 저장소에서 기대 출력과 비교한다.
 set -eu
-st=$(cd "$(dirname "$0")/.." && pwd)/plugins/adk/template/.github/spec-trace.sh
+# 시험 입력의 TC 번호는 `@` 를 넣어 쓰고 실행 사본에서 지운다 → adk 자신의 추적성 검사가 시험 입력을 실제 TC 의 테스트로 세지 않는다.
+if [ -z "${SPEC_TRACE_TEST_ROOT:-}" ]; then
+  SPEC_TRACE_TEST_ROOT=$(cd "$(dirname "$0")/.." && pwd); export SPEC_TRACE_TEST_ROOT
+  self=$(mktemp); sed 's/\([Tt][Cc]\)@/\1/g' "$0" > "$self"
+  rc=0; sh "$self" || rc=$?; rm -f "$self"; exit $rc
+fi
+st=$SPEC_TRACE_TEST_ROOT/plugins/adk/template/.github/spec-trace.sh
 r=$(mktemp -d); trap 'rm -rf "$r"' EXIT
 cd "$r"; git init -q; git config user.email t@t; git config user.name t
 # BSD sed 의 -i 는 다음 인자를 백업 확장자로 읽는다 → 제자리 수정은 이 함수로 한다
@@ -27,32 +33,32 @@ Given `FR#9` 코드블록 안은 정의가 아니다
 ## 7. 테스트 및 검증 기준
 | TC | 시나리오 | 대상 | 비고 |
 | --- | --- | --- | --- |
-| `TC#1` | 결제 | [FR#1, API#1] | |
-| `TC#2` | 영수증 | [FR#2] | |
-| `TC#3` | 지연 | [NFR#1] | (통합 — other/repo) |
-| `TC#4` | 없는 대상 | [FR#7] | |
-| `TC#5` | 대상 없음 | §4 | |
-| `TC#7` | 화면 | [FR#2] | (수동) 화면 확인 |
+| `TC@#1` | 결제 | [FR#1, API#1] | |
+| `TC@#2` | 영수증 | [FR#2] | |
+| `TC@#3` | 지연 | [NFR#1] | (통합 — other/repo) |
+| `TC@#4` | 없는 대상 | [FR#7] | |
+| `TC@#5` | 대상 없음 | §4 | |
+| `TC@#7` | 화면 | [FR#2] | (수동) 화면 확인 |
 ## 부록. 변경 이력
 - GH-1: [확인필요] 해소 (부록은 검사하지 않음)
 MD
-printf 'test("TC#1 결제", ()=>{})\ntest("TC#2 영수증", ()=>{})\ntest("TC#4 x", ()=>{})\ntest("TC#5 y", ()=>{})\n' > src/pay.test.js
+printf 'test("TC@#1 결제", ()=>{})\ntest("TC@#2 영수증", ()=>{})\ntest("TC@#4 x", ()=>{})\ntest("TC@#5 y", ()=>{})\n' > src/pay.test.js
 git add -A; git commit -qm base
-sedi 's/test("TC#2 영수증", ()=>{})//' src/pay.test.js
-printf 'test("TC#6 고아", ()=>{})\n' > src/new.test.js
+sedi 's/test("TC@#2 영수증", ()=>{})//' src/pay.test.js
+printf 'test("TC@#6 고아", ()=>{})\n' > src/new.test.js
 sedi 's/3초 안 \[요구사항\]/3초 안 [확인필요] 측정 방법 미정/' docs/spec_pay.md
 got=$(sh "$st" -b HEAD | sed "s/ $(git rev-parse HEAD) / BASE /" || true)
 want='E NO_TC docs/spec_pay.md:3 US#2
 E NO_TC docs/spec_pay.md:6 FR#3
-E NO_TEST docs/spec_pay.md:21 TC#2
-E ORPHAN_TC src/new.test.js:1 TC#6
-E TC_NO_TARGET docs/spec_pay.md:24 TC#5
+E NO_TEST docs/spec_pay.md:21 TC@#2
+E ORPHAN_TC src/new.test.js:1 TC@#6
+E TC_NO_TARGET docs/spec_pay.md:24 TC@#5
 E UNCONFIRMED docs/spec_pay.md:7 -
 E UNDEF_REF docs/spec_pay.md:23 FR#7
-M MANUAL docs/spec_pay.md:22 TC#3
-M MANUAL docs/spec_pay.md:25 TC#7
+M MANUAL docs/spec_pay.md:22 TC@#3
+M MANUAL docs/spec_pay.md:25 TC@#7
 W NO_TC docs/spec_pay.md:16 D#1
-W TEST_REMOVED BASE TC#2 영수증
+W TEST_REMOVED BASE TC@#2 영수증
 W UNCONFIRMED_OLD docs/spec_pay.md:6 -'
 [ "$got" = "$want" ] && echo PASS || { echo FAIL; echo "$want" > w; echo "$got" > g; diff w g || true; exit 1; }
 sh "$st" >/dev/null && { echo "FAIL: 결함이 있는데 exit 0"; exit 1; }
@@ -79,16 +85,16 @@ cat > "docs/spec_b c.md" <<'MD'
 ## 7. 테스트
 | TC | 대상 | 비고 |
 | --- | --- | --- |
-| `TC#1` | [FR#1, NFR#1] | |
-| `TC#1` | [FR#1] | |
+| `TC@#1` | [FR#1, NFR#1] | |
+| `TC@#1` | [FR#1] | |
 MD
-printf 'test("TC#1 x", ()=>{})\n' > src/b.test.js
+printf 'test("TC@#1 x", ()=>{})\n' > src/b.test.js
 got=$(sh "$st" | sort || true)
-want=$(printf '%s\n' 'E DUP_ID docs/spec_b c.md:4 FR#1' 'E DUP_TC docs/spec_b c.md:9 TC#1' 'E NO_TC docs/specification.md:4 BR#2' 'E UNCONFIRMED docs/spec_b c.md:3 -' 'W UNCONFIRMED_MENTION docs/specification.md:5 -' | sort)
+want=$(printf '%s\n' 'E DUP_ID docs/spec_b c.md:4 FR#1' 'E DUP_TC docs/spec_b c.md:9 TC@#1' 'E NO_TC docs/specification.md:4 BR#2' 'E UNCONFIRMED docs/spec_b c.md:3 -' 'W UNCONFIRMED_MENTION docs/specification.md:5 -' | sort)
 [ "$got" = "$want" ] && echo PASS-multi || { echo FAIL-multi; printf '%s\n' "$want" > w; printf '%s\n' "$got" > g; diff w g || true; exit 1; }
 git add -A; git commit -qm base
-sedi 's/TC#1 x/TC#1 y/' src/b.test.js
-sh "$st" -b HEAD | grep -q "^W TEST_NAME_GONE $(git rev-parse HEAD) TC#1 x" && echo PASS-rename || { echo FAIL-rename; exit 1; }
+sedi 's/TC@#1 x/TC@#1 y/' src/b.test.js
+sh "$st" -b HEAD | grep -q "^W TEST_NAME_GONE $(git rev-parse HEAD) TC@#1 x" && echo PASS-rename || { echo FAIL-rename; exit 1; }
 
 # 참조 줄: 들여쓴 글머리·백틱 없는 글머리의 ID 는 정의가 아니다
 r3=$(mktemp -d); trap 'rm -rf "$r" "$r2" "$r3"' EXIT
@@ -104,9 +110,9 @@ cat > docs/spec_a.md <<'MD'
 ## 7. 테스트
 | TC | 대상 | 비고 |
 | --- | --- | --- |
-| `TC#1` | [FR#1, FR#2] | |
+| `TC@#1` | [FR#1, FR#2] | |
 MD
-printf 'test("TC#1 x", ()=>{})\n' > src/a.test.js
+printf 'test("TC@#1 x", ()=>{})\n' > src/a.test.js
 got=$(sh "$st")
 [ -z "$got" ] && echo PASS-ref || { echo "FAIL-ref: $got"; exit 1; }
 
@@ -126,7 +132,7 @@ cat > docs/spec_a.md <<'MD'
 ## 7. 테스트
 | TC | 대상 | 비고 |
 | --- | --- | --- |
-| `TC#1` | [FR#1] | |
+| `TC@#1` | [FR#1] | |
 MD
 got=$(sh "$st") && rc=0 || rc=$?
 want='E BAD_DEF docs/spec_a.md:3 -
@@ -149,9 +155,9 @@ cat > docs/spec_a.md <<'MD'
 ## 7. 테스트
 | TC | 대상 | 비고 |
 | --- | --- | --- |
-| `TC#1` | [FR#1, FR#2] | |
+| `TC@#1` | [FR#1, FR#2] | |
 MD
-echo 'test("TC#1 x", ()=>{})' > src/a.test.js
+echo 'test("TC@#1 x", ()=>{})' > src/a.test.js
 git add -A; git commit -qm base
 cat > docs/spec_a.md <<'MD'
 ## 3. 요구사항
@@ -163,7 +169,7 @@ cat > docs/spec_a.md <<'MD'
 ## 7. 테스트
 | TC | 대상 | 비고 |
 | --- | --- | --- |
-| `TC#1` | [FR#1, FR#2, FR#3, FR#4, FR#5] | |
+| `TC@#1` | [FR#1, FR#2, FR#3, FR#4, FR#5] | |
 MD
 got=$(sh "$st" -b HEAD 2>&1) && rc=0 || rc=$?
 want='E UNCONFIRMED docs/spec_a.md:5 -
@@ -191,11 +197,11 @@ cat > docs/spec_a.md <<'MD'
 ## 7. 테스트
 | TC | 대상 | 비고 |
 | --- | --- | --- |
-| `TC#1` | [FR#1, FR#2, FR#3, FR#4] | |
+| `TC@#1` | [FR#1, FR#2, FR#3, FR#4] | |
 ## 부록
 - [확인필요: 부록은 검사하지 않음]
 MD
-echo 'test("TC#1 x", ()=>{})' > src/a.test.js
+echo 'test("TC@#1 x", ()=>{})' > src/a.test.js
 got=$(sh "$st" 2>&1 | sort) && rc=0 || rc=$?
 want=$(printf '%s\n' 'E BAD_UNCONFIRMED docs/spec_a.md:2 -' 'E BAD_UNCONFIRMED docs/spec_a.md:3 -' 'W BAD_UNCONFIRMED_MENTION docs/spec_a.md:7 -' 'E UNCONFIRMED docs/spec_a.md:4 -' | sort)
 [ "$got" = "$want" ] && echo PASS-badtag || { echo "FAIL-badtag: $got"; exit 1; }
@@ -216,42 +222,42 @@ cat > docs/spec_a.md <<'MD'
 ## 7. 테스트
 | TC | 대상 | 비고 |
 | --- | --- | --- |
-| `TC#1` | [FR#1] | |
-| `TC#2` | [FR#1] | |
-| `TC#3` | [FR#1] | |
-| `TC#4` | [FR#1] | |
-| `TC#5` | [FR#1] | |
-| `TC#6` | [FR#1] | |
-| `TC#7` | [FR#1] | |
-| `TC#8` | [FR#1] | |
-| `TC#9` | [FR#1] | |
-| `TC#11` | [FR#1] | |
+| `TC@#1` | [FR#1] | |
+| `TC@#2` | [FR#1] | |
+| `TC@#3` | [FR#1] | |
+| `TC@#4` | [FR#1] | |
+| `TC@#5` | [FR#1] | |
+| `TC@#6` | [FR#1] | |
+| `TC@#7` | [FR#1] | |
+| `TC@#8` | [FR#1] | |
+| `TC@#9` | [FR#1] | |
+| `TC@#11` | [FR#1] | |
 MD
 cat > src/test_a.py <<'PY'
-def test_tc1_login():
-    x = tc5_value
-async def test_TC8_async():
+def test_tc@1_login():
+    x = tc@5_value
+async def test_TC@8_async():
     pass
-def test_tc60_other():
+def test_tc@60_other():
     pass
-def test_tc09_leading_zero():
+def test_tc@09_leading_zero():
     pass
-def helper_tc11_value():
+def helper_tc@11_value():
     pass
 PY
 cat > src/a_test.go <<'GO'
-func TestTC2Login(t *testing.T) {}
-func (s *S) TestTc3Method(t *testing.T) {}
+func TestTC@2Login(t *testing.T) {}
+func (s *S) TestTc@3Method(t *testing.T) {}
 GO
-printf '%s\n' '#[test]' 'fn tc4_works() {}' > src/a.rs
-printf '%s\n' 'public async Task TC7_Async() {}' 'void batch6_x() {}' > src/ATests.cs
+printf '%s\n' '#[test]' 'fn tc@4_works() {}' > src/a.rs
+printf '%s\n' 'public async Task TC@7_Async() {}' 'void batch6_x() {}' > src/ATests.cs
 got=$(sh "$st" 2>&1 | grep -E 'NO_TEST|ORPHAN' | sed 's/ [^ ]*:[0-9]* / @ /' | sort)
-want=$(printf '%s\n' 'E NO_TEST @ TC#5' 'E NO_TEST @ TC#6' 'E ORPHAN_TC @ TC#60' | sort)
+want=$(printf '%s\n' 'E NO_TEST @ TC@#5' 'E NO_TEST @ TC@#6' 'E ORPHAN_TC @ TC@#60' | sort)
 [ "$got" = "$want" ] && echo PASS-ident || { echo "FAIL-ident: $got"; exit 1; }
 # Red 삭제 검사도 식별자 이름을 읽는다: 지우면 TEST_REMOVED, 이름만 바꾸면 TEST_NAME_GONE
 git add -A; git commit -qm base
-sedi '/^def test_tc1_login/d' src/test_a.py
-sedi 's/fn tc4_works/fn tc4_renamed/' src/a.rs
+sedi '/^def test_tc@1_login/d' src/test_a.py
+sedi 's/fn tc@4_works/fn tc@4_renamed/' src/a.rs
 got=$(sh "$st" -b HEAD 2>&1 | grep -E 'TEST_REMOVED|TEST_NAME_GONE' | sed 's/ [0-9a-f]\{40\} / @ /' | sort)
-want=$(printf '%s\n' 'W TEST_NAME_GONE @ TC#4 tc4_works' 'W TEST_REMOVED @ TC#1 test_tc1_login' | sort)
+want=$(printf '%s\n' 'W TEST_NAME_GONE @ TC@#4 tc@4_works' 'W TEST_REMOVED @ TC@#1 test_tc@1_login' | sort)
 [ "$got" = "$want" ] && echo PASS-ident-removed || { echo "FAIL-ident-removed: $got"; exit 1; }
