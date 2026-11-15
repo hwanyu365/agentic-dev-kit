@@ -104,6 +104,30 @@ t '12 -' '{"tool_input":{"command":"echo 2>\"$(gh pr merge --squash 12)\""}}'
 t '12 -' '{"tool_input":{"command":"echo > ; gh pr merge --squash 12"}}'
 # here-string 은 데이터다
 t none '{"tool_input":{"command":"cat <<< \"gh pr merge 12\""}}'
+# TC#73 해석기의 낱말 경계와 확장 표시: 펼친 뒤 허용 목록 밖 플래그가 될 수 있는 낱말은 막는다
+t deny '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 2> >(cat) --admin"}}'
+t deny '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 < <(echo) --auto"}}'
+t deny '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 } --admin"}}'
+t deny '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 $X"}}'
+t deny '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 -b $X"}}'
+t deny '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 {--admin,}"}}'
+t deny '{"tool_input":{"command":"gh pr {merge,x} 17 --squash"}}'
+t deny '{"tool_input":{"command":"gh pr {mer,}ge 17 --squash"}}'
+t deny '{"tool_input":{"command":"gh pr m?rge 17 --squash"}}'
+t deny '{"tool_input":{"command":"gh p? merge 17 --squash"}}'
+t deny '{"tool_input":{"command":"gh p? m?rge 17 --squash"}}'
+t deny '{"tool_input":{"command":"gh alias $X"}}'
+t deny '{"tool_input":{"command":"gh {pr,x} merge 17 --squash"}}'
+t deny '{"tool_input":{"command":"f() { gh pr merge 17 --squash --admin; }; f"}}'
+t deny '{"tool_input":{"command":"function f { gh pr merge 17 --squash --admin; }"}}'
+t none '{"tool_input":{"command":"gh api repos/o/r/commits?per_page=5 --jq .[0].sha"}}'
+t none '{"tool_input":{"command":"j() { gh pr view \"$1\" --json state; }; j 17"}}'
+t none '{"tool_input":{"command":"time (gh pr view 17)"}}'
+t deny '{"tool_input":{"command":"gh pr merge \"$N\" --squash"}}'
+t deny '{"tool_input":{"command":"export $V; gh pr merge 17 --squash"}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 2> >(cat)"}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 -b \"$BODY\""}}'
+t '17 abc1234' '{"tool_input":{"command":"gh pr merge 17 --squash --match-head-commit abc1234 --subject \"$(cat t)\""}}'
 # TC#10 허용 목록 밖의 플래그는 막는다 → 브랜치 보호 우회(--admin)·판정과 merge 시점 분리(--auto) 등
 for f in --admin --auto --disable-auto -m --merge -r --rebase -sd -- --unknown -x; do
   t deny "{\"tool_input\":{\"command\":\"gh pr merge 12 --squash $f --match-head-commit abc1234\"}}"
@@ -163,7 +187,7 @@ nobl='"HEAD: abc1234def\n## 개요\n- x\n"'
 j 2 github abc1234 "{$bot,body:$nobl}"
 # Dependabot PR: 작성자 app/dependabot, 커밋 조회 결과를 C 로 준다
 A=app/dependabot
-db='author:{login:"dependabot[bot]"},commit:{verification:{verified:true},message:'
+db='author:{login:"dependabot[bot]"},committer:{login:"web-flow"},commit:{verification:{verified:true},message:'
 tail='\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>"}'
 grp() { # update-type 줄 하나짜리 그룹 커밋
   C="{$db\"Bumps the github-actions group with 1 update.\n\nUpdates \`a/b\` from 1.0.269 to 1.0.271\n\n---\nupdated-dependencies:\n- dependency-name: a/b\n  dependency-version: 1.0.271\n  dependency-type: direct:production\n  update-type: $1\n  dependency-group: github-actions$tail}"
@@ -177,9 +201,12 @@ dj() { # 기대종료코드 [사유에 들어 있어야 할 글자]
   [ -z "${2-}" ] || case "$got" in *"$2"*) ;; *) echo "FAIL 사유에 '$2' 없음 → $got"; fail=1 ;; esac
 }
 # TC#23 Dependabot 이 아닌 커밋(작성자·서명)이 있으면 막고 recreate 를 안내한다
-grp version-update:semver-patch; C="$C,{author:{login:\"me\"},commit:{verification:{verified:true},message:\"Merge branch main\"}}"; dj 2 recreate
-C="{author:null,commit:{verification:{verified:true},message:\"x\"}}"; dj 2 recreate
-C="{author:{login:\"dependabot[bot]\"},commit:{verification:{verified:false},message:\"x\"}}"; dj 2 recreate
+grp version-update:semver-patch; C="$C,{author:{login:\"me\"},committer:{login:\"web-flow\"},commit:{verification:{verified:true},message:\"Merge branch main\"}}"; dj 2 recreate
+C="{author:null,committer:{login:\"web-flow\"},commit:{verification:{verified:true},message:\"x\"}}"; dj 2 recreate
+C="{author:{login:\"dependabot[bot]\"},committer:{login:\"web-flow\"},commit:{verification:{verified:false},message:\"x\"}}"; dj 2 recreate
+# TC#74 committer 가 web-flow 가 아니면 작성자·서명이 맞아도 Dependabot 커밋이 아니다
+grp version-update:semver-patch; C=$(printf '%s' "$C" | sed 's/committer:{login:"web-flow"}/committer:{login:"me"}/'); dj 2 recreate
+grp version-update:semver-patch; C=$(printf '%s' "$C" | sed 's/committer:{login:"web-flow"}/committer:null/'); dj 2 recreate
 C=""; dj 2
 # TC#24 update-type 은 patch·minor 만 통과한다
 grp version-update:semver-patch; dj 0

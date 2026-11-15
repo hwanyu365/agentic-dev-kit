@@ -2,13 +2,14 @@
 # 모든 Bash 명령 직전 hook: gh pr merge 이면 CI 통과, 현재 head 의 리뷰 요약, 그 요약의 Blocking 0건을 확인하고 아니면 exit 2 로 막는다.
 # 셸 예약어와 env·timeout 같은 감싸기는 벗기고 읽는다. gh 는 merge 글자가 보이면 gh pr merge 이거나 허용 하위 명령(ALLOW)이어야 하고, 그 밖의 명령(허용 명령 제외)은 낱말 merge 또는 gh…merge 가 보이면 막는다.
 # --parse: 판정 없이 stdin 에서 해석한 "PR번호 match-head-commit" 또는 none 만 출력한다 (자체 검사용).
-deny() { echo "merge 차단: $*" >&2; exit 2; }
+deny() { echo "merge 차단: $*" | tr -d '\002\003' >&2; exit 2; }
 pass() { [ "$mode" = --parse ] && echo none; exit 0; }
 mode=${1-}
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/hook-lib.sh"
 # 해석 실패는 gh 글자가 보일 때 막는다 → merge 글자를 쪼갠 명령 치환도 막는다.
 load gh
+xu=$(printf '\002'); xq=$(printf '\003')
 
 found=""; margs=""; ghexp=""
 while IFS= read -r line; do
@@ -19,13 +20,16 @@ while IFS= read -r line; do
   name=${1##*/}; shift
   case $name in
     export|declare|typeset|readonly|local)
-      for a in "$@"; do case $a in GH_REPO*|GH_HOST*) ghexp=1 ;; esac; done ;;
+      for a in "$@"; do case $a in GH_REPO*|GH_HOST*|*"$xu"*|*"$xq"*) ghexp=1 ;; esac; done ;;
     gh|gh.exe)
       # 하위 명령 자리의 확장은 펼친 뒤 무엇이 될지 모른다 → merge 글자를 쪼갠 경우까지 막는다.
+      # gh api 의 경로는 둘째 자리라 질의 문자열의 ? 가 glob 으로 표시된다 → glob·brace 는 pr 의 하위 명령 자리에서만 본다.
       case "${1-} ${2-}" in *'$'*|*'`'*) deny "gh 하위 명령 자리의 확장은 해석하지 않음" ;; esac
+      case "${1-}" in *"$xu"*|*"$xq"*) deny "gh 하위 명령 자리의 확장은 해석하지 않음" ;; esac
+      [ "${1-}" != pr ] || case "${2-}" in *"$xu"*|*"$xq"*) deny "gh 하위 명령 자리의 확장은 해석하지 않음" ;; esac
       if [ "${1-}" = pr ] && [ "${2-}" = merge ]; then
         case "$envs" in *" GH_REPO "*|*" GH_HOST "*) deny "GH_REPO·GH_HOST 를 붙인 merge 는 다른 저장소일 수 있음" ;; esac
-        [ -z "$ghexp" ] || deny "앞에서 GH_REPO·GH_HOST 를 export 한 뒤의 merge 는 다른 저장소일 수 있음"
+        [ -z "$ghexp" ] || deny "앞에서 GH_REPO·GH_HOST 나 확장 낱말을 export 한 뒤의 merge 는 다른 저장소일 수 있음"
         [ -z "$found" ] || deny "한 명령에 gh pr merge 가 둘 이상임"
         shift 2; found=1; margs=""
         for a in "$@"; do margs="$margs$a$us"; done
@@ -52,6 +56,8 @@ EOS
 n=""; mh=""; skip=""; want=""; sq=""
 old=$IFS; IFS=$us; set -f; set -- $margs; set +f; IFS=$old
 for a in "$@"; do
+  # 따옴표 밖 확장은 값 자리에서도 쪼개져 허용 목록 밖 플래그가 될 수 있다.
+  case $a in *"$xu"*) deny "gh pr merge 인자 $a 는 따옴표 밖 확장이라 쪼개지거나 플래그가 될 수 있음 → 값은 \"…\" 로 감싸고 --match-head-commit 은 SHA 를 그대로 쓴다" ;; esac
   if [ -n "$skip" ]; then skip=""; continue; fi
   if [ -n "$want" ]; then mh=$a; want=""; continue; fi
   case "$a" in
@@ -89,6 +95,7 @@ gh pr checks "$n" >/dev/null 2>&1 || deny "CI 가 통과하지 않았거나 진�
 dq='def maj: [match("^v?([0-9]+)")] | if length == 0 then null else .[0].captures[0].string end;
 .[] | if .author.login != "dependabot[bot]" then "author"
   elif .commit.verification.verified != true then "author"
+  elif .committer.login != "web-flow" then "author"
   else (.commit.message | split("\n---\nupdated-dependencies:\n")) as $p
     | if ($p | length) != 2 then "version" else
       [$p[0] | scan("(?:`([^`\n]+)`|\\[([^\\]\n]+)\\]\\([^)\n]*\\)) from ([^ \n]+) to ([^ \n]+)") | {n: (.[0] // .[1]), a: .[2], b: .[3]}] as $vs

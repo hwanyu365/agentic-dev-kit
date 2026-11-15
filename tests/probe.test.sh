@@ -44,12 +44,24 @@ o() { printf '{"type":"user","message":{"content":[{"type":"tool_result","tool_u
 B='blocked by the blockReadsOutsideWorkingDirectories setting'
 e=$(u 1 Bash '{"command":"sh probe/env.sh"}'); eo=$(o 1 false 'ADK-ENV oauth=absent workflow_token=absent')
 re=$(u 2 Read '{"file_path":"/proc/self/environ"}'); rs=$(u 3 Read '{"file_path":"/home/runner/.claude/settings.json"}')
-t "TC#15 토큰 없음·두 읽기 거부" "$(J "[$e,$eo,$re,$(o 2 true "$B"),$rs,$(o 3 true "$B")]")" "ADK-PROBE oauth=absent workflow_token=absent read_environ=blocked read_settings=blocked"
-t "TC#15 토큰 있음" "$(J "[$e,$(o 1 false 'ADK-ENV oauth=absent workflow_token=present')]")" "ADK-PROBE oauth=absent workflow_token=present read_environ=not-attempted read_settings=not-attempted"
-t "TC#15 읽기가 성공하면 read" "$(J "[$re,$(o 2 false 'X=1')]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=read read_settings=not-attempted"
-t "TC#15 장치·프로세스 파일 규칙으로 막힌 것도 거부" "$(J "[$re,$(o 2 true "Cannot read /proc/self/environ: this path names a device or process file that this tool does not read.")]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=blocked read_settings=not-attempted"
-t "TC#15 다른 이유의 오류는 거부로 보지 않음" "$(J "[$rs,$(o 3 true 'File does not exist')]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=error-other"
-t "TC#15 스크립트를 돌리지 않았으면 not-run" "$(J "[]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted"
+t "TC#15 토큰 없음·두 읽기 거부" "$(J "[$e,$eo,$re,$(o 2 true "$B"),$rs,$(o 3 true "$B")]")" "ADK-PROBE oauth=absent workflow_token=absent read_environ=blocked read_settings=blocked pr_view=not-attempted pr_comments=not-attempted"
+t "TC#15 토큰 있음" "$(J "[$e,$(o 1 false 'ADK-ENV oauth=absent workflow_token=present')]")" "ADK-PROBE oauth=absent workflow_token=present read_environ=not-attempted read_settings=not-attempted pr_view=not-attempted pr_comments=not-attempted"
+t "TC#15 읽기가 성공하면 read" "$(J "[$re,$(o 2 false 'X=1')]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=read read_settings=not-attempted pr_view=not-attempted pr_comments=not-attempted"
+t "TC#15 장치·프로세스 파일 규칙으로 막힌 것도 거부" "$(J "[$re,$(o 2 true "Cannot read /proc/self/environ: this path names a device or process file that this tool does not read.")]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=blocked read_settings=not-attempted pr_view=not-attempted pr_comments=not-attempted"
+t "TC#15 다른 이유의 오류는 거부로 보지 않음" "$(J "[$rs,$(o 3 true 'File does not exist')]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=error-other pr_view=not-attempted pr_comments=not-attempted"
+t "TC#15 스크립트를 돌리지 않았으면 not-run" "$(J "[]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted pr_view=not-attempted pr_comments=not-attempted"
+
+# TC#77 리뷰 prompt 의 이전 라운드 명령을 그대로 돌리고, 같은 환경에서 대조군 --comments 를 돌린다
+t "TC#77 prompt 의 이전 라운드 명령이 들어감" "$(q "import re; c = re.search(r'\`(gh pr view <PR NUMBER> [^\`]*)\`', step(base)['with']['prompt']).group(1).replace('<PR NUMBER>', '\${{ github.event.pull_request.number }}'); print(all(c in step(x)['with']['prompt'] for x in (s, n)))")" True
+t "TC#77 대조군 --comments 가 두 변형에 들어감" "$(q "print(all('gh pr view \${{ github.event.pull_request.number }} --comments' in step(x)['with']['prompt'] for x in (s, n)))")" True
+cp -R "$r/m" "$r/x" && sed -i.bak 's/gh pr view <PR NUMBER> --json/gh pr view --json/' "$r/x/.github/workflows/claude-review.yml"
+t "TC#77 prompt 에서 명령을 찾지 못하면 생성 실패" "$( (cd "$r/x" && "$py" -P "$A/tests/probe.py" . >/dev/null 2>&1); echo $?)" 1
+gv=$(u 4 Bash '{"command":"gh pr view 7 --json body,comments"}'); gc=$(u 5 Bash '{"command":"gh pr view 7 --comments"}')
+P='GraphQL: Resource not accessible by integration (repository.pullRequest.statusCheckRollup)'
+t "TC#77 --json 성공, --comments 권한 오류" "$(J "[$gv,$(o 4 false '{}'),$gc,$(o 5 true "$P")]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted pr_view=ok pr_comments=perm-error"
+t "TC#77 --json 이 권한 오류면 perm-error" "$(J "[$gv,$(o 4 true "$P")]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted pr_view=perm-error pr_comments=not-attempted"
+t "TC#77 성공 출력 안의 오류 문구는 권한 오류가 아님" "$(J "[$gc,$(o 5 false "$P")]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted pr_view=not-attempted pr_comments=ok"
+t "TC#77 다른 오류는 error-other" "$(J "[$gc,$(o 5 true 'no pull requests found')]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted pr_view=not-attempted pr_comments=error-other"
 
 [ "$fail" -eq 0 ] && echo "probe ok"
 exit "$fail"

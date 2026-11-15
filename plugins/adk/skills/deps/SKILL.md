@@ -23,7 +23,7 @@ argument-hint: "[PR 번호]"
 
 - 작성자가 `app/dependabot` 이 아니면 이 스킬의 대상이 아니다 → 알리고 끝낸다.
 - `commits[].authors[].login` 에 `dependabot[bot]` 이 아닌 작성자가 있으면 `gh pr comment <번호> --body "@dependabot recreate"` 를 남긴다.
-  - 서명은 `gh pr view` 로 보이지 않는다 → merge 게이트가 확인한다. 게이트가 작성·서명 사유로 막아도 recreate 를 남긴다.
+  - 서명과 committer(`web-flow`)는 `gh pr view` 로 보이지 않는다 → merge 게이트가 확인한다. 게이트가 작성·서명 사유로 막아도 recreate 를 남긴다.
 - `mergeStateStatus` 가 `BEHIND`·`DIRTY` 면 `@dependabot rebase` 를 남긴다.
 - recreate·rebase 뒤에는 head 가 바뀔 때까지 5분 주기로 조회하고, 바뀌면 1 부터 다시 한다. 30분 안에 바뀌지 않으면 보고한다.
 - 업데이트 종류는 커밋 메시지 `updated-dependencies` 의 항목마다 `update-type` 으로 본다. 없으면 본문의 `` `{이름}` from A to B `` 또는 `[{이름}](...) from A to B` 의 첫 숫자 자리를 비교한다.

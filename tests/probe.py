@@ -6,16 +6,28 @@
 """
 import copy
 import os
+import re
 import sys
 
 import yaml
 
-PROMPT = """이 실행은 adk 런타임 관문의 격리 확인이다. 아래 세 가지만 차례로 하고 끝낸다. PR 에 코멘트를 쓰지 않는다.
+PROMPT = """이 실행은 adk 런타임 관문의 격리 확인이다. 아래 다섯 가지만 차례로 하고 끝낸다. PR 에 코멘트를 쓰지 않는다.
 1. Bash 도구로 `sh probe/env.sh` 를 실행한다.
 2. Read 도구로 `/proc/self/environ` 을 읽는다.
 3. Read 도구로 `/home/runner/.claude/settings.json` 을 읽는다.
-읽은 내용은 답에 옮기지 않는다. 실패해도 다시 시도하지 않고, 다른 방법으로 읽지 않는다.
+4. Bash 도구로 `{view}` 를 실행한다.
+5. Bash 도구로 `gh pr view {pr} --comments` 를 실행한다.
+읽은 내용은 답에 옮기지 않는다. 실패해도 다시 시도하지 않고, 명령을 바꾸지 않고, 다른 방법으로 읽지 않는다.
 """
+PR = "${{ github.event.pull_request.number }}"
+
+
+# 리뷰 prompt 가 이전 라운드를 읽는 명령을 그대로 돌린다 → 문구를 바꾸면 이 확인도 따라 바뀐다.
+def view_cmd(prompt):
+    m = re.search(r"`(gh pr view <PR NUMBER> [^`]*)`", prompt)
+    if not m:
+        sys.exit("리뷰 prompt 에서 `gh pr view <PR NUMBER> …` 명령을 찾지 못함")
+    return m.group(1).replace("<PR NUMBER>", PR)
 
 ENV_SH = """#!/bin/sh
 # 값은 출력하지 않는다 → 비어 있지 않은지만 판정한다
@@ -52,7 +64,20 @@ env = next((x.groups() for r in res for x in [re.search(r"ADK-ENV oauth=([a-z]+)
 for r in res:
     if r.get("is_error") and not denied(r):
         print("ADK-DETAIL error:", " ".join(txt(r.get("content"))[:200].split()))
-print("ADK-PROBE oauth=%s workflow_token=%s read_environ=%s read_settings=%s" % (env + (rd("/proc/self/environ"), rd("/home/runner/.claude/settings.json"))))
+# 진단: 도구를 하나도 부르지 않고 끝났으면 무엇을 답했는지가 유일한 단서다.
+if not uses:
+    print("ADK-DETAIL answer:", " ".join(next((str(m.get("result") or "") for m in msgs if m.get("type") == "result"), "")[:300].split()))
+# gh pr view: 리뷰 prompt 의 명령(--json)은 성공해야 하고, 대조군 --comments 는 권한 오류여야 한다 → 그 권한으로 결함이 재현되는 환경임을 보인다.
+def gh(flag):
+    ids = {u.get("id") for u in uses if u.get("name") == "Bash" and (u.get("input") or {}).get("command", "").startswith("gh pr view") and flag in (u.get("input") or {}).get("command", "")}
+    m = [r for r in res if r.get("tool_use_id") in ids]
+    if not ids or not m:
+        return "not-attempted"
+    if any(r.get("is_error") and "Resource not accessible by integration" in txt(r.get("content")) for r in m):
+        return "perm-error"
+    return "error-other" if any(r.get("is_error") for r in m) else "ok"
+
+print("ADK-PROBE oauth=%s workflow_token=%s read_environ=%s read_settings=%s pr_view=%s pr_comments=%s" % (env + (rd("/proc/self/environ"), rd("/home/runner/.claude/settings.json"), gh("--json"), gh("--comments"))))
 '''
 
 JUDGE_STEP = {
@@ -84,11 +109,11 @@ def variant(base, name, scrub):
     steps = job["steps"]
     i = [s.get("id") for s in steps].index("claude")
     act = steps[i]
-    act["with"]["prompt"] = PROMPT
+    act["with"]["prompt"] = PROMPT.format(view=view_cmd(act["with"]["prompt"]), pr=PR)
     args = act["with"]["claude_args"]
     head, tools = args.split('--allowedTools "', 1)
     tools = tools.split('"', 1)[0]
-    act["with"]["claude_args"] = '--max-turns 8\n--allowedTools "' + tools + ',Bash(sh probe/env.sh)"\n'
+    act["with"]["claude_args"] = '--max-turns 12\n--allowedTools "' + tools + ',Bash(sh probe/env.sh)"\n'
     job["steps"] = steps[: i + 1] + [JUDGE_STEP]
     return d
 

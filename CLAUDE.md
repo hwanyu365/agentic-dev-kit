@@ -24,6 +24,7 @@ sh tests/pre-commit.test.sh
 sh tests/spec-trace.test.sh
 sh tests/verify.test.sh
 sh tests/review-format.test.sh
+sh tests/review-prompt.test.sh
 sh tests/readonly-agent.test.sh
 sh tests/skill-size.test.sh
 sh tests/render.test.sh
