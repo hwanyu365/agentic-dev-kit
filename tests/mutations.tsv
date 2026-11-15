@@ -84,12 +84,12 @@ plugins/adk/template/.claude/hooks/commit-gate.sh	git|git.exe) shift ;;	  contin
 plugins/adk/template/.claude/hooks/commit-gate.sh	n) deny "git commit 의 -n	      n) ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	m|F|C|c|t) [ -n "$s" ] || want=1; return ;;	      m|F|C|c|t) want=1; return ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	u|S) return ;;	      u|S) want=1; return ;;	tests/commit-gate.test.sh
-plugins/adk/template/.claude/hooks/commit-gate.sh	case $k in core.hookspath|alias.*|include.*|includeif.*) deny	  :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $k in core.hookspath|help.autocorrect|alias.*|include.*|includeif.*) deny	  :	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	k=$(printf '%s' "${1%%=*}" | LC_ALL=C tr	  k=${1%%=*}	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	-c|--config-env) [ $# -ge 2 ] || break; cfg "$2"; shift 2 ;;	      -c|--config-env) shift 2 ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	--config-env=*) cfg	      --config-env=*) shift ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	-c*) cfg "${1#-c}"; shift ;;	      -c*) shift ;;	tests/commit-gate.test.sh
-plugins/adk/template/.claude/hooks/commit-gate.sh	-C|--git-dir|--work-tree|--namespace) shift; [ $# -gt 0 ] && shift ;;	      -C|--git-dir|--work-tree|--namespace) shift ;;	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	-C|--namespace|--attr-source) shift; [ $# -gt 0 ] && shift ;;	      -C|--namespace|--attr-source) shift ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	[ "$sub" = commit ] || continue	  continue	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	--no-veri*) case --no-verify in	      --no-veri*) ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	      --*) ;;	      --*) want=1 ;;	tests/commit-gate.test.sh
@@ -97,7 +97,25 @@ plugins/adk/template/.claude/hooks/commit-gate.sh	if [ "$sub" = config ]; then f
 plugins/adk/template/.claude/hooks/commit-gate.sh	--) end=1 ;;	      --) ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	--message|--file|--template	      --never) want=1 ;;	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	[ "${1-}" = S ] || continue	  continue	tests/commit-gate.test.sh
-plugins/adk/template/.claude/hooks/commit-gate.sh	unwrap "$@"; shift "$drop"	  :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	  shift "$drop"	  :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $k in core.hookspath|help.autocorrect|alias.*|include.*|includeif.*) deny	  case $k in core.hookspath|alias.*|include.*|includeif.*) deny "x" ;; esac	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $ev in *" GIT_CONFIG"*) deny	  :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	ev=$(printf '%s' "$envs" | LC_ALL=C tr	  ev=$envs	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	--git-dir|--work-tree) alt=$1;	      --git-dir|--work-tree) shift; [ $# -gt 0 ] && shift ;;	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	--git-dir=*|--work-tree=*) alt=	      --git-dir=*|--work-tree=*) shift ;;	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	[ -z "$alt" ] || deny	  :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $ev in *" GIT_DIR "*	  :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	-*) unk=$1; break ;;	      -*) shift ;;	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	-*) unk=$1; break ;;	      -*) unk=$1; shift ;;	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $a in commit|config|-c*|--config-env*) deny	      case $a in commit|config) deny "x" ;; esac	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	    if [ -n "$wrapped" ]; then	      if false; then	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $a in git|*/git|git.exe|*/git.exe) deny	          :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $a in git|*/git|git.exe|*/git.exe) deny	          case $a in git|git.exe) deny "x" ;; esac	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $a in -S*|-[!-]*S*|--sp*) deny	      :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $a in -S*|-[!-]*S*|--sp*) deny	      case $a in -S*) deny "x" ;; esac	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/commit-gate.sh	case $a in -S*|-[!-]*S*|--sp*) deny	      case $a in -S*|-[!-]*S*) deny "x" ;; esac	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/hook-lib.sh	|flock) wrapped=1	    :	tests/commit-gate.test.sh
+plugins/adk/template/.claude/hooks/hook-lib.sh	|flock) wrapped=1	    case ${1##*/} in env|timeout|nice|nohup|time|command|exec|builtin) wrapped=1 ;; esac	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/segments.awk	if (inw && !wq && cur ~ /^[0-9]+$/) { cur = ""; inw = 0 } else word_end()	function fdword() { if (inw && cur ~ /^[0-9]+$/) { cur = ""; inw = 0 } else word_end() }	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/segments.awk	fdword(); i += 2; strip = 0	      word_end(); i += 2; strip = 0	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/segments.awk	if (c2 == "&>") { word_end(); i += 2;	    x = 0	tests/merge-gate.test.sh
