@@ -2,7 +2,7 @@
 
 ## 1. 개요
 
-- 문서 정보: 작성 2026-11-14 / 기준 커밋 `c17de0c` (origin/main) / 이슈 GH#25, GH#61
+- 문서 정보: 작성 2026-11-14 / 기준 커밋 `7e10431` (origin/main) / 이슈 GH#25, GH#61, GH#70
 - 기능: 자율 범위·리뷰 방식마다 PR 의 리뷰·ready·merge 흐름을 정하고, pr 모드의 팀원 리뷰 대응을 감시 스킬로 처리한다
 - 목적 (Why)
   - 사람 리뷰 저장소에서 ready 가 merge 직전 → 팀원이 리뷰하는 내내 PR 이 draft("작업 중")로 보인다.
@@ -65,6 +65,17 @@
 - `FR#11` [요구사항] 리뷰 job 이 따르는 지시(템플릿·adk `claude-review.yml` prompt, `/adk:ship` review.md)의 `gh pr view` 는 `--json <필드>` 로 읽을 필드를 정한다 → job 의 `permissions` 안에서 동작한다 [as-built: 리뷰 job 에서 `gh pr view --comments` 가 check 상태 조회 중 `Resource not accessible by integration` 으로 실패]
   - 이전 라운드 읽기: `gh pr view <번호> --json body,comments`
   - job `permissions` 는 넓히지 않는다 → `checks: read` 를 더하면 모든 형태가 동작하지만, PR 내용을 읽는 리뷰 job 의 권한을 지시 형태 때문에 넓히지 않는다
+- `FR#12` [요구사항] 템플릿·adk 의 `claude-review.yml` 은 `claude_args` 에 `--permission-mode default`, `claude.yml` 은 `--permission-mode acceptEdits` 를 둔다 → `--allowedTools` 밖 호출은 거부된다 [as-built: `claude-code-action` v1.0.273 부터 opt-out 조건이 없으면 세션이 auto mode 로 시작하고, 허용 규칙이 없는 호출을 안전성 검토가 판정한다]
+  - action 이 넣는 인자 뒤에 `claude_args` 가 붙는다 → 마지막 `--permission-mode` 가 이긴다
+  - `claude.yml` 의 쓰기 도구는 `--disallowedTools` 로 따로 막는다 → acceptEdits 여도 편집하지 않는다
+  - `claude.yml` 세션의 권한 모드는 `default` 로 관측된다 [as-built: v1.0.275 tag mode, 시험 저장소 run] → 확인은 auto mode 가 아닌지와 거부 여부로 한다
+  - 런타임 관문의 격리 확인 워크플로는 템플릿의 권한 모드를 그대로 쓰고, 허용 목록 밖 명령 하나가 거부되는지와 세션 권한 모드를 본다
+    - 거부는 실행 결과의 권한 거부 목록(`permission_denials`)으로 판정한다 → 거부 문구는 action 설정에 따라 달라진다 [as-built: v1.0.275 리뷰 job 의 거부 문구는 `This command requires approval`]
+    - 권한 모드는 세션 시작 메시지의 `permissionMode` 로 본다
+    - 권한 모드만 뺀 리뷰 변형을 대조군으로 두고 판정 줄을 기록만 한다 → 런타임 관문 환경이 auto mode 로 들어가는지 배포마다 남긴다
+    - 런타임 관문 환경(OAuth 토큰)은 플래그 없이도 auto mode 로 시작하지 않는다 [as-built: v1.0.275, 대조군 `CLAUDE_ARGS` 에 auto 없음, `outside=denied`] → 이 환경의 거부는 권한 모드 플래그와 무관하다
+    - 확인하지 못한 범위: auto mode 로 시작하는 환경에서 플래그가 거부를 되돌리는지는 관측하지 않았다. 근거는 action 의 인자 처리(마지막 `--permission-mode` 가 이김)와 v1.0.273 release notes 의 opt-out 안내다
+  - `claude.yml` 도 같은 방식으로 본다: 렌더한 `claude.yml` 을 트리거 문구만 바꿔 복제하고, 시험 PR 코멘트로 불러 허용 목록 밖의 작업 트리 수정 Bash(`sed -i`)와 스크립트가 거부되는지 본다
 - `NFR#1` [요구사항] FR#1~FR#10 의 흐름 변경은 merge 게이트(`merge-gate.sh`)와 그 테스트·mutation 목록을 바꾸지 않는다 → 흐름 변경이 보안 경계를 바꾸지 않는다.
 - `NFR#2` [요구사항] 스킬 본문은 `tests/skill-size.test.sh` 상한 안에 둔다. 넘으면 특정 상황 절차를 같은 폴더 참조 파일로 옮긴다.
 
@@ -113,5 +124,13 @@ flowchart TB
 | TC#43 | FR#10 | 4-b merge 명령에 `--delete-branch` 없음. 워크트리에서 시작한 브랜치에 `cleanup.md` 명령을 줄마다 실행 → 원격 브랜치가 남은 저장소·자동 삭제 저장소 모두 줄마다 종료 코드 0, 워크트리·로컬·원격 브랜치 없음, `main` 갱신 | `tests/cleanup.test.sh` (임시 bare 원격·워크트리) |
 | TC#75 | FR#11 | 템플릿·adk `claude-review.yml` prompt 와 review.md 의 `gh pr view` 마다 `--json` 이 있음 | `tests/review-prompt.test.sh` |
 | TC#76 | FR#11 | 렌더한 리뷰 job 과 같은 권한·격리에서 prompt 의 이전 라운드 명령이 성공하고, 대조군의 `gh pr view <번호> --comments` 는 권한 오류로 실패 | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job), 배포 관문 스펙 FR#5 |
+| TC#80 | FR#12 | 템플릿·adk 의 `claude-review.yml` `claude_args` 에 `--permission-mode default`, `claude.yml` 에 `--permission-mode acceptEdits` 가 있고 다른 `--permission-mode` 는 없음 | `tests/review-prompt.test.sh` |
+| TC#81 | FR#12 | 격리 확인 워크플로가 템플릿의 `--permission-mode` 를 그대로 두고 허용 목록 밖 명령(`sh probe/outside.sh`)을 시도하게 함. 판정: 실행 출력 표지가 있으면 ran, 권한 거부 목록에 그 호출이 있으면 denied(문구와 무관), 그 밖 오류는 error-other. 세션 시작 메시지의 `permissionMode` 를 mode 로 냄 | `tests/probe.test.sh` |
+| TC#82 | FR#12 | 렌더한 리뷰 job 과 같은 권한·격리에서 허용 목록 밖 명령이 denied 이고 mode 가 default | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job), 배포 관문 스펙 FR#5 |
+| TC#85 | FR#12 | 권한 모드 대조군 워크플로가 scrub 변형에서 `--permission-mode` 줄만 빠짐 | `tests/probe.test.sh` |
+| TC#86 | FR#12 | 같은 runtime 실행에서 대조군 판정 줄이 `info` 로 기록됨 (실패시키지 않음) | (수동) `runtime` job 로그 확인. 대조군이 `outside=ran`·`mode=auto` 를 내면 위 확인하지 못한 범위를 다시 본다 |
+| TC#83 | FR#12 | `@claude` 확인 워크플로가 렌더한 `claude.yml` 과 트리거 문구·판정 step·action step id 만 다름. 판정 줄에 작업 트리 수정 Bash(`edit=`) 결과가 있음 | `tests/probe.test.sh` |
+| TC#84 | FR#12 | 시험 PR 코멘트로 부른 `@claude` 확인 워크플로에서 `edit=denied outside=denied`, mode 는 `default` 또는 `acceptEdits`(auto 아님). 진행 코멘트가 깨운 건너뛴 run 은 고르지 않음 | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job) |
 | TC#22 | FR#2 | `local` 렌더 결과에 `claude-review.yml`·`claude.yml` 없음, `github` 렌더 결과에 있음 | (수동) `/adk:init` 렌더 확인 |
 - GH-61: 리뷰 job 지시의 `gh pr view` 를 `--json` 필드 지정으로
+- GH-70: 리뷰·`@claude` job 의 권한 모드를 명시해 허용 목록을 엄격하게

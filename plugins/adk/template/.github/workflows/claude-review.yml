@@ -41,7 +41,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends bubblewrap socat
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - id: claude
-        uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe # v1.0.269
+        uses: anthropics/claude-code-action@4d75e5f390ee76b2e09c1980ecc99ff3a2e088c8 # v1.0.275
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # 파일 도구가 저장소 밖(러너의 자격 파일, /proc 의 환경 변수)을 읽지 못하게 한다.
@@ -101,7 +101,9 @@ jobs:
             ## 결론
             - Blocking 유무와 머지 판정
             - 실제로 돌린 명령과 결과 / 돌리지 못한 것 (검증 명령·테스트는 같은 PR 의 CI 가 돌린다 → 이 실행은 돌리지 않는다. 남기는 것은 막힌 이유와 필요한 것을 적는다)
+          # action 은 opt-out 조건이 없으면 auto mode 로 시작해 허용 규칙 밖 호출을 안전성 검토에 넘긴다 → 권한 모드를 정해 허용 목록을 상한으로 둔다.
           claude_args: |
+            --permission-mode default
             --max-turns 60
             --allowedTools "Edit(./.claude-review/summary.md),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
       # 요약을 올리지 못하고 끝나도 action 은 성공으로 남는다 → 현재 head 의 요약이 없으면 check 를 실패시킨다. 작성자 판정은 merge-gate.sh 와 같다.

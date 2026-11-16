@@ -165,3 +165,5 @@ plugins/adk/template/.claude/hooks/segments.awk	if (xu || xq || wq || !(k == 1	 
 plugins/adk/template/.claude/hooks/commit-gate.sh	case $c in n) deny	        case $c in S|u|m|F|C|c|t) return ;; esac	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	[ "$unk" != "$1" ] || case $unk in *"$xu"*) deny	    :	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/commit-gate.sh	case $unk in *"$xq"*) shift; cargs "$@"	    :	tests/commit-gate.test.sh
+plugins/adk/template/.github/workflows/claude-review.yml	--permission-mode default	            --max-turns 60	tests/review-prompt.test.sh
+plugins/adk/template/.github/workflows/claude.yml	--permission-mode acceptEdits	            --max-turns 40	tests/review-prompt.test.sh
