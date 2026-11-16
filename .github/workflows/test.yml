@@ -24,7 +24,7 @@ jobs:
         run: |
           # main push 는 직전 커밋이 기준이다 → 그 merge 가 더한 미확인 태그만 실패로 본다.
           if [ -n "$BASE" ]; then b="origin/$BASE"; elif git rev-parse -q --verify HEAD^ >/dev/null; then b=HEAD^; else b=""; fi
-          sh plugins/adk/template/.github/spec-trace.sh ${b:+-b "$b"} -- ':(exclude)docs/' ':(exclude)*.md' ':(exclude)plugins/adk/template/docs/' ':(exclude)plugins/adk/template/.github/spec-trace.sh'
+          sh plugins/adk/template/.github/spec-trace.sh ${b:+-b "$b"} -- ':(exclude)docs/' ':(exclude)*.md' ':(exclude)plugins/adk/template/docs/' ':(exclude).github/spec-trace.sh' ':(exclude)plugins/adk/template/.github/spec-trace.sh'
       # 템플릿 YAML 은 자리표시자 치환 전에도 파싱돼야 한다 (CLAUDE.md 수정 규칙).
       - run: |
           python3 -m pip install -q --break-system-packages pyyaml==6.0.3
