@@ -71,6 +71,7 @@
   - 런타임 관문의 격리 확인 워크플로는 템플릿의 권한 모드를 그대로 쓰고, 허용 목록 밖 명령 하나가 거부되는지와 세션 권한 모드를 본다
     - 거부는 실행 결과의 권한 거부 목록(`permission_denials`)으로 판정한다 → 거부 문구는 action 설정에 따라 달라진다 [as-built: v1.0.275 리뷰 job 의 거부 문구는 `This command requires approval`]
     - 권한 모드는 세션 시작 메시지의 `permissionMode` 로 본다 → auto mode 의 검토가 거부한 것과 구분한다
+  - `claude.yml` 도 같은 방식으로 본다: 렌더한 `claude.yml` 을 트리거 문구만 바꿔 복제하고, 시험 PR 코멘트로 불러 허용 목록 밖의 작업 트리 수정 Bash(`sed -i`)와 스크립트가 거부되는지 본다
 - `NFR#1` [요구사항] FR#1~FR#10 의 흐름 변경은 merge 게이트(`merge-gate.sh`)와 그 테스트·mutation 목록을 바꾸지 않는다 → 흐름 변경이 보안 경계를 바꾸지 않는다.
 - `NFR#2` [요구사항] 스킬 본문은 `tests/skill-size.test.sh` 상한 안에 둔다. 넘으면 특정 상황 절차를 같은 폴더 참조 파일로 옮긴다.
 
@@ -122,6 +123,8 @@ flowchart TB
 | TC#80 | FR#12 | 템플릿·adk 의 `claude-review.yml` `claude_args` 에 `--permission-mode default`, `claude.yml` 에 `--permission-mode acceptEdits` 가 있고 다른 `--permission-mode` 는 없음 | `tests/review-prompt.test.sh` |
 | TC#81 | FR#12 | 격리 확인 워크플로가 템플릿의 `--permission-mode` 를 그대로 두고 허용 목록 밖 명령(`sh probe/outside.sh`)을 시도하게 함. 판정: 실행 출력 표지가 있으면 ran, 권한 거부 목록에 그 호출이 있으면 denied(문구와 무관), 그 밖 오류는 error-other. 세션 시작 메시지의 `permissionMode` 를 mode 로 냄 | `tests/probe.test.sh` |
 | TC#82 | FR#12 | 렌더한 리뷰 job 과 같은 권한·격리에서 허용 목록 밖 명령이 denied 이고 mode 가 default | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job), 배포 관문 스펙 FR#5 |
+| TC#83 | FR#12 | `@claude` 확인 워크플로가 렌더한 `claude.yml` 과 트리거 문구·판정 step·action step id 만 다름. 판정 줄에 작업 트리 수정 Bash(`edit=`) 결과가 있음 | `tests/probe.test.sh` |
+| TC#84 | FR#12 | 시험 PR 코멘트로 부른 `@claude` 확인 워크플로에서 `edit=denied outside=denied mode=acceptEdits` | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job) |
 | TC#22 | FR#2 | `local` 렌더 결과에 `claude-review.yml`·`claude.yml` 없음, `github` 렌더 결과에 있음 | (수동) `/adk:init` 렌더 확인 |
 - GH-61: 리뷰 job 지시의 `gh pr view` 를 `--json` 필드 지정으로
 - GH-70: 리뷰·`@claude` job 의 권한 모드를 명시해 허용 목록을 엄격하게
