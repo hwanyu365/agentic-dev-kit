@@ -2,7 +2,7 @@
 
 ## 1. 개요
 
-- 문서 정보: 작성 2026-11-13 / 기준 커밋 `c3a8faa` (origin/main) / 이슈 GH#17, GH#61, GH#63, GH#68
+- 문서 정보: 작성 2026-11-13 / 기준 커밋 `7e10431` (origin/main) / 이슈 GH#17, GH#61, GH#63, GH#68, GH#70
 - 기능: adk 변경을 adk 저장소 안에서 검증한 뒤에만 배포한다
 - 목적 (Why)
   - 배포 = `plugins/adk/.claude-plugin/plugin.json` 의 `version` 을 올린 커밋이 main 에 들어가는 것 → 사용자 `plugin update` 대상이 된다.
@@ -43,13 +43,14 @@
   - `claude -p --permission-mode bypassPermissions` 에서도 deny 규칙 명령(`git commit --no-verify`)을 실행하지 못함. 대조군으로 같은 모드의 일반 커밋은 실행됨
     - 프로젝트 allow 는 workspace trust 를 수락한 경로에만 적용된다 [as-built] (runtime 의 trust 전후 비교, Claude Code 2.1.319) → trust 기록 전의 기본 모드로는 대조군이 성립하지 않는다
   - 기본 모드: trust 전에는 허용 규칙의 커밋도 승인 대기, runner `~/.claude.json` 에 trust 를 기록한 뒤에는 실행됨 (GH#19)
-  - 리뷰 job 의 격리: 렌더한 `claude-review.yml` 과 같은 격리 설정에 프롬프트·허용 도구(`Bash(sh probe/env.sh)`)만 바꾼 워크플로가 첫 head 에서 돈다 (`tests/probe.py`)
+  - 리뷰 job 의 격리: 렌더한 `claude-review.yml` 과 같은 격리 설정·권한 모드에 프롬프트·허용 도구(`Bash(sh probe/env.sh)`)만 바꾼 워크플로가 첫 head 에서 돈다 (`tests/probe.py`)
     - scrub 변형: 하위 셸에 action 의 워크플로 토큰(`DEFAULT_WORKFLOW_TOKEN`) 없음, Read 의 `/proc/self/environ`·`~/.claude/settings.json` 거부
     - 대조군(scrub 만 뺌): 워크플로 토큰 있음 → scrub 변형의 "없음" 이 원래 오지 않는 변수라서가 아님을 보인다
     - `CLAUDE_CODE_OAUTH_TOKEN` 은 scrub 과 관계없이 하위 셸에 오지 않는다 [as-built] (두 변형 모두 없음) → scrub 효과의 판정 변수로 쓸 수 없다
     - `/proc/self/environ` 은 저장소 밖 차단 설정보다 먼저 Read 도구의 장치·프로세스 파일 규칙으로 거부된다 [as-built]
     - 판정은 action 실행 기록에서 뽑고 값·파일 내용은 출력하지 않는다. 읽기 거부는 두 규칙의 오류만 센다 → 파일이 없어 난 오류를 거부로 보지 않는다
   - 리뷰 job 의 조회 권한: scrub 변형이 렌더한 prompt 의 이전 라운드 명령(`gh pr view` 행)을 실행해 성공하고, 대조군이 `gh pr view <번호> --comments` 를 실행해 권한 오류로 실패한다 → 대조군 실패가 없으면 그 권한으로 결함이 재현되지 않는 환경이라 성공이 공허하다 (리뷰 흐름 스펙 FR#11)
+  - 리뷰 job 의 허용 목록: 두 변형 모두 허용 목록 밖 명령(`sh probe/outside.sh`)이 권한 거부로 실행되지 않는다 → 렌더한 권한 모드가 auto mode 기본값을 덮는지 본다 (리뷰 흐름 스펙 FR#12)
   - 리뷰 워크플로: 시험 저장소에 시험 PR 을 열면 head 기준 Claude 리뷰 요약이 생기고, 반영 push 뒤 새 head 기준 요약이 다시 생김. 끝나면 시험 PR 을 닫는다
 - `FR#6` [요구사항] adk `CLAUDE.md` `## 검증` 에 규칙을 둔다.
   - adk 변경은 adk 안에서 확인하고, 확인 수단이 없으면 배포 전에 만든다
@@ -140,3 +141,4 @@ flowchart TB
 - GH-61: 런타임 관문에 리뷰 job 의 조회 권한 확인
 - GH-63: `checks` 에 adk 자신의 스펙 추적성 검사
 - GH-68: `checks` 에 비밀 파일 가드
+- GH-70: 런타임 관문에 리뷰 job 의 허용 목록 확인

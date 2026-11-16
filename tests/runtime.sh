@@ -102,6 +102,7 @@ review() {
 }
 # 격리 확인: scrub 변형은 하위 셸에 워크플로 토큰이 없고 저장소 밖 읽기가 막혀야 하며, scrub 만 뺀 대조군은 워크플로 토큰이 있어야 한다. OAuth 토큰은 둘 다 없어야 한다
 # 같은 판정 줄로 리뷰 prompt 의 이전 라운드 명령이 리뷰 job 권한에서 성공하고, 대조군 --comments 가 권한 오류인지도 본다 (TC#76)
+# 허용 목록 밖 명령은 두 변형 모두 거부돼야 한다 → 렌더한 권한 모드가 action 의 auto mode 기본값을 덮는다 (TC#82)
 probe() {
   sha=$1; wf=$2; want=$3; i=0; id=""
   while [ $i -lt 120 ]; do
@@ -120,7 +121,7 @@ printf -- '- 두 번째 head\n' >> probe/notes.md
 st "반영 커밋" git commit -qam "probe 2"
 st "반영 push" git push -q origin "$br"
 review "$(git rev-parse HEAD)" "재리뷰"
-probe "$h1" adk-probe.yml "ADK-PROBE oauth=absent workflow_token=absent read_environ=blocked read_settings=blocked pr_view=ok pr_comments=perm-error"
-probe "$h1" adk-probe-noscrub.yml "ADK-PROBE oauth=absent workflow_token=present read_environ=blocked read_settings=blocked pr_view=ok pr_comments=perm-error"
+probe "$h1" adk-probe.yml "ADK-PROBE oauth=absent workflow_token=absent read_environ=blocked read_settings=blocked pr_view=ok pr_comments=perm-error outside=denied"
+probe "$h1" adk-probe-noscrub.yml "ADK-PROBE oauth=absent workflow_token=present read_environ=blocked read_settings=blocked pr_view=ok pr_comments=perm-error outside=denied"
 
 exit "$fail"
