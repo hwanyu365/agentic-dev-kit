@@ -14,7 +14,7 @@ jobs:
     # fork PR 은 secret 이 없고 외부 입력이므로 같은 저장소 브랜치만 리뷰한다. dependabot PR 에도 secret 이 전달되지 않는다.
     if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
-    # 끝나지 않는 실행이 토큰을 계속 쓰지 않게 시간과 턴에 상한을 둔다. 상한에 걸려 요약이 없으면 마지막 단계가 check 를 실패시킨다.
+    # 끝나지 않는 실행이 토큰을 계속 쓰지 않게 시간과 턴에 상한을 둔다. 상한에 걸려 요약이 없으면 merge 게이트가 막는다.
     timeout-minutes: 30
     permissions:
       contents: read
@@ -104,8 +104,8 @@ jobs:
           claude_args: |
             --max-turns 60
             --allowedTools "Edit(./.claude-review/summary.md),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
-      # 요약을 올리지 못하고 끝나도 action 은 성공으로 남는다 → 현재 head 의 요약이 없으면 check 를 실패시킨다. 작성자는 Claude App 만 인정한다.
-      # PR 이 이 워크플로를 바꾸면 action 이 실행 없이 정상 종료한다 → 그때는 conclusion 이 비어 있으므로 실패시키지 않고 알린다. 그 PR 은 리뷰 없이 이 check 를 통과한다.
+      # 요약을 올리지 못하고 끝나도 action 은 성공으로 남는다 → 현재 head 의 요약이 없으면 check 를 실패시킨다. 작성자 판정은 merge-gate.sh 와 같다.
+      # PR 이 이 워크플로를 바꾸면 action 이 실행 없이 정상 종료한다 → 그때는 conclusion 이 비어 있으므로 실패시키지 않고 알린다. merge 게이트는 요약이 없으니 그대로 막는다.
       # conclusion 이 비는 조건은 고정한 action 버전의 동작이다 → action 을 올릴 때 다시 확인한다.
       - env:
           GH_TOKEN: ${{ github.token }}
