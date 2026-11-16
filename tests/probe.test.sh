@@ -21,6 +21,17 @@ job = lambda d: d['jobs']['review']
 step = lambda d: [x for x in job(d)['steps'] if x.get('id') == 'claude'][0]
 $1
 "); }
+qx() { (cd "$r/m" && PYTHONIOENCODING=utf-8 "$py" -P -c "
+import sys, yaml
+def load(p):
+    d = yaml.safe_load(open(p, encoding='utf-8'))
+    d['on'] = d.pop(True, d.get('on'))
+    return d
+base = load('.github/workflows/claude-review.yml'); s = load('.github/workflows/adk-probe.yml'); n = load('.github/workflows/adk-probe-noscrub.yml')
+job = lambda d: d['jobs']['review']
+step = lambda d: [x for x in job(d)['steps'] if x.get('id') == 'claude'][0]
+$1
+"); }
 
 t "TC#14 생성한 두 워크플로가 있음" "$([ -f "$w/adk-probe.yml" ] && [ -f "$w/adk-probe-noscrub.yml" ] && echo y)" y
 t "TC#14 PR 을 열 때만 돈다" "$(q "print(s['on'] == {'pull_request': {'types': ['opened']}}, n['on'] == s['on'])")" "True True"
@@ -73,6 +84,9 @@ in='{"type":"system","subtype":"init","permissionMode":"default"}'
 t "TC#81 권한 거부 목록에 있으면 denied (문구와 무관)" "$(J "[$in,$ou,$(o 6 true 'This command requires approval'),$dn]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted pr_view=not-attempted pr_comments=not-attempted edit=not-attempted outside=denied mode=default"
 t "TC#81 거부 목록에 없는 오류는 error-other" "$(J "[$ou,$(o 6 true 'This command requires approval')]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted pr_view=not-attempted pr_comments=not-attempted edit=not-attempted outside=error-other mode=not-run"
 t "TC#81 세션 권한 모드를 init 메시지에서 읽음" "$(J "[$(printf '%s' "$in" | sed 's/default/auto/')]")" "ADK-PROBE oauth=not-run workflow_token=not-run read_environ=not-attempted read_settings=not-attempted pr_view=not-attempted pr_comments=not-attempted edit=not-attempted outside=not-attempted mode=auto"
+
+# TC#85 권한 모드 대조군: 리뷰 변형에서 --permission-mode 만 빠진다
+t "TC#85 대조군은 권한 모드만 빠지고 나머지 claude_args 는 scrub 변형과 같음" "$(qx "import re; a = load('.github/workflows/adk-probe-automode.yml'); ca, cs = step(a)['with']['claude_args'], step(s)['with']['claude_args']; print(re.findall(r'--permission-mode', ca) == [], re.sub(r'--permission-mode \\S+\\n', '', cs) == ca, job(a).get('env') == job(s).get('env'), step(a)['with']['prompt'] == step(s)['with']['prompt'])")" "True True True True"
 
 # TC#83 @claude 확인 워크플로: 렌더한 claude.yml 에서 트리거 문구·판정 step·action step id 만 다르다
 qm() { (cd "$r/m" && PYTHONIOENCODING=utf-8 "$py" -P -c "

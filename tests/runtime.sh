@@ -104,7 +104,7 @@ review() {
 # 같은 판정 줄로 리뷰 prompt 의 이전 라운드 명령이 리뷰 job 권한에서 성공하고, 대조군 --comments 가 권한 오류인지도 본다 (TC#76)
 # 허용 목록 밖 명령은 두 변형 모두 거부되고 세션이 default 모드여야 한다 → 렌더한 권한 모드가 action 의 auto mode 기본값을 덮는다 (TC#82)
 probe() {
-  sha=$1; wf=$2; want=$3; i=0; id=""
+  sha=$1; wf=$2; want=$3; how=${4:-eq}; i=0; id=""
   while [ $i -lt 120 ]; do
     l=$(gh run list -R "$TB" --workflow "$wf" --commit "$sha" --json databaseId,status -q '.[0] | "\(.databaseId) \(.status)"' 2>/dev/null)
     case "$l" in *" completed") id=${l%% *}; break ;; esac
@@ -113,7 +113,7 @@ probe() {
   [ -n "$id" ] || { ng "$wf: $sha 의 run 이 30분 안에 끝나지 않음"; return; }
   echo "     run https://github.com/$TB/actions/runs/$id"
   got=$(gh run view -R "$TB" "$id" --log 2>/dev/null | grep -o 'ADK-PROBE [^"]*' | tail -n 1)
-  [ "$got" = "$want" ] && ok "$wf: $got" || ng "$wf: 기대 '$want', 실제 '${got:-판정 줄 없음}'"
+  if [ "$how" = re ]; then printf '%s' "$got" | grep -Eq "$want"; else [ "$got" = "$want" ]; fi && ok "$wf: $got" || ng "$wf: 기대 '$want', 실제 '${got:-판정 줄 없음}'"
 }
 h1=$(git rev-parse HEAD)
 review "$(git rev-parse HEAD)" "첫 리뷰"
@@ -123,6 +123,8 @@ st "반영 push" git push -q origin "$br"
 review "$(git rev-parse HEAD)" "재리뷰"
 probe "$h1" adk-probe.yml "ADK-PROBE oauth=absent workflow_token=absent read_environ=blocked read_settings=blocked pr_view=ok pr_comments=perm-error edit=not-attempted outside=denied mode=default"
 probe "$h1" adk-probe-noscrub.yml "ADK-PROBE oauth=absent workflow_token=present read_environ=blocked read_settings=blocked pr_view=ok pr_comments=perm-error edit=not-attempted outside=denied mode=default"
+# 권한 모드만 뺀 대조군은 위 두 변형과 달라야 한다 → 허용 목록 밖 명령이 실행되거나 세션이 auto mode 로 보여야 denied·mode=default 가 권한 모드의 효과다 (TC#86)
+probe "$h1" adk-probe-automode.yml ' (outside=ran|mode=auto)( |$)' re
 
 # @claude 확인: 트리거 문구만 바꾼 claude.yml 복제를 코멘트로 부른다 → 허용 목록 밖 작업 트리 수정·스크립트가 거부되고 세션이 auto mode 가 아니어야 한다 (TC#84)
 # Claude 가 단 진행 코멘트도 같은 워크플로를 깨우고 실행 조건에서 건너뛴다 → 건너뛴 run 은 고르지 않는다

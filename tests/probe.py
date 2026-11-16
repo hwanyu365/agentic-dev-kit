@@ -127,7 +127,7 @@ def load(path):
     return d
 
 
-def variant(base, name, scrub):
+def variant(base, name, scrub, keep_mode=True):
     d = copy.deepcopy(base)
     d["name"] = name
     d["on"] = {"pull_request": {"types": ["opened"]}}
@@ -144,7 +144,7 @@ def variant(base, name, scrub):
     args = act["with"]["claude_args"]
     head, tools = args.split('--allowedTools "', 1)
     tools = tools.split('"', 1)[0]
-    mode = "".join(l.strip() + "\n" for l in head.splitlines() if l.strip().startswith("--permission-mode"))
+    mode = "".join(l.strip() + "\n" for l in head.splitlines() if l.strip().startswith("--permission-mode")) if keep_mode else ""
     act["with"]["claude_args"] = mode + '--max-turns 12\n--allowedTools "' + tools + ',Bash(sh probe/env.sh)"\n'
     job["steps"] = steps[: i + 1] + [JUDGE_STEP]
     return d
@@ -171,9 +171,10 @@ def mention(base):
 def main(root):
     wf = os.path.join(root, ".github", "workflows")
     base = load(os.path.join(wf, "claude-review.yml"))
-    for fname, name, scrub in (("adk-probe.yml", "adk probe", True), ("adk-probe-noscrub.yml", "adk probe noscrub", False)):
+    # 권한 모드만 뺀 대조군(adk-probe-automode.yml) → 판정 필드가 권한 모드를 실제로 가르는지 보인다. 두 변형과 같은 판정이면 그 필드는 공허하다
+    for fname, name, scrub, keep in (("adk-probe.yml", "adk probe", True, True), ("adk-probe-noscrub.yml", "adk probe noscrub", False, True), ("adk-probe-automode.yml", "adk probe automode", True, False)):
         with open(os.path.join(wf, fname), "w", encoding="utf-8", newline="\n") as f:
-            yaml.safe_dump(variant(base, name, scrub), f, allow_unicode=True, sort_keys=False)
+            yaml.safe_dump(variant(base, name, scrub, keep), f, allow_unicode=True, sort_keys=False)
     with open(os.path.join(wf, "adk-probe-mention.yml"), "w", encoding="utf-8", newline="\n") as f:
         yaml.safe_dump(mention(load(os.path.join(wf, "claude.yml"))), f, allow_unicode=True, sort_keys=False)
     os.makedirs(os.path.join(root, "probe"), exist_ok=True)
