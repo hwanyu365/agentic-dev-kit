@@ -64,7 +64,8 @@
 - `FR#10` [요구사항] `/adk:ship` 4-b 의 merge 는 `--delete-branch` 를 붙이지 않고, 5 에서 main 클론 기준으로 워크트리 → 로컬 브랜치 → 남아 있는 원격 브랜치 순으로 지운다 [as-built: 워크트리가 있는 브랜치의 `gh pr merge --delete-branch` 는 merge 뒤 `cannot delete branch … used by worktree` 로 실패]
 - `FR#11` [요구사항] 리뷰 job 이 따르는 지시(템플릿·adk `claude-review.yml` prompt, `/adk:ship` review.md)의 `gh pr view` 는 `--json <필드>` 로 읽을 필드를 정한다 → job 의 `permissions` 안에서 동작한다 [as-built: 리뷰 job 에서 `gh pr view --comments` 가 check 상태 조회 중 `Resource not accessible by integration` 으로 실패]
   - 이전 라운드 읽기: `gh pr view <번호> --json body,comments`
-  - 대조군 `--comments` 의 권한 오류는 같은 head 의 다른 check run 이 진행 중일 때만 재현된다 [as-built: 시험 저장소 run 4건 비교, 다른 check run 이 모두 끝난 실행에서 성공] → 대조군 성공은 결함이 아니라 재현되지 않은 실행이다
+  - 대조군 `--comments` 의 권한 오류는 같은 head 의 다른 check run 이 진행 중일 때만 재현된다 [as-built: 시험 저장소 run 4건 비교, 다른 check run 이 모두 끝난 실행에서 성공] → 판정은 엄격하게 두고, `runtime` 이 `pr_comments=ok` 로 실패하면 job 을 다시 실행해 본다. 다시 실행해도 `ok` 면 권한이 넓어졌는지 조사한다
+    - 성공을 통과로 완화하지 않는다 → 리뷰 job 권한이 넓어져 생긴 성공과 구분할 수 없다
   - job `permissions` 는 넓히지 않는다 → `checks: read` 를 더하면 모든 형태가 동작하지만, PR 내용을 읽는 리뷰 job 의 권한을 지시 형태 때문에 넓히지 않는다
 - `FR#12` [요구사항] 템플릿·adk 의 `claude-review.yml` 은 `claude_args` 에 `--permission-mode default`, `claude.yml` 은 `--permission-mode acceptEdits` 를 둔다 → `--allowedTools` 밖 호출은 거부된다 [as-built: `claude-code-action` v1.0.273 부터 opt-out 조건이 없으면 세션이 auto mode 로 시작하고, 허용 규칙이 없는 호출을 안전성 검토가 판정한다]
   - action 이 넣는 인자 뒤에 `claude_args` 가 붙는다 → 마지막 `--permission-mode` 가 이긴다
@@ -124,7 +125,7 @@ flowchart TB
 | TC#21 | FR#6 | `merge` 모드 저장소에서 `/adk:watch` 를 실행하면 감시하지 않고 알림 | (수동) |
 | TC#43 | FR#10 | 4-b merge 명령에 `--delete-branch` 없음. 워크트리에서 시작한 브랜치에 `cleanup.md` 명령을 줄마다 실행 → 원격 브랜치가 남은 저장소·자동 삭제 저장소 모두 줄마다 종료 코드 0, 워크트리·로컬·원격 브랜치 없음, `main` 갱신 | `tests/cleanup.test.sh` (임시 bare 원격·워크트리) |
 | TC#75 | FR#11 | 템플릿·adk `claude-review.yml` prompt 와 review.md 의 `gh pr view` 마다 `--json` 이 있음 | `tests/review-prompt.test.sh` |
-| TC#76 | FR#11 | 렌더한 리뷰 job 과 같은 권한·격리에서 prompt 의 이전 라운드 명령이 성공. 대조군의 `gh pr view <번호> --comments` 는 권한 오류 또는 성공이고, 성공이면 `info` 로 기록 | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job), 배포 관문 스펙 FR#5 |
+| TC#76 | FR#11 | 렌더한 리뷰 job 과 같은 권한·격리에서 prompt 의 이전 라운드 명령이 성공하고, 대조군의 `gh pr view <번호> --comments` 는 권한 오류로 실패 | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job), 배포 관문 스펙 FR#5 |
 | TC#80 | FR#12 | 템플릿·adk 의 `claude-review.yml` `claude_args` 에 `--permission-mode default`, `claude.yml` 에 `--permission-mode acceptEdits` 가 있고 다른 `--permission-mode` 는 없음 | `tests/review-prompt.test.sh` |
 | TC#81 | FR#12 | 격리 확인 워크플로가 템플릿의 `--permission-mode` 를 그대로 두고 허용 목록 밖 명령(`sh probe/outside.sh`)을 시도하게 함. 판정: 실행 출력 표지가 있으면 ran, 권한 거부 목록에 그 호출이 있으면 denied(문구와 무관), 그 밖 오류는 error-other. 세션 시작 메시지의 `permissionMode` 를 mode 로 냄 | `tests/probe.test.sh` |
 | TC#82 | FR#12 | 렌더한 리뷰 job 과 같은 권한·격리에서 허용 목록 밖 명령이 denied 이고 mode 가 default | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job), 배포 관문 스펙 FR#5 |
