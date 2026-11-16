@@ -2,7 +2,7 @@
 
 ## 1. 개요
 
-- 문서 정보: 작성 2026-11-13 / 기준 커밋 `4ec0422` (origin/main) / 이슈 GH#17, GH#61, GH#63
+- 문서 정보: 작성 2026-11-13 / 기준 커밋 `c3a8faa` (origin/main) / 이슈 GH#17, GH#61, GH#63, GH#68
 - 기능: adk 변경을 adk 저장소 안에서 검증한 뒤에만 배포한다
 - 목적 (Why)
   - 배포 = `plugins/adk/.claude-plugin/plugin.json` 의 `version` 을 올린 커밋이 main 에 들어가는 것 → 사용자 `plugin update` 대상이 된다.
@@ -22,7 +22,7 @@
 
 ## 3. 요구사항
 
-- `US#1` [요구사항] 저장소 소유자로서, 적용 저장소가 adk 결함을 찾지 않도록, adk 가 검증을 끝낸 변경만 배포되기를 원한다. → FR#1~FR#7
+- `US#1` [요구사항] 저장소 소유자로서, 적용 저장소가 adk 결함을 찾지 않도록, adk 가 검증을 끝낸 변경만 배포되기를 원한다. → FR#1~FR#8
 - `FR#1` [요구사항] PR·main push 마다 `tests/*.test.sh` 를 세 환경에서 돌린다: ubuntu gawk, ubuntu mawk(PATH 앞 `awk -> mawk`), macOS `/usr/bin/awk`.
   - 각 환경은 실제로 쓴 `awk` 를 로그에 남기고, 기대한 구현이 아니면 실패한다 → 공허한 통과 방지
 - `FR#2` [요구사항] 보안 경계 조건마다 그 조건을 지운 사본에서 지정한 테스트가 실패해야 한다.
@@ -59,6 +59,8 @@
   - 기준: PR 은 `origin/<base>`, main push 는 `HEAD^` 를 `-b` 로 준다 → 템플릿 `ci.yml` 과 같다
   - 범위: 템플릿 기본 범위에서 템플릿 안의 `docs/` 와 `spec-trace.sh` 를 더 뺀다 → 적용 저장소에서도 기본 범위 밖인 예시가 adk 의 TC 로 세지 않는다 (D10)
   - 테스트의 시험 입력은 TC 번호를 검사가 읽지 못하는 형태로 쓴다 → 시험 입력이 실제 TC 를 덮거나 고아 TC 가 되지 않는다 (D10)
+- `FR#8` [요구사항] `checks` job 이 추적 파일을 `.github/secret-files.regex` 와 대조해 맞는 파일(`*.example` 제외)이 있으면 실패한다. 목록 파일이 없거나 비면 실패한다 (NFR#1).
+  - 템플릿 `ci.yml` 의 `Guard secrets` step 과 같다 → pre-commit 을 거치지 않는 커밋(세션 밖 커밋, rebase·cherry-pick)의 비밀 파일도 merge 전에 막는다
 - `NFR#1` [요구사항] 모든 관문은 fail-closed 다. 입력·secret·대상이 없으면 통과가 아니라 실패한다.
 - `NFR#2` [요구사항] 필수 check 이름 `test` 를 유지한다 → ruleset 을 바꾸지 않아도 새 job 이 merge 를 막는다.
 - `NFR#3` [요구사항] Claude 실행(구독 사용량)은 version 을 올린 PR 과 수동 실행에서만 생긴다.
@@ -72,7 +74,7 @@
 flowchart TB
   subgraph PR["adk PR (pull_request)"]
     direction LR
-    K["checks: validate·YAML·spec trace"] --> G["test (집계)"]
+    K["checks: guard secrets·validate·YAML·spec trace"] --> G["test (집계)"]
     M["sh: gawk / mawk / macOS"] --> G
     X["mutation (ubuntu)"] --> G
     R["render"] --> G
@@ -128,6 +130,7 @@ flowchart TB
 | TC#77 | FR#5 | 격리 확인 워크플로 생성이 렌더한 prompt 에서 이전 라운드 `gh pr view` 명령을 뽑아 scrub 변형에, `--comments` 형태를 대조군에 넣음. 명령을 뽑지 못하면 실패 | `tests/probe.test.sh` |
 | TC#7 | FR#6 | `CLAUDE.md` 검증 절에 원칙·version 기준 존재 | (수동) |
 | TC#8 | NFR#2 | 하위 job 하나라도 실패·취소면 `test` 실패 | (수동) 하위 job 이 실패한 PR run 에서 `test` 실패 관측 |
+| TC#79 | FR#8 | PR run 의 `checks` 로그에 Guard secrets step 이 돌고 통과 | (수동) CI 로그 확인. 맞는 파일이 없는 트리의 통과는 검출 경로를 보이지 않는다 → 검출은 템플릿과 같은 코드임으로 갈음 |
 | TC#78 | FR#7 | PR run 의 `checks` 로그에 `-b origin/main` 으로 돈 Spec trace 출력이 있고 E 0, merge 뒤 main push run 은 `-b HEAD^` 로 돌고 E 0 | (수동) CI 로그 확인. check 의 pass 만 보면 공허하다 |
 | TC#9 | NFR#3 NFR#4 | version 불변 PR 에서 Claude 실행 0, adk 로그에 시험 출력 전문 없음 | (수동) CI 로그 확인 |
 
@@ -136,3 +139,4 @@ flowchart TB
 - GH-17: 배포 전 검증 체계 정의
 - GH-61: 런타임 관문에 리뷰 job 의 조회 권한 확인
 - GH-63: `checks` 에 adk 자신의 스펙 추적성 검사
+- GH-68: `checks` 에 비밀 파일 가드

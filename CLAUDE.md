@@ -23,7 +23,7 @@ agent 가 SDD + TDD 로 개발하게 하는 프로젝트 틀(`plugins/adk/templa
 - `plugins/adk/template/docs/rules_spec.md` 가 스펙 작성 규칙의 원본이다. 특정 프로젝트 사례는 넣지 않는다
 - 스킬 안의 다른 스킬 참조는 `/adk:<이름>` 전체 이름으로 쓴다
 - adk 자신의 틀은 `/adk:init --update` 로 갱신한다. 아래는 템플릿과 일부러 다르게 둔 것이다 → 갱신 때 추가·병합하지 않는다
-  - `.github/workflows/ci.yml`: 들이지 않음 → `test.yml` 이 같은 검증을 돌린다
+  - `.github/workflows/ci.yml`: 들이지 않음 → `test.yml` 이 같은 검사를 돌린다: 비밀 파일 가드·`plugin validate`·추적성 검사는 `checks`, `tests/*.test.sh` 는 `sh`
   - `.github/workflows/release.yml`: 들이지 않음 → Release 를 만들지 않고 태그는 `test.yml` `tag` job 이 단다
   - `docs/rules_spec.md`: 들이지 않음 → 템플릿 원본을 가리킨다
   - 자리표시자 `CI_SETUP`: `ci.yml` 이 없으므로 `claude.yml` 의 설정 step 에서 읽는다
