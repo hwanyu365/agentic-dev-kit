@@ -64,6 +64,8 @@
 - `FR#10` [요구사항] `/adk:ship` 4-b 의 merge 는 `--delete-branch` 를 붙이지 않고, 5 에서 main 클론 기준으로 워크트리 → 로컬 브랜치 → 남아 있는 원격 브랜치 순으로 지운다 [as-built: 워크트리가 있는 브랜치의 `gh pr merge --delete-branch` 는 merge 뒤 `cannot delete branch … used by worktree` 로 실패]
 - `FR#11` [요구사항] 리뷰 job 이 따르는 지시(템플릿·adk `claude-review.yml` prompt, `/adk:ship` review.md)의 `gh pr view` 는 `--json <필드>` 로 읽을 필드를 정한다 → job 의 `permissions` 안에서 동작한다 [as-built: 리뷰 job 에서 `gh pr view --comments` 가 check 상태 조회 중 `Resource not accessible by integration` 으로 실패]
   - 이전 라운드 읽기: `gh pr view <번호> --json body,comments`
+  - 대조군 `--comments` 의 권한 오류는 실행 시점에 따라 재현되지 않을 수 있다 [as-built: 시험 저장소 run 4건 중 같은 head 의 다른 check run 이 진행 중이던 3건은 권한 오류, 모두 끝나 있던 1건은 성공. 상관관계이고 GitHub 의 조건은 확인하지 못함] → 판정은 엄격하게 두고, `runtime` 이 `pr_comments=ok` 로 실패하면 job 을 다시 실행해 본다. 다시 실행해도 `ok` 면 권한이 넓어졌는지 조사한다
+    - 성공을 통과로 완화하지 않는다 → 리뷰 job 권한이 넓어져 생긴 성공과 구분할 수 없다
   - job `permissions` 는 넓히지 않는다 → `checks: read` 를 더하면 모든 형태가 동작하지만, PR 내용을 읽는 리뷰 job 의 권한을 지시 형태 때문에 넓히지 않는다
 - `FR#12` [요구사항] 템플릿·adk 의 `claude-review.yml` 은 `claude_args` 에 `--permission-mode default`, `claude.yml` 은 `--permission-mode acceptEdits` 를 둔다 → `--allowedTools` 밖 호출은 거부된다 [as-built: `claude-code-action` v1.0.273 부터 opt-out 조건이 없으면 세션이 auto mode 로 시작하고, 허용 규칙이 없는 호출을 안전성 검토가 판정한다]
   - action 이 넣는 인자 뒤에 `claude_args` 가 붙는다 → 마지막 `--permission-mode` 가 이긴다
