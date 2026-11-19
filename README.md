@@ -1,103 +1,103 @@
 # agentic-dev-kit
 
-Claude Code agent 가 SDD(Spec-Driven Development) + TDD 로 개발하게 하는 프로젝트 틀과 절차 스킬.
-agent 가 건너뛸 수 없는 단계(단일 검증 명령과 그 안의 스펙 ↔ TC ↔ 테스트 추적성 검사, 읽기 전용 리뷰, merge 게이트)는 hook·CI 로 강제한다. 강도는 프로젝트별 성숙도로 조절한다.
+A project scaffold and procedure skills that make Claude Code agents develop with SDD (Spec-Driven Development) + TDD.
+Steps the agent must not skip (a single verification command with a spec ↔ TC ↔ test traceability check inside it, read-only review, merge gate) are enforced with hooks and CI. The strictness is tuned per project maturity.
 
-- 사람: 요구사항, 결정, 리뷰
-- agent: 스펙, 테스트, 구현, 검증, PR, 릴리스
-- 장치: 스펙 주도 TDD, 로컬과 CI 가 같은 단일 검증 명령, 프로젝트별 성숙도·자율 범위
+- Human: requirements, decisions, review
+- Agent: spec, tests, implementation, verification, PR, release
+- Mechanisms: spec-driven TDD, the same single verification command locally and in CI, per-project maturity and autonomy scope
 
-적용 예: [hwanyu365/argos](https://github.com/hwanyu365/argos) (Android + Firebase, v1.0.0)
-참고한 방법론과 채택 이유: [docs/benchmark.md](docs/benchmark.md)
+Example adoption: [hwanyu365/argos](https://github.com/hwanyu365/argos) (Android + Firebase, v1.0.0)
+Methodologies referenced and why they were adopted: [docs/benchmark.md](docs/benchmark.md)
 
-## 설치
+## Installation
 
-- GitHub SSH 키가 없으면 `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` 을 설정한다 → 세션 안의 `/plugin` 설치와 `plugin update` 는 HTTPS 로 다시 시도하지 않는다
+- If you don't have a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` → `/plugin` installs inside a session and `plugin update` do not retry over HTTPS
 
 ```sh
 claude plugin marketplace add hwanyu365/agentic-dev-kit
 claude plugin install adk@agentic-dev-kit
 ```
 
-- 플러그인 이름은 `adk` 이고 명령은 `/adk:*` 다
-- 갱신: `claude plugin marketplace update agentic-dev-kit` → `claude plugin update adk@agentic-dev-kit` (자동 갱신은 기본으로 꺼져 있다)
-  - 플러그인만 갱신하면 이미 적용한 저장소의 틀(hook·CI·CLAUDE.md)은 그대로다 → 그 저장소에서 `/adk:init --update` 로 맞춘다
-- 플러그인 hook: 세션 시작 시 main 클론의 `.adk/handoff.md` 를 컨텍스트에 넣고, 아래 두 agent 의 Bash 를 조회 명령으로 제한하고, `adk:reviewer` 의 반환 양식을 검사하고, 컨텍스트 압축 때 진행 상태(이슈·리뷰 항목·소유자 결정)를 요약에 남기게 한다
-- 플러그인 agent: `adk:reviewer`(local 리뷰), `adk:spec-verifier`(스펙 대조)
-  - 편집 도구(Edit·Write)가 없고, Bash 는 hook 이 허용 목록으로 제한함: git·gh 조회, 읽기 도구, 자체 검사·검증 래퍼만 통과
-  - 판정은 셸이 실제로 넘기는 단어(따옴표·backslash 를 푼 것)로 함. 목록 밖의 명령과 확장(`$`·중괄호·glob)·치환·괄호·파일 리다이렉트·셸 감싸기는 모두 막음
-  - 허용한 명령의 파일 쓰기·명령 실행 옵션은 이름 앞부분으로 막음 (git `--out*`·`--ext*`·`--op*`·`--upl*`·`--exec*`, `git grep -O`, `gh api` 의 쓰기 플래그·URL·`--hostname`, gh `--web`, gh 의 URL 인자, `-R`/`--repo` 는 위치와 관계없이 OWNER/REPO 만(짧은 옵션 묶음 안의 `R` 은 막음), `repo view` 의 인자는 허용 글자와 `/` 하나만, `git fetch` 는 원격 이름과 `:`·`+` 없는 ref 만). 이 목록은 각 명령의 옵션 문서와 대조한 범위다 → 허용 명령을 늘리거나 도구가 옵션을 추가하면 다시 대조한다
-  - 인자를 다시 확장하는 셸 내장(`printf -v`·`test -v`)은 목록에 넣지 않음
-  - 남는 로컬 쓰기: `git fetch` 의 FETCH_HEAD·원격 추적 ref·객체 (기본 refspec 기준. `remote.*.fetch` 를 로컬 브랜치로 잡은 저장소에서는 로컬 ref 도 바뀜), `git status`·`git describe --dirty` 의 index 갱신
-  - 자체 검사(`sh tests/*.test.sh`)와 검증 래퍼(`sh .claude/hooks/verify.sh`)는 저장소 코드를 그대로 실행함 → 그 코드가 하는 일은 hook 의 제한 밖이고, `cd` 로 옮긴 다른 저장소의 것도 실행됨. 이 범위는 agent 지침이 기준이다
-  - `cd`·`git -C` 로 옮긴 저장소의 git 설정이 실행하는 명령(`core.fsmonitor`, external diff 등)도 hook 범위 밖이다 → 같은 이유로 agent 지침이 기준이다
-- Claude Code v2.1.295 이상: 템플릿의 차단 hook 은 `onFailure: "block"` 으로 hook 실패·시간 초과도 막는다. 그보다 낮은 버전은 이 필드를 모르므로 실패가 통과로 끝난다
+- The plugin name is `adk` and its commands are `/adk:*`
+- Update: `claude plugin marketplace update agentic-dev-kit` → `claude plugin update adk@agentic-dev-kit` (auto-update is off by default)
+  - Updating only the plugin leaves the scaffold (hooks, CI, CLAUDE.md) in already-adopted repositories unchanged → align it with `/adk:init --update` in that repository
+- Plugin hooks: on session start, inject the main clone's `.adk/handoff.md` into context; restrict the Bash of the two agents below to query commands; check the return format of `adk:reviewer`; and on context compaction, keep progress state (issues, review items, owner decisions) in the summary
+- Plugin agents: `adk:reviewer` (local review), `adk:spec-verifier` (spec cross-check)
+  - They have no editing tools (Edit, Write), and their Bash is restricted to an allowlist by a hook: only git/gh queries, read tools, and the repository's self-checks and verification wrapper pass
+  - Decisions are made on the words the shell actually passes (with quotes and backslashes resolved). Commands outside the list, expansions (`$`, braces, globs), substitutions, parentheses, file redirection and shell wrapping are all blocked
+  - File-writing and command-execution options of allowed commands are blocked by name prefix (git `--out*`, `--ext*`, `--op*`, `--upl*`, `--exec*`, `git grep -O`, `gh api` write flags, URLs and `--hostname`, gh `--web`, gh URL arguments, `-R`/`--repo` only as OWNER/REPO regardless of position (`R` inside a short-option bundle is blocked), `repo view` arguments only allowed characters with a single `/`, `git fetch` only a remote name and refs without `:` or `+`). This list covers what was checked against each command's option docs → re-check when adding allowed commands or when a tool adds options
+  - Shell builtins that re-expand arguments (`printf -v`, `test -v`) are not on the list
+  - Remaining local writes: `git fetch`'s FETCH_HEAD, remote-tracking refs and objects (with the default refspec; in repositories where `remote.*.fetch` targets local branches, local refs change too), and the index refresh by `git status` and `git describe --dirty`
+  - The self-checks (`sh tests/*.test.sh`) and the verification wrapper (`sh .claude/hooks/verify.sh`) run repository code as-is → what that code does is outside the hook's restriction, and those of another repository moved into with `cd` also run. For this scope the agent instructions are the reference
+  - Commands run by the git config of a repository moved into with `cd` or `git -C` (`core.fsmonitor`, external diff, etc.) are also outside the hook's scope → for the same reason the agent instructions are the reference
+- Claude Code v2.1.295 or later: the template's blocking hooks use `onFailure: "block"` so hook failures and timeouts also block. Older versions don't know this field, so failures end up passing
 
-## 사용 흐름
+## Workflow
 
 ```mermaid
 flowchart LR
-  I[요청 또는 GitHub Issue] --> S["/adk:spec"] --> T["/adk:tdd"] --> V["/adk:verify"] --> P["/adk:ship"]
+  I[Request or GitHub Issue] --> S["/adk:spec"] --> T["/adk:tdd"] --> V["/adk:verify"] --> P["/adk:ship"]
   S -->|chore| V
-  P -->|자율 범위 pr| R["ready → 보고 → /adk:watch: 팀원 리뷰 반영 → 승인 → squash merge"]
-  P -->|자율 범위 merge| M[ready → squash merge]
+  P -->|autonomy pr| R["ready → report → /adk:watch: address teammate review → approval → squash merge"]
+  P -->|autonomy merge| M[ready → squash merge]
   R & M --> L["/adk:release"]
 ```
 
-| 명령 | 하는 일 |
+| Command | What it does |
 | --- | --- |
-| `/adk:init` | 현재 저장소에 틀을 복사하고 자리표시자(스택, 검증 명령, 성숙도, 자율 범위, 리뷰 방식, 브랜치 최신 요구 등)를 인터뷰로 채움. `--update` 는 적용된 저장소의 현재 값을 읽어 최신 템플릿과 파일마다 비교·병합 |
-| `/adk:spec [이슈]` | 워크트리·브랜치 생성·기준선 검증 → `docs/spec_{function}.md` 갱신, 요구사항 ID·TC 부여, `[확인필요]` 0건. 이슈가 없으면 확인받고 생성 |
-| `/adk:tdd` | TC 로 테스트 먼저(Red) → 최소 구현(Green) → 정리. 같은 TC 수정이 3번 실패하면 멈춤. 리뷰 지적은 같은 입력이 들어오는 자리를 전수로 세고 테스트부터 |
-| `/adk:verify` | 검증 명령 + 스펙 항목별 구현 위치·TC·Then 단언 대조와 diff → 스펙 역대조(대화 이력 없는 subagent) + 보안 경계 mutation 표 + 차단 장치의 이전 버전 비교 + 변경 범위 점검. chore 는 대조 생략 |
-| `/adk:ship` | 커밋(리뷰 `local` 이면 push 전 로컬 리뷰) → draft PR → CI·리뷰 조사·반영 → 후속 건 이슈 등록 → 반복 지적은 규칙화 이슈로 → 멈춤 판정(B·S 는 재리뷰 2라운드까지, Nits 만 남으면 merge 가능) → ready → 자율 범위 `pr` 은 리뷰 요청 확인·보고, `merge` 는 squash merge |
-| `/adk:watch <PR>` | 자율 범위 `pr` 에서 ready 된 PR 감시 → 팀원 리뷰 조사·반영(amend·push) → 스레드 회신·resolve → 재리뷰 요청 → 현재 head 승인 뒤 squash merge. PRD·스펙 변경을 부르는 지적은 멈추고 보고 |
-| `/adk:deps [PR]` | Dependabot PR 대상 확인(작성자·서명·patch·minor, 어긋나면 `@dependabot recreate`·`rebase`) → CI → 로컬 subagent 리뷰 → 요약 코멘트 → 자율 범위 `merge` 는 Blocking·Should Fix 0 이면 squash merge, `pr` 은 보고. major 는 리뷰 후 보고 |
-| `/adk:release <버전>` | 자동 테스트가 없는 TC 확인 → 태그 → 릴리스 워크플로 확인 → 배포 후 확인 목록 |
-| `/adk:handoff` | main 클론의 `.adk/handoff.md` 에 현재 상태 기록 |
+| `/adk:init` | Copies the scaffold into the current repository and fills placeholders (stack, verification command, maturity, autonomy scope, review mode, up-to-date branch requirement, etc.) through an interview. `--update` reads the current values of an adopted repository and compares/merges each file with the latest template |
+| `/adk:spec [issue]` | Creates worktree and branch, verifies the baseline → updates `docs/spec_{function}.md`, assigns requirement IDs and TCs, zero `[확인필요]` (needs confirmation) markers. Creates an issue after confirmation if none exists |
+| `/adk:tdd` | Tests first from TCs (Red) → minimal implementation (Green) → refactor. Stops after 3 failed attempts at the same TC. For review comments, exhaustively counts every place the same input arrives and starts with tests |
+| `/adk:verify` | Verification command + per-spec-item cross-check of implementation location, TC and Then assertions, plus diff → spec reverse check (subagent without conversation history) + security boundary mutation table + comparison of blocking mechanisms with the previous version + change scope check. Cross-checks are skipped for chores |
+| `/adk:ship` | Commit (local review before push when review is `local`) → draft PR → investigate and address CI and reviews → file follow-up issues → turn repeated comments into rule-making issues → stop decision (up to 2 re-review rounds for B and S; mergeable when only Nits remain) → ready → with autonomy `pr`, confirm review requests and report; with `merge`, squash merge |
+| `/adk:watch <PR>` | Watches a ready PR under autonomy `pr` → investigates and addresses teammate reviews (amend, push) → replies to and resolves threads → requests re-review → squash merge after approval of the current head. Stops and reports on comments that call for PRD or spec changes |
+| `/adk:deps [PR]` | Checks Dependabot PR eligibility (author, signature, patch/minor; if off, `@dependabot recreate` or `rebase`) → CI → local subagent review → summary comment → with autonomy `merge`, squash merge when Blocking and Should Fix are 0; with `pr`, report. Majors are reported after review |
+| `/adk:release <version>` | Checks TCs without automated tests → tag → checks the release workflow → post-release checklist |
+| `/adk:handoff` | Records current state in the main clone's `.adk/handoff.md` |
 
-## 프로젝트에 생기는 것
+## What gets added to a project
 
-| 경로 | 역할 |
+| Path | Role |
 | --- | --- |
-| `CLAUDE.md` | 규칙 원본: 원칙, 절차, 검증 명령, 성숙도, 자율 범위, GIT, 문서·주석 |
-| `docs/specification.md` | 색인 + 공통 제약 |
-| `docs/spec_{function}.md` | 기능별 스펙 (§1~§7) |
-| `docs/rules_spec.md` | 스펙 작성 규칙 |
-| `.claude/settings.json` | 자율 범위 `pr` 에 필요한 권한, 비밀 파일 Read 거부, pre-commit 을 건너뛰는 명령 거부, 세션 시작 때 git hook 경로 설정(실패해도 세션은 진행), 커밋 명령 직전 hook 경로 확인, 모든 Bash 명령 직전의 커밋·merge 게이트 hook. PreToolUse hook 은 실패해도 막음. 저장소 최상위가 아닌 곳에서 연 세션에는 적용되지 않음. allow 는 workspace trust 를 수락한 경로에만 적용됨 |
-| `.githooks/pre-commit` | git 이 커밋하는 작업 트리에서 비밀 파일과 검증 뒤 변경을 확인하고 아니면 커밋을 막음. hook 경로는 `hooks-path.sh` 가 설정 |
-| `.claude/hooks/hooks-path.sh` | git hook 경로를 `.githooks` 로 맞춤. 기존 `.git/hooks` 가 있거나 다른 경로면 바꾸지 않고 실패. 세션 시작 hook 과 `verify.sh` 가 부르고, `--check` 는 커밋 명령 직전 hook 이 부름 |
-| `.claude/hooks/commit-gate.sh` | 모든 Bash 명령 직전에 `git … commit` 의 옵션을 해석해 pre-commit 을 끄는 형태(짧은 옵션 묶음 안의 `-n`, `--no-verify` 약어)와 `-c`·`--config-env`·`git config` 로 `core.hooksPath`·`help.autocorrect`·`alias.*`·`include.*`·`includeIf.*` 를 바꾸는 명령, `GIT_CONFIG*` 환경변수, `--git-dir`·`--work-tree`·`GIT_DIR`·`GIT_WORK_TREE`·`GIT_COMMON_DIR` 가 붙은 commit 을 값과 무관하게 막음 (대소문자 무관, `git config` 는 조회·해제도 막음). 모르는 git 전역 옵션은 뒤에 `commit`·`config`·`-c`·`--config-env` 가 있으면, 감싸는 명령(`env`·`time`·`exec`·`sudo`·`xargs` 등)을 벗긴 뒤 git 이 아니면 남은 낱말에 `git` 이 있을 때, `env -S`·`--split-string` 은 내용과 무관하게 막음. 값 자리와 `--` 뒤 경로는 옵션으로 보지 않음. 명령 자리 밖의 `(`·`{`·`}`·`!` 와 `<(…)`·`>(…)` 로 명령을 끊지 않고, 실행할 때 정해지는 낱말(변수·치환·glob·brace)은 따옴표 밖이면 `--` 앞 어디서나, 따옴표 안이면 옵션 자리에서 막음. 명령 이름 자리의 확장은 뒤에 `commit`·`config` 가 있으면, git 전역 옵션·하위 명령 자리의 확장은 따옴표 밖이면 막고 따옴표 안이면 뒤 낱말을 commit 인자로 판정 |
-| `.claude/hooks/merge-gate.sh` | `gh pr merge` 직전에 CI 통과, 현재 head 의 리뷰 요약(작성자 확인), Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막음. Dependabot PR 은 세션 계정 요약도 인정하되 모든 커밋의 Dependabot 작성·GitHub(`web-flow`) 서명과 patch·minor 를 확인. 플래그는 허용 목록만 받고 `--squash` 필수(`--admin`·`--auto` 등은 막음), 인자의 따옴표 밖 확장과 확장 낱말을 `export` 한 뒤의 merge 도 막음. gh 는 merge 글자가 보이면 허용 하위 명령이어야 하고, 그 밖의 명령(허용 명령 `git`·`echo` 등 제외)은 낱말 `merge`·`gh…merge` 가 보이면 막음 |
-| `.claude/hooks/segments.awk`·`hook-lib.sh` | 커밋·merge 게이트가 쓰는 명령 해석. 따옴표·heredoc·here-string 본문은 데이터로, 리다이렉션의 fd 번호·대상 낱말은 인자에서 빼고, `$(...)`·`` `...` ``·서브셸 안은 명령으로 읽고, 셸 예약어와 env·timeout 같은 감싸기를 벗김 |
-| `.claude/hooks/verify.sh` | 추적성 검사 + 검증 명령. 통과한 작업 트리를 기록하고, 커밋 직전(pre-commit)에 달라졌으면 막음. git hook 경로가 맞지 않으면 실패 |
-| `.github/workflows/ci.yml` | 비밀 파일 가드 + 추적성 검사 + 검증 명령 |
-| `.github/spec-trace.sh` | 스펙 ↔ TC ↔ 테스트 이름 대조 (문자열 `TC#n`, 정의 줄 식별자의 `tc{n}`. 누락, 고아 TC, `[확인필요]`, 형식 위반, 테스트 삭제 경고). 성숙도 `poc` 는 보고만 |
-| `.github/secret-files.regex` | 커밋되면 안 되는 파일 목록. CI 가드와 `.githooks/pre-commit` 이 함께 읽음 |
-| `.github/workflows/claude.yml` | 이슈·PR 의 `@claude` (소유자·협업자만, 리뷰·질의응답 전용으로 커밋·push 차단). 리뷰 `github` 일 때만 |
-| `.github/workflows/claude-review.yml` | PR 자동 리뷰 (같은 저장소 브랜치만, 양식 고정). 리뷰 `github` 일 때만. `local` 이면 `/adk:ship` 이 로컬 subagent 로 리뷰 |
-| 두 워크플로 공통 | 코멘트·PR 본문의 prompt injection 이 러너의 비밀을 읽어 게시하는 경로를 줄임: 파일 도구의 저장소 밖 읽기 차단(`blockReadsOutsideWorkingDirectories`), 하위 프로세스 환경의 자격 증명 제거(`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`), 권한 모드 명시(리뷰 `default`, `@claude` `acceptEdits`)로 허용 목록 밖 도구 호출 거부 → action 기본값 auto mode 는 그 호출을 안전성 검토에 넘긴다. 남는 경로: GitHub 앱 토큰(`gh` 가 쓰고 `.git/config` 의 origin URL 에도 들어감), 하위 프로세스가 부모 프로세스의 `/proc/<pid>/environ` 을 읽는 경로(PID 격리 없음) |
-| `.github/workflows/release.yml` | `v*` 태그 → 검증 → 산출물 → GitHub Release |
-| `.github/ISSUE_TEMPLATE/`, `pull_request_template.md` | 스토리·인수 조건, 재현 절차, chore, PR 검증 항목 |
+| `CLAUDE.md` | Source of rules: principles, procedures, verification command, maturity, autonomy scope, GIT, docs and comments |
+| `docs/specification.md` | Index + common constraints |
+| `docs/spec_{function}.md` | Per-feature spec (§1–§7) |
+| `docs/rules_spec.md` | Spec writing rules |
+| `.claude/settings.json` | Permissions needed for autonomy `pr`, deny Read of secret files, deny commands that skip pre-commit, set the git hook path on session start (the session continues even if it fails), check the hook path right before commit commands, and the commit/merge gate hook right before every Bash command. PreToolUse hooks block even when they fail. Not applied to sessions opened outside the repository root. allow applies only to paths where workspace trust was accepted |
+| `.githooks/pre-commit` | Checks the working tree git is committing for secret files and post-verification changes, and blocks the commit otherwise. The hook path is set by `hooks-path.sh` |
+| `.claude/hooks/hooks-path.sh` | Sets the git hook path to `.githooks`. Fails without changing anything if an existing `.git/hooks` is present or a different path is set. Called by the session start hook and `verify.sh`; `--check` is called by the hook right before commit commands |
+| `.claude/hooks/commit-gate.sh` | Right before every Bash command, parses the options of `git … commit` and blocks, regardless of value: forms that disable pre-commit (`-n` inside a short-option bundle, abbreviations of `--no-verify`); commands that change `core.hooksPath`, `help.autocorrect`, `alias.*`, `include.*` or `includeIf.*` via `-c`, `--config-env` or `git config`; `GIT_CONFIG*` environment variables; and commits with `--git-dir`, `--work-tree`, `GIT_DIR`, `GIT_WORK_TREE` or `GIT_COMMON_DIR` (case-insensitive; `git config` reads and unsets are blocked too). Unknown git global options are blocked if followed by `commit`, `config`, `-c` or `--config-env`; after stripping wrapping commands (`env`, `time`, `exec`, `sudo`, `xargs`, etc.), a non-git command is blocked if `git` appears among the remaining words; `env -S` and `--split-string` are blocked regardless of content. Value positions and paths after `--` are not treated as options. `(`, `{`, `}`, `!` outside the command position and `<(…)`, `>(…)` do not split commands; words determined at run time (variables, substitutions, globs, braces) are blocked anywhere before `--` when unquoted, and in option positions when quoted. Expansions in the command name position are blocked if followed by `commit` or `config`; expansions in git global option or subcommand positions are blocked when unquoted, and when quoted the following words are judged as commit arguments |
+| `.claude/hooks/merge-gate.sh` | Right before `gh pr merge`, checks CI passed, a review summary for the current head (author verified), 0 Blocking items and `--match-head-commit`, and blocks otherwise. For Dependabot PRs it also accepts a summary from the session account, but checks that every commit is authored by Dependabot and signed by GitHub (`web-flow`) and is patch/minor. Only allowlisted flags are accepted and `--squash` is required (`--admin`, `--auto`, etc. are blocked); unquoted expansions in arguments and merges after `export`ing expanded words are also blocked. For gh, if the text merge appears it must be an allowed subcommand; other commands (except allowed commands such as `git` and `echo`) are blocked if the word `merge` or `gh…merge` appears |
+| `.claude/hooks/segments.awk`, `hook-lib.sh` | Command parsing used by the commit and merge gates. Treats quoted, heredoc and here-string bodies as data, removes redirection fd numbers and target words from arguments, reads the inside of `$(...)`, `` `...` `` and subshells as commands, and strips shell reserved words and wrappers like env and timeout |
+| `.claude/hooks/verify.sh` | Traceability check + verification command. Records the working tree that passed, and blocks at commit time (pre-commit) if it has changed. Fails if the git hook path is not set correctly |
+| `.github/workflows/ci.yml` | Secret file guard + traceability check + verification command |
+| `.github/spec-trace.sh` | Cross-checks spec ↔ TC ↔ test names (the string `TC#n`, the identifier `tc{n}` on definition lines; missing items, orphan TCs, `[확인필요]`, format violations, test deletion warnings). Report-only at maturity `poc` |
+| `.github/secret-files.regex` | List of files that must not be committed. Read by both the CI guard and `.githooks/pre-commit` |
+| `.github/workflows/claude.yml` | `@claude` in issues and PRs (owners and collaborators only; review and Q&A only, commits and pushes blocked). Only when review is `github` |
+| `.github/workflows/claude-review.yml` | Automatic PR review (same-repository branches only, fixed format). Only when review is `github`. When `local`, `/adk:ship` reviews with a local subagent |
+| Common to both workflows | Reduces paths by which prompt injection in comments or PR bodies could read and post runner secrets: blocks file tool reads outside the repository (`blockReadsOutsideWorkingDirectories`), removes credentials from subprocess environments (`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`), and sets the permission mode explicitly (review `default`, `@claude` `acceptEdits`) to deny tool calls outside the allowlist → the action's default auto mode would pass those calls to a safety review. Remaining paths: the GitHub App token (used by `gh` and also embedded in the origin URL in `.git/config`), and subprocesses reading the parent process's `/proc/<pid>/environ` (no PID isolation) |
+| `.github/workflows/release.yml` | `v*` tag → verification → artifacts → GitHub Release |
+| `.github/ISSUE_TEMPLATE/`, `pull_request_template.md` | Stories and acceptance criteria, reproduction steps, chore, PR verification items |
 
-### 자율 범위
+### Autonomy scope
 
-| 값 | agent 가 묻지 않고 하는 일 |
+| Value | What the agent does without asking |
 | --- | --- |
-| `pr` (기본) | 팀원 리뷰가 있는 저장소. 리뷰·CI 반영 → ready 까지. 팀원 리뷰 대응·merge 는 `/adk:watch` 실행 후 |
-| `merge` | 팀원 리뷰가 없는 저장소. 리뷰 반영·squash merge 까지 |
+| `pr` (default) | Repositories with teammate review. Addresses reviews and CI up to ready. Responding to teammate reviews and merging happen after running `/adk:watch` |
+| `merge` | Repositories without teammate review. Up to addressing reviews and squash merge |
 
-어느 쪽이든 스펙에 없는 결정, 비용, 클라우드·Secrets, 운영 데이터, 자율 범위·성숙도의 변경은 먼저 묻는다.
+Either way, decisions not in the spec, costs, cloud and Secrets, production data, and changes to autonomy scope or maturity are asked first.
 
-## 저장소 구조
+## Repository structure
 
 ```
-.claude-plugin/marketplace.json   # 마켓플레이스 → plugins/adk
+.claude-plugin/marketplace.json   # marketplace → plugins/adk
 plugins/adk/
   .claude-plugin/plugin.json
-  skills/<명령>/SKILL.md
-  agents/                         # 읽기 전용 리뷰·스펙 대조 agent
-  hooks/                          # handoff 주입, 읽기 전용 agent 의 원격 쓰기 차단, 리뷰 양식 검사, 압축 시 보존 항목
-  template/                       # /adk:init 이 복사하는 프로젝트 틀
+  skills/<command>/SKILL.md
+  agents/                         # read-only review and spec cross-check agents
+  hooks/                          # handoff injection, blocking remote writes by read-only agents, review format check, items kept on compaction
+  template/                       # project scaffold copied by /adk:init
 docs/benchmark.md
 ```
