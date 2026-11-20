@@ -24,7 +24,9 @@ for e in 'pulls/<번호>/comments' 'issues/<번호>/comments'; do
   cmd "$e" | grep -F 'updated_at >= "<기준 시각>"' >/dev/null     || { echo "FAIL TC#88 $e 수집이 updated_at 을 보지 않음 → 처리한 뒤 수정된 코멘트가 대상이 되지 않는다"; fail=1; }
 done
 printf '%s
-' "$start" | grep -F '리뷰 대응' | grep -F '.created_at' | grep -qF '| sort'   && { echo "FAIL TC#88 기준 시각 조회를 sort 에 파이프로 이어 오류가 빈 결과로 가려짐"; fail=1; }
+' "$start" | grep -F '리뷰 대응' | grep -F '.created_at' | grep -E "^ *B=[$][(]gh api " | grep -qE "[)] [|][|] "   || { echo "FAIL TC#88 기준 시각 조회를 B=\$(gh api …) || 로 받지 않음 → 파이프로 이으면 오류가 빈 결과로 가려진다"; fail=1; }
+printf '%s
+' "$start" | grep -qF '세션이 만든 코멘트·리뷰는 id 로'   || { echo "FAIL TC#88 세션이 만든 글을 id 로 빼지 않음 → 자기 글을 수정하면 다시 대상이 된다"; fail=1; }
 printf '%s
 ' "$start" | grep -qF '답글이 만든'   || { echo "FAIL TC#88 처리한 id 정의(답글이 만든 리뷰 포함)가 없음"; fail=1; }
 printf '%s
