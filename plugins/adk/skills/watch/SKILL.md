@@ -24,16 +24,18 @@ argument-hint: "<PR 번호>"
 
     - 첫 줄만 보고 제목 표지(`##`)와 HEAD 표기는 가리지 않는다 → 손으로 쓴 대응 코멘트는 3-2 형식과 다르게 남아 있다.
 
-  - 대상: 기준 시각 뒤의 리뷰·inline 코멘트·일반 코멘트(작성자 무관)와 미해결 리뷰 스레드([human-review.md](../ship/human-review.md) 의 `reviewThreads` 조회). `--paginate` 가 없으면 30건까지만 온다.
+  - 대상: 기준 시각 이후의 리뷰·inline 코멘트·일반 코멘트(작성자 무관)와 미해결 리뷰 스레드([human-review.md](../ship/human-review.md) 의 `reviewThreads` 조회)에서 처리한 id 를 뺀 것. `--paginate` 가 없으면 30건까지만 온다.
 
     ```sh
-    gh api --paginate repos/{owner}/{repo}/pulls/<번호>/reviews --jq '.[] | select(.submitted_at > "<기준 시각>") | [.id, .user.login, .state] | @tsv'
-    gh api --paginate repos/{owner}/{repo}/pulls/<번호>/comments --jq '.[] | select(.created_at > "<기준 시각>") | [.id, .user.login] | @tsv'
-    gh api --paginate repos/{owner}/{repo}/issues/<번호>/comments --jq '.[] | select(.created_at > "<기준 시각>") | [.id, .user.login] | @tsv'
+    gh api --paginate repos/{owner}/{repo}/pulls/<번호>/reviews --jq '.[] | select(.submitted_at >= "<기준 시각>") | [.id, .user.login, .state] | @tsv'
+    gh api --paginate repos/{owner}/{repo}/pulls/<번호>/comments --jq '.[] | select(.created_at >= "<기준 시각>") | [.id, .user.login] | @tsv'
+    gh api --paginate repos/{owner}/{repo}/issues/<번호>/comments --jq '.[] | select(.created_at >= "<기준 시각>") | [.id, .user.login] | @tsv'
     ```
 
+  - 처리한 id: 기준이 된 "리뷰 대응" 코멘트, 이 세션이 조사한 항목, 이 세션이 만든 코멘트·리뷰(답글, "리뷰 대응", 답글이 만든 `COMMENTED` 리뷰) → 빼지 않으면 자기 글이 매번 대상이 된다. 계정으로 거르지 않는다 → 소유자 계정으로 쓰면 소유자의 글까지 빠진다.
+  - 기준 시각은 세션 동안 옮기지 않고, `>=` 로 비교한다 → 로컬 시계와 GitHub 시각을 비교하지 않고, 같은 초에 달린 항목도 빠지지 않는다.
   - 대상이 있으면 2의 라운드를 처리하고, 없으면 보고하지 않고 아래 감시로 간다.
-- 변화가 생길 때까지 기다린다. `Monitor` 도구로 아래 조회를 주기(5분)로 돌리고, 직전 결과와 달라지면 깨어나 2의 라운드를 처리한다.
+- 변화가 생길 때까지 기다린다. `Monitor` 도구로 아래 조회를 주기(5분)로 돌리고, 직전 결과와 달라지면 깨어나 위의 수집으로 대상을 정해 2의 라운드를 처리한다.
 
   ```sh
   gh pr view <번호> --json headRefOid,state,isDraft,reviewDecision,reviewRequests,reviews,comments,statusCheckRollup
@@ -53,9 +55,7 @@ argument-hint: "<PR 번호>"
    - 미루는 항목은 `/adk:ship` 3-1 대로 이슈로 등록한다.
    - 같은 유형의 지적이 두 번째면 `/adk:ship` 3-3 으로 규칙화 이슈도 등록한다.
 3. 회신·resolve·재리뷰 요청: [human-review.md](../ship/human-review.md) "순서" 를 따른다. "리뷰 대응" 코멘트는 `/adk:ship` 3-2 형식이다.
-4. 재수집: 감시로 돌아가기 전에 이 라운드의 수집 시각을 기준 시각으로 1의 수집 명령을 다시 돌리고, 대상이 있으면 다음 라운드를 바로 처리한다 → 라운드 중에 달린 코멘트는 "리뷰 대응" 코멘트보다 앞이라 다음 기준 시각에 묻힌다.
-   - 수집 시각은 라운드의 수집 명령 직전에 `date -u +%Y-%m-%dT%H:%M:%SZ` 로 찍는다 → jq 는 문자열로 비교하므로 GitHub 시각과 같은 형식이어야 하고, 수집 뒤에 찍으면 그 사이 코멘트가 빠진다.
-   - 이 라운드에서 세션이 만든 코멘트·리뷰(답글, "리뷰 대응", 답글이 만든 `COMMENTED` 리뷰)의 id 는 뺀다 → 빼지 않으면 자기 글이 매번 대상이 된다. 계정으로 거르지 않는다 → 소유자 계정으로 쓰면 소유자의 글까지 빠진다.
+4. 재수집: 감시로 돌아가기 전에 1의 수집을 같은 기준 시각으로 다시 돌리고, 대상이 있으면 다음 라운드를 바로 처리한다 → 라운드 중에 달린 코멘트는 감시의 첫 조회 결과에 묻힌다.
 5. 다시 1의 감시로 돌아간다.
 
 ## 3. 멈추고 보고
