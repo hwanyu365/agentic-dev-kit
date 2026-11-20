@@ -14,6 +14,7 @@
 
 - `gh pr view <번호> --json reviewRequests,reviews` 로 리뷰 요청을 조회한다.
 - 비어 있으면 30초 간격으로 3번까지 다시 조회한다 → CODEOWNERS 의 자동 리뷰 요청은 ready 뒤 늦게 붙는다.
+  - 기다림은 `Monitor` 나 백그라운드 명령으로 한다 → foreground `sleep` 은 막힌다.
 - 그래도 비면 "리뷰 요청 없음" 과 base 브랜치의 CODEOWNERS 유무를 함께 보고한다 → 파일이 있는데 비었으면 소유자가 경로 규칙을 확인할 신호다.
   - GitHub 이 읽는 위치 `.github/CODEOWNERS`·`CODEOWNERS`·`docs/CODEOWNERS` 마다 `gh api repos/{owner}/{repo}/contents/<경로>?ref=<base>` 를 조회한다. 404 가 아닌 오류는 "확인하지 못함" 으로 보고한다.
 
