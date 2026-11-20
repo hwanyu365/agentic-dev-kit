@@ -19,7 +19,7 @@ argument-hint: "[이슈 번호]"
 - 커밋 전 확인
   - `sh .claude/hooks/verify.sh` 가 통과한 뒤 파일을 고치지 않음 → 고쳤으면 pre-commit 이 막으므로 다시 돌린다
   - `git diff --cached --stat` 에 비밀 파일·대용량 파일·의도하지 않은 파일 없음
-  - 테스트·검사가 지워지거나 약화되지 않음: Red 에서 만든 테스트, 기존 테스트의 skip·timeout 확대·snapshot 갱신, lint·검사 suppression
+  - 테스트·검사가 지워지거나 약화되지 않음: Red 에서 만든 테스트, 기존 테스트의 skip·timeout 확대·snapshot 갱신, lint·검사 suppression (CLAUDE.md 문구 chore 의 기대값 변경은 제외)
 - pre-commit 을 건너뛰는 커밋은 하지 않는다 (`CLAUDE.md` "검증" 의 deny 목록).
 - 커밋 메시지는 `CLAUDE.md` 형식. 스펙 문구를 옮기지 않고 실제로 구현·검증한 것만 적는다.
 
@@ -93,6 +93,7 @@ argument-hint: "[이슈 번호]"
 | 2라운드 뒤에도 Blocking·Should Fix 가 남음 | 중단: merge 하지 않고 보고 → 설계부터 다시 볼 신호다 |
 
 - 반영할 때는 지적된 한 자리만 고치지 않는다. 같은 입력이 들어오는 자리를 먼저 전수로 세고 테스트를 추가한 뒤 고친다 (`/adk:tdd` "지적 반영").
+  - 낡은 서술 지적은 그 전제의 서술을 `/adk:verify` 3 대로 다시 센다.
 - 차단 장치를 고쳤으면 push 전에 이전 버전과 같은 입력으로 비교한다 (`/adk:verify` 2-3). 고치다가 원래 막던 입력을 다시 푸는 일을 막는다.
 
 ## 3-5. 사람 리뷰·승인이 필요한 저장소
@@ -112,7 +113,7 @@ argument-hint: "[이슈 번호]"
 
 ## 4-a. 자율 범위 `pr`
 
-- ready 직후 `gh pr view <번호> --json reviewRequests,reviews` 로 리뷰 요청을 조회해 보고에 넣고 멈춘다. 비어 있으면 리뷰어가 없다고 보고한다 → 리뷰어는 agent 가 고르지 않는다.
+- ready 직후 리뷰 요청을 [human-review.md](human-review.md) "ready 직후" 대로 조회해 보고에 넣고 멈춘다 → 리뷰어는 agent 가 고르지 않는다.
 - 팀원 리뷰 대응과 merge 는 저장소 소유자가 `/adk:watch <번호>` 로 맡긴다.
 
 ## 4-b. 자율 범위 `merge`

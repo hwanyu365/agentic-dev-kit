@@ -15,6 +15,24 @@ argument-hint: "<PR 번호>"
 
 ## 1. 감시
 
+- 감시를 걸면 기다리기 전에 첫 라운드를 처리한다 → 감시 전에 달린 리뷰가 첫 조회 결과에 묻혀 "변화 없음" 이 되지 않게 한다.
+  - 기준 시각: 세션 gh 계정이 남긴 마지막 "리뷰 대응" 코멘트(`/adk:ship` 3-2)의 작성 시각, 없으면 PR 생성 시각(`gh pr view <번호> --json createdAt`) → 기록 파일 없이 세션·기기가 바뀌어도 같은 기준이다.
+
+    ```sh
+    gh api --paginate repos/{owner}/{repo}/issues/<번호>/comments --jq '.[] | select(.user.login == "<gh api user 의 login>" and (.body | split("\n")[0] | test("^#* *리뷰 대응"))) | .created_at' | sort | tail -n 1
+    ```
+
+    - 첫 줄만 보고 제목 표지(`##`)와 HEAD 표기는 가리지 않는다 → 손으로 쓴 대응 코멘트는 3-2 형식과 다르게 남아 있다.
+
+  - 대상: 기준 시각 뒤의 리뷰·inline 코멘트·일반 코멘트(작성자 무관)와 미해결 리뷰 스레드([human-review.md](../ship/human-review.md) 의 `reviewThreads` 조회). `--paginate` 가 없으면 30건까지만 온다.
+
+    ```sh
+    gh api --paginate repos/{owner}/{repo}/pulls/<번호>/reviews --jq '.[] | select(.submitted_at > "<기준 시각>") | [.id, .user.login, .state] | @tsv'
+    gh api --paginate repos/{owner}/{repo}/pulls/<번호>/comments --jq '.[] | select(.created_at > "<기준 시각>") | [.id, .user.login] | @tsv'
+    gh api --paginate repos/{owner}/{repo}/issues/<번호>/comments --jq '.[] | select(.created_at > "<기준 시각>") | [.id, .user.login] | @tsv'
+    ```
+
+  - 대상이 있으면 2의 라운드를 처리하고, 없으면 보고하지 않고 아래 감시로 간다.
 - 변화가 생길 때까지 기다린다. `Monitor` 도구로 아래 조회를 주기(5분)로 돌리고, 직전 결과와 달라지면 깨어나 2의 라운드를 처리한다.
 
   ```sh
@@ -35,7 +53,8 @@ argument-hint: "<PR 번호>"
    - 미루는 항목은 `/adk:ship` 3-1 대로 이슈로 등록한다.
    - 같은 유형의 지적이 두 번째면 `/adk:ship` 3-3 으로 규칙화 이슈도 등록한다.
 3. 회신·resolve·재리뷰 요청: [human-review.md](../ship/human-review.md) "순서" 를 따른다. "리뷰 대응" 코멘트는 `/adk:ship` 3-2 형식이다.
-4. 다시 1의 감시로 돌아간다.
+4. 감시로 돌아가기 전에 이 라운드의 수집 시각을 기준 시각으로 1의 수집 명령을 다시 돌리고, 대상이 있으면 다음 라운드를 바로 처리한다 → 라운드 중에 달린 코멘트는 "리뷰 대응" 코멘트보다 앞이라 다음 기준 시각에 묻힌다.
+5. 다시 1의 감시로 돌아간다.
 
 ## 3. 멈추고 보고
 
