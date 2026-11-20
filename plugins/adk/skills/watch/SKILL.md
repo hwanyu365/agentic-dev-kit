@@ -72,4 +72,5 @@ argument-hint: "<PR 번호>"
   - 처리하지 않은 지적 없음: 미해결 리뷰 스레드 0건, 새 리뷰·코멘트를 모두 조사함
   - [human-review.md](../ship/human-review.md) 의 승인 조건 (현재 head 의 승인, 대기 중인 재리뷰 요청 없음, 필요 승인 수)
   - CI 통과, 현재 head 의 리뷰 요약이 있고 `/adk:ship` 3-4 판정이 merge 가능
+- 스택 PR 이면 `gh pr merge` 대신 [merge.md](../ship/merge.md) "스택" 의 `gh stack merge` 로 하고, 아래 조건을 merge 될 PR 마다 확인한다. 스택 전체가 승인된 뒤 새 지적이 오면 그 절의 두 선택지를 보고하고 멈춘다.
 - merge 뒤 `/adk:ship` 5 로 정리하고 보고한다.
