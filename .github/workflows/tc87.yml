@@ -1,0 +1,14 @@
+name: tc87
+on:
+  push:
+    branches: [tc87-head]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh pr create -R "$GITHUB_REPOSITORY" --draft --base tc87-base --head tc87-head --title "TC#87 CODEOWNERS 리뷰 요청 지연 관측 (GH-75)" --body "GH-75 의 TC#87 관측용 임시 PR. 관측 뒤 닫고 브랜치를 지운다."
+        env:
+          GH_TOKEN: ${{ github.token }}
