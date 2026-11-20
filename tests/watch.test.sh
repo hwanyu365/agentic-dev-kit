@@ -20,5 +20,14 @@ printf '%s\n' "$start" | grep -qF '처리한 id' \
 recollect=$(awk '/^## 2\./{s=1} /^## 3\./{s=0} s && /^[0-9]+\. /{f=/재수집/} s && f' "$f")
 printf '%s\n' "$recollect" | grep -qF '같은 기준 시각' \
   || { echo "FAIL TC#88 라운드 뒤 재수집이 같은 기준 시각으로 1의 수집을 다시 돌리지 않음"; fail=1; }
+for e in 'pulls/<번호>/comments' 'issues/<번호>/comments'; do
+  cmd "$e" | grep -F 'updated_at >= "<기준 시각>"' >/dev/null     || { echo "FAIL TC#88 $e 수집이 updated_at 을 보지 않음 → 처리한 뒤 수정된 코멘트가 대상이 되지 않는다"; fail=1; }
+done
+printf '%s
+' "$start" | grep -F '리뷰 대응' | grep -F '.created_at' | grep -qF '| sort'   && { echo "FAIL TC#88 기준 시각 조회를 sort 에 파이프로 이어 오류가 빈 결과로 가려짐"; fail=1; }
+printf '%s
+' "$start" | grep -qF '답글이 만든'   || { echo "FAIL TC#88 처리한 id 정의(답글이 만든 리뷰 포함)가 없음"; fail=1; }
+printf '%s
+' "$recollect" | grep -qF '1의 수집'   || { echo "FAIL TC#88 재수집이 1의 수집을 다시 돌리지 않음"; fail=1; }
 [ "$fail" = 0 ] && echo PASS
 exit "$fail"
