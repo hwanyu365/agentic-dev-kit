@@ -45,6 +45,7 @@ sh tests/runtime.test.sh
 sh tests/probe.test.sh
 sh tests/readme-commands.test.sh
 sh tests/cleanup.test.sh
+sh tests/watch.test.sh
 sh plugins/adk/template/.github/spec-trace.sh -- ':(exclude)docs/' ':(exclude)*.md' ':(exclude)plugins/adk/template/docs/' ':(exclude).github/spec-trace.sh' ':(exclude)plugins/adk/template/.github/spec-trace.sh'
 )
 r=$?

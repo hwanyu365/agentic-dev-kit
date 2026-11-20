@@ -15,4 +15,5 @@
 | 배포 전 검증(`test.yml` 의 job, `tests/runtime.sh`)을 고친다 | `spec_release-gate.md` §3·§6 |
 | 추적성 검사(`spec-trace.sh`)의 태그·테스트 이름 판정을 고친다 | `spec_spec-trace.md` §3 |
 | `/adk:init` 의 브랜치 최신 요구 선택을 고친다 | `spec_branch-strict.md` §3·§6 |
+| chore 분류 기준·변경 범위(`/adk:verify` 3)를 고친다 | `spec_dev-flow.md` §3·§6 |
 | 작업 습관 규칙(백그라운드 작업, 빈 출력, Refactor, 결함 등록 전 확인, 제목)을 고친다 | `spec_work-habits.md` §3·§6 |
