@@ -203,6 +203,7 @@ main 에 merge 된 version 이 곧 배포다. 적용 저장소는 adk 의 검증
   - 하위 이슈는 1행에 `[GH-{상위}][GH-{하위}]`, `[ISSUE]` 는 상위 이슈 URL
 - PR 은 draft 로 만들고 `.github/pull_request_template.md` 를 채운다. 본문은 최종 커밋 기준으로 갱신한다.
   - 제목에는 건수·비율·커버리지처럼 갱신 때 바뀌는 값과 본문을 열면 보이는 정보를 쓰지 않는다 → 갱신 때마다 제목이 낡는다 (PR·이슈 공통).
+  - 다른 열린 PR 에 의존하는 PR 은 `gh stack` 으로 스택에 묶고 `gh stack merge` 로 merge 한다 (`/adk:ship` merge.md "스택"). `gh-stack` 확장이 없으면 설치를 안내하고 멈춘다. 스택 전체가 승인된 뒤 새 지적이 오면 두 선택지(다시 쌓아 반영·재승인 / 먼저 merge 하고 후속 PR)를 보고하고, 다시 쌓아 승인이 풀린 PR 은 지적이 없던 PR 도 재리뷰를 요청한다.
   - 구조가 바뀌면 AS-IS/TO-BE 를 mermaid 도식 하나(바깥 `TB`, 두 subgraph 안은 `LR`, 사이 `~~~`)에 담는다
   - draft 는 팀원에게 보일 준비가 안 된 상태(리뷰 또는 CI 미통과)다 → CI·리뷰를 통과하면 ready 로 바꾼다. ready 뒤 head 가 바뀌어도 draft 로 되돌리지 않는다.
 - 리뷰: `github`
@@ -212,11 +213,13 @@ main 에 merge 된 version 이 곧 배포다. 적용 저장소는 adk 의 검증
   - 조사로 확인한 미해결 Blocking·Should Fix 가 있으면 반영 후 재리뷰(2라운드까지), Nits 만 남으면 반영하지 않고 merge 가능으로 판정한다 (`/adk:ship` 3-4). 반영·merge 를 언제 하는지는 자율 범위를 따른다.
   - 팀원 리뷰는 `/adk:watch` 가 반영 후 amend·push → 지적 스레드마다 답글·resolve 와 "리뷰 대응" 코멘트 → 재리뷰 요청 순서로 처리하고, 현재 head 의 승인을 확인한 뒤 merge 한다 (`/adk:ship` 3-5).
   - 같은 유형의 지적이 두 번째로 나오면 규칙으로 올린다 (`/adk:ship` 3-3). 기계로 막을 수 있으면 hook·CI, 아니면 이 파일에 한 줄.
-  - `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, Blocking 0건, `--match-head-commit` 을 확인하고 아니면 막는다.
-    - gh 명령에 merge 글자가 보이면 `gh pr merge` 이거나 허용 하위 명령이어야 한다. 그 밖의 명령(허용 명령 `git`·`echo`·`grep` 등 제외)은 낱말 `merge` 또는 `gh…merge` 가 보이면 막는다. gh 하위 명령 자리의 확장과, 명령에 gh 가 보이는 해석 실패도 막는다 (hook 입력의 `cwd`·`transcript_path` 는 보지 않는다).
+  - `gh pr merge`·`gh stack merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, Blocking 0건을 확인하고(`gh pr merge` 는 `--match-head-commit` 도) 아니면 막는다.
+    - gh 명령에 merge 글자가 보이면 `gh pr merge`·`gh stack merge` 이거나 허용 하위 명령이어야 한다. 그 밖의 명령(허용 명령 `git`·`echo`·`grep` 등 제외)은 낱말 `merge` 또는 `gh…merge` 가 보이면 막는다. gh 하위 명령 자리의 확장과, 명령에 gh 가 보이는 해석 실패도 막는다 (hook 입력의 `cwd`·`transcript_path` 는 보지 않는다).
     - Dependabot PR(작성자 `app/dependabot`)은 리뷰 방식과 관계없이 세션 gh 계정의 요약도 인정한다. 대신 모든 커밋이 Dependabot 작성이고 GitHub(`web-flow`)가 서명한 커밋이며 모든 업데이트가 patch·minor 여야 한다 → 세션이 그 브랜치에 더한 코드를 스스로 승인하지 못한다.
     - `gh pr merge` 의 플래그는 허용 목록(`-s`·`-d`·`--match-head-commit`·`-t`·`-b`·`-F`·`-A`)만 받고 `--squash` 가 있어야 한다 → `--admin`(브랜치 보호 우회)·`--auto`(판정 뒤 다른 시점에 merge)·짧은 옵션 묶음 등은 막는다.
     - `gh pr merge` 인자의 따옴표 밖 확장(`-b $X`)은 쪼개져 플래그가 될 수 있어 막는다. 값 자리의 따옴표 안 확장(`-b "$BODY"`)은 통과한다. 앞에서 확장 낱말을 `export` 한 뒤의 merge 도 막는다 (`export $V` 가 `GH_REPO` 를 정할 수 있다).
+    - 스택 PR 은 `gh stack merge <PR 또는 스택 번호> --squash` 만 받는다(`--merge-method squash`·`-y`·`--yes` 허용) → 번호 없는 형태·다른 merge 방식·허용 밖 플래그는 막는다. 대상은 GitHub 에서 정한다: PR 번호면 그 스택의 아래부터 그 PR 까지, 스택 번호면 스택 전부. merge 될 PR 마다 CI 통과, 현재 head 요약, Blocking 0건을 확인하고, 닫힌 PR·스택에 없는 PR·Dependabot PR 이 대상이면 막는다.
+      - 막지 못하는 범위: `gh stack merge` 는 검사한 head 를 고정하지 못한다 → 검사 뒤 끼어든 push 는 통과한다. 커밋 메시지를 지정할 수 없어 squash 메시지는 GitHub 기본값이다.
     - 막지 못하는 범위: 스크립트 파일·gh alias 안의 merge, 글자를 감춘 merge, REST API 직접 호출(`curl … /pulls/N/merge` 등), REST API 로 Dependabot 브랜치에 만든 커밋(GitHub 가 `web-flow` 로 서명하고 작성자는 요청이 정한다). 브랜치 보호(CI 필수)가 있으면 그것이 최종 경계이고, 없는 저장소는 이 게이트가 유일한 경계다.
 - 게이트(커밋·merge hook, pre-commit)의 결함이 그 결함을 고치는 커밋·merge 까지 막으면 저장소 소유자가 세션 밖에서 직접 커밋·push·merge 한다 → 드문 경우를 위해 우회 장치를 두지 않는다.
 - **코드 변경은 세션이 직접 커밋한다. `@claude` 에게 맡기지 않는다.**

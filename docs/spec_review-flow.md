@@ -2,7 +2,7 @@
 
 ## 1. 개요
 
-- 문서 정보: 작성 2026-11-14 / 기준 커밋 `df5a528` (origin/main) / 이슈 GH#25, GH#61, GH#70, GH#75
+- 문서 정보: 작성 2026-11-14 / 기준 커밋 `03422a5` (origin/main) / 이슈 GH#25, GH#61, GH#70, GH#75, GH#77
 - 기능: 자율 범위·리뷰 방식마다 PR 의 리뷰·ready·merge 흐름을 정하고, pr 모드의 팀원 리뷰 대응을 감시 스킬로 처리한다
 - 목적 (Why)
   - 사람 리뷰 저장소에서 ready 가 merge 직전 → 팀원이 리뷰하는 내내 PR 이 draft("작업 중")로 보인다.
@@ -74,8 +74,8 @@
   - 회신 내용(반영 커밋 SHA / 미반영 근거 / 이슈 번호)은 ship 3-5 그대로다.
   - 템플릿 자율 범위 절은 사용자 전역 규칙이 resolve 주체를 달리 정해도 이 표를 따른다고 적는다 → 특정 전역 규칙 문구는 인용하지 않는다.
 - `FR#8` [요구사항] README 명령 표는 `plugins/adk/skills/` 의 스킬마다 한 행을 둔다.
-- `FR#9` [요구사항] 템플릿 `.claude/settings.json` allow 에 `gh pr ready`·`gh pr merge --squash`·`git worktree remove` 를 자율 범위와 관계없이 둔다 → 두 값 모두 ready·merge 를 묻지 않고 한다.
-  - `gh pr merge` 는 그대로 merge 게이트 hook 을 거친다.
+- `FR#9` [요구사항] 템플릿 `.claude/settings.json` allow 에 `gh pr ready`·`gh pr merge --squash`·`gh stack merge`·`gh stack view`·`git worktree remove` 를 자율 범위와 관계없이 둔다 → 두 값 모두 ready·merge 를 묻지 않고 한다.
+  - `gh pr merge`·`gh stack merge` 는 그대로 merge 게이트 hook 을 거친다.
 - `FR#10` [요구사항] `/adk:ship` 4-b 의 merge 는 `--delete-branch` 를 붙이지 않고, 5 에서 main 클론 기준으로 워크트리 → 로컬 브랜치 → 남아 있는 원격 브랜치 순으로 지운다 [as-built: 워크트리가 있는 브랜치의 `gh pr merge --delete-branch` 는 merge 뒤 `cannot delete branch … used by worktree` 로 실패]
 - `FR#11` [요구사항] 리뷰 job 이 따르는 지시(템플릿·adk `claude-review.yml` prompt, `/adk:ship` review.md)의 `gh pr view` 는 `--json <필드>` 로 읽을 필드를 정한다 → job 의 `permissions` 안에서 동작한다 [as-built: 리뷰 job 에서 `gh pr view --comments` 가 check 상태 조회 중 `Resource not accessible by integration` 으로 실패]
   - 이전 라운드 읽기: `gh pr view <번호> --json body,comments`
@@ -93,6 +93,14 @@
     - 런타임 관문 환경(OAuth 토큰)은 플래그 없이도 auto mode 로 시작하지 않는다 [as-built: v1.0.275, 대조군 `CLAUDE_ARGS` 에 auto 없음, `outside=denied`] → 이 환경의 거부는 권한 모드 플래그와 무관하다
     - 확인하지 못한 범위: auto mode 로 시작하는 환경에서 플래그가 거부를 되돌리는지는 관측하지 않았다. 근거는 action 의 인자 처리(마지막 `--permission-mode` 가 이김)와 v1.0.273 release notes 의 opt-out 안내다
   - `claude.yml` 도 같은 방식으로 본다: 렌더한 `claude.yml` 을 트리거 문구만 바꿔 복제하고, 시험 PR 코멘트로 불러 허용 목록 밖의 작업 트리 수정 Bash(`sed -i`)와 스크립트가 거부되는지 본다
+- `FR#13` [요구사항] 다른 열린 PR 에 의존하는 PR 은 `gh stack` 으로 스택에 묶는다 (GH#77)
+  - base 만 앞 PR 의 브랜치로 지정한 PR 은 스택으로 인정되지 않는다 → 스택 merge 가 동작하지 않는다
+  - 만들기: `gh stack submit --auto`(새 PR 은 draft) 또는 이미 있는 PR 을 `gh stack link <아래> <위>` → 스택의 base 는 기본 브랜치다 [as-built: 시험 저장소에서 `gh stack link` 가 맨 아래 PR 의 base 를 기본 브랜치로 바꿈]
+  - ready·리뷰·CI 판정은 PR 마다 ship 3·4 그대로다
+  - merge: 스택 PR 은 `gh stack merge <PR> --squash --yes` 로 아래부터 그 PR 까지 merge 한다 → merge 게이트가 대상 PR 마다 판정한다 (merge 게이트 스펙 FR#8~FR#10). `gh pr merge` 는 스택 PR 에 쓰지 않는다
+  - 스택 전체가 승인된 뒤 새 지적이 오면 저장소 소유자에게 두 선택지를 보고한다: 스택을 다시 쌓아 반영·재승인 / 먼저 merge 하고 남은 지적은 후속 PR 하나로 처리
+  - 다시 쌓아 승인이 풀린 PR 은 지적이 없던 PR 이어도 재리뷰를 요청한다
+  - `gh-stack` 확장이 없으면 설치를 안내하고 멈춘다 → 의존 PR 을 base 지정만으로 만들지 않는다
 - `NFR#1` [요구사항] FR#1~FR#10 의 흐름 변경은 merge 게이트(`merge-gate.sh`)와 그 테스트·mutation 목록을 바꾸지 않는다 → 흐름 변경이 보안 경계를 바꾸지 않는다.
 - `NFR#2` [요구사항] 스킬 본문은 `tests/skill-size.test.sh` 상한 안에 둔다. 넘으면 특정 상황 절차를 같은 폴더 참조 파일로 옮긴다.
 
@@ -134,7 +142,7 @@ flowchart TB
 | --- | --- | --- | --- |
 | TC#16 | FR#8 | `plugins/adk/skills/*/` 마다 README 명령 표에 `/adk:<이름>` 행이 있고, 없는 스킬의 행은 없음 | `tests/readme-commands.test.sh` |
 | TC#17 | NFR#2 | 모든 `SKILL.md` 가 상한 이하, 참조 링크 대상 존재 | `tests/skill-size.test.sh` |
-| TC#18 | NFR#1 | `merge-gate.sh`·`tests/merge-gate.test.sh`·`tests/mutations.tsv` 가 diff 에 없음, 기존 테스트 통과 | (수동) PR diff 확인 |
+| TC#18 | NFR#1 | FR#1~FR#10 만 바꾼 PR 에서 `merge-gate.sh`·`tests/merge-gate.test.sh`·`tests/mutations.tsv` 가 diff 에 없음, 기존 테스트 통과. 게이트를 바꾸는 FR#13 은 merge 게이트 스펙 FR#8~FR#11 이 근거 | (수동) PR diff 확인 |
 | TC#19 | FR#1 FR#2 FR#3 FR#4 FR#5 FR#7 FR#9 | 템플릿 `CLAUDE.md`·ship·init·README 가 같은 흐름을 적음: 자율 범위 정의, 방식별 PR 전 단계, ready 시점·draft 의 뜻, pr 의 멈춤 지점, merge 의 사람 리뷰 해당 시 보고, resolve 대체, allow 의 ready·merge 항목 | (수동) 세 곳 대조 |
 | TC#20 | FR#6 | PR 에서 `/adk:watch` 한 라운드: 리뷰 코멘트 → amend·push → 스레드 회신·resolve → 리뷰 대응 코멘트 → 재리뷰 요청이 관측되고, 승인 뒤 merge 게이트를 거쳐 merge | (수동) 시험 저장소에서 `github-actions[bot]` 이 연 PR 에 소유자 계정이 리뷰어로 관측. `Monitor` 로 깨어나는 감시 루프는 관측 대상 아님 |
 | TC#21 | FR#6 | `merge` 모드 저장소에서 `/adk:watch` 를 실행하면 감시하지 않고 알림 | (수동) |
@@ -148,6 +156,8 @@ flowchart TB
 | TC#86 | FR#12 | 같은 runtime 실행에서 대조군 판정 줄이 `info` 로 기록됨 (실패시키지 않음) | (수동) `runtime` job 로그 확인. 대조군이 `outside=ran`·`mode=auto` 를 내면 위 확인하지 못한 범위를 다시 본다 |
 | TC#83 | FR#12 | `@claude` 확인 워크플로가 렌더한 `claude.yml` 과 트리거 문구·판정 step·action step id 만 다름. 판정 줄에 작업 트리 수정 Bash(`edit=`) 결과가 있음 | `tests/probe.test.sh` |
 | TC#84 | FR#12 | 시험 PR 코멘트로 부른 `@claude` 확인 워크플로에서 `edit=denied outside=denied`, mode 는 `default` 또는 `acceptEdits`(auto 아님). 진행 코멘트가 깨운 건너뛴 run 은 고르지 않음 | `tests/runtime.sh` (version 올림 PR 의 CI `runtime` job) |
+| TC#101 | FR#13 FR#9 | 템플릿 `CLAUDE.md`·`/adk:ship` 2·4-b·`/adk:watch` 4·README 가 같은 스택 흐름(스택 만들기, `gh stack merge` merge, 승인 뒤 새 지적의 두 선택지, 재쌓기 뒤 재리뷰 요청, 확장 없을 때 멈춤)을 적고, 템플릿·adk `settings.json` allow 에 `gh stack merge`·`gh stack view` 가 있음 | (수동) 대조 |
+| TC#102 | FR#13 | 시험 저장소에서 bot 이 연 PR 두 개를 `gh stack link` 로 묶으면 스택이 만들어지고 맨 아래 PR 의 base 가 기본 브랜치가 됨 | (수동) 2026-11-20 관측: 스택 #40, PR#38 base `stk-base` → `main` |
 | TC#22 | FR#2 | `local` 렌더 결과에 `claude-review.yml`·`claude.yml` 없음, `github` 렌더 결과에 있음 | (수동) `/adk:init` 렌더 확인 |
 | TC#87 | FR#4 | ready 직후 `reviewRequests` 가 비면 30초 간격 3번까지 다시 조회하고, 그래도 비면 보고에 "리뷰 요청 없음" 과 CODEOWNERS 유무가 함께 있음. CODEOWNERS 로 늦게 붙은 리뷰어는 보고에 들어감 | (수동) CODEOWNERS 를 둔 저장소에서 bot 이 연 draft PR 을 ready 로 바꾸고 4-a 의 조회 명령을 실행. PR 작성자가 CODEOWNERS 와 같은 계정이면 요청이 붙지 않는다 |
 | TC#88 | FR#6 | `/adk:watch` 의 첫 라운드 수집 명령이 reviews·pulls/comments·issues/comments 셋 모두 `--paginate` 로 읽고 기준 시각 뒤로 거르며, 기준 시각은 `--paginate` 로 읽은 일반 코멘트 중 "리뷰 대응" 코멘트의 작성 시각에서 정함. 비교는 `>=` 이고, 재수집은 같은 기준 시각으로 돌며 처리한 id 를 뺌 | `tests/watch.test.sh` |
@@ -155,3 +165,4 @@ flowchart TB
 - GH-61: 리뷰 job 지시의 `gh pr view` 를 `--json` 필드 지정으로
 - GH-70: 리뷰·`@claude` job 의 권한 모드를 명시해 허용 목록을 엄격하게
 - GH-75: ready 직후 리뷰 요청 재조회, 감시 시작 시 첫 라운드 처리
+- GH-77: 의존 PR 을 `gh stack` 스택으로 묶고 `gh stack merge` 로 merge

@@ -27,11 +27,11 @@ plugins/adk/template/.claude/hooks/merge-gate.sh	*) for a in "$@"; do case $a in
 plugins/adk/template/.claude/hooks/merge-gate.sh	case $a in merge) deny	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	-R|--repo|-R*|--repo=*) deny	-R|--repo|-R*|--repo=*) ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	-*) deny "허용하지 않는 gh pr merge 플래그	    -*) ;;	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$sq" ] || deny	:	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$n" ] || deny	:	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$n" ] || deny	*[!0-9]*) n=$(printf '%s' "$a" | sed -n 's#^https://[^ ]*/pull/\([0-9][0-9]*\).*#\1#p') ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$sq" ] || deny "squash 가 아닌 merge	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$n" ] || deny "대상 PR 이	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$n" ] || deny "대상 PR 을	*[!0-9]*) n=$(printf '%s' "$a" | sed -n 's#^https://[^ ]*/pull/\([0-9][0-9]*\).*#\1#p') ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case "$sha" in "$mh"*)	:	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/merge-gate.sh	gh pr checks "$n" >/dev/null 2>&1 || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	gh pr checks "$1" >/dev/null 2>&1 || deny	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	who='.user.type == "Bot"	  who='true'	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	.user.login == \"$me\""	  who='true'	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	.[] | if .author.login != "dependabot[bot]" then "author"	.[] | if false then "author"	tests/merge-gate.test.sh
@@ -42,13 +42,13 @@ plugins/adk/template/.claude/hooks/merge-gate.sh	[$vs[] | select(.n == $n)] | le
 plugins/adk/template/.claude/hooks/merge-gate.sh	| if ($r | length) == 0 or any(	      | if any($r[]; . != true) then "version" else "ok" end end end'	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	*author*) deny	    *author*) dep=1 ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	*) deny "patch·minor	    *) dep=1 ;;	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/merge-gate.sh	if [ -z "$who" ] || [ -n "$dep" ]; then	if true; then	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	if [ -z "$who" ] || [ -n "${1-}" ]; then	if true; then	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	if [ "$by" = app/dependabot ]; then	if false; then	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	"ok ") dep=1 ;;	    "ok ") ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	if ($p | length) != 2 then "version" else	    | if false then "version" else	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	blocking) deny	  blocking) exit 0 ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	format) deny	  format) exit 0 ;;	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/merge-gate.sh	*) deny "현재 head($sha)	  *) exit 0 ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	*) deny "PR $1 현재 head($2)	    *) exit 0 ;;	tests/merge-gate.test.sh
 plugins/adk/hooks/readonly-agent.sh	grep -qE '"agent_type"	exit 0	tests/readonly-agent.test.sh
 plugins/adk/hooks/readonly-agent.sh	if (raw == "") no(	  x_ = 0	tests/readonly-agent.test.sh
 plugins/adk/hooks/readonly-agent.sh	else no("JSON escape	      else c = d	tests/readonly-agent.test.sh
@@ -155,7 +155,7 @@ plugins/adk/template/.claude/hooks/commit-gate.sh	*"$xq"*) xarg "$a" ;;	      *"
 plugins/adk/template/.claude/hooks/commit-gate.sh	deny "git commit 의 $1 는 실행할 때 정해져	  :	tests/commit-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case $a in *"$xu"*) deny "gh pr merge 인자	  :	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	case "${1-}" in *"$xu"*|*"$xq"*) deny	:	tests/merge-gate.test.sh
-plugins/adk/template/.claude/hooks/merge-gate.sh	[ "${1-}" != pr ] || case "${2-}"	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	case "${1-}" in pr|stack) case "${2-}"	:	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	GH_REPO*|GH_HOST*|*"$xu"*|*"$xq"*) ghexp=1	      for a in "$@"; do case $a in GH_REPO*|GH_HOST*) ghexp=1 ;; esac; done ;;	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/merge-gate.sh	elif .committer.login != "web-flow" then "author"	  elif false then "author"	tests/merge-gate.test.sh
 plugins/adk/template/.claude/hooks/segments.awk	if (c == "(" && fndef()) continue	    x = 0	tests/commit-gate.test.sh
@@ -167,3 +167,18 @@ plugins/adk/template/.claude/hooks/commit-gate.sh	[ "$unk" != "$1" ] || case $un
 plugins/adk/template/.claude/hooks/commit-gate.sh	case $unk in *"$xq"*) shift; cargs "$@"	    :	tests/commit-gate.test.sh
 plugins/adk/template/.github/workflows/claude-review.yml	--permission-mode default	            --max-turns 60	tests/review-prompt.test.sh
 plugins/adk/template/.github/workflows/claude.yml	--permission-mode acceptEdits	            --max-turns 40	tests/review-prompt.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ "$a" = squash ] || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	-*) deny "허용하지 않는 gh stack merge 플래그	      -*) ;;	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$n" ] || deny "대상이 둘 이상임	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	case "$a" in ''|*[!0-9]*) deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -z "$want" ] || deny "--merge-method	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$sq" ] || deny "squash 가 아닌 gh stack merge	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$n" ] || deny "번호 없는	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ -n "$l" ] || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ "$2" = - ] || continue	    continue	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ "$1" = open ] || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	[ "$4" != "dependabot[bot]" ] || deny	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	verdict "$m" "$3"	:	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	--jq "$info") || deny "PR $m	    q=$(gh api "repos/{owner}/{repo}/pulls/$m" --jq "$info")	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	set -f; set -- $q; set +f	    set -- $q	tests/merge-gate.test.sh
+plugins/adk/template/.claude/hooks/merge-gate.sh	| tail -n 1)" = "$n" ] || deny	:	tests/merge-gate.test.sh

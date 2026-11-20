@@ -38,6 +38,7 @@ argument-hint: "[이슈 번호]"
   - 구조가 바뀌었으면 AS-IS / TO-BE 를 mermaid 도식 하나에 담는다
   - 맨 위 쉬운 설명(eli5) 링크의 아티팩트는 발행 뒤 감시를 끈다: 코멘트·재발행 구독(`ArtifactComments` watch)을 걸지 않고, 발행으로 걸렸으면 `on: false` 로 끈다.
 - 본문은 이후 커밋이 추가될 때마다 최종 커밋 기준으로 갱신한다.
+- 다른 열린 PR 에 의존하는 PR 은 [merge.md](merge.md) "스택" 대로 `gh stack` 스택으로 묶는다.
 
 ## 3. CI·리뷰 조사
 
@@ -120,11 +121,7 @@ argument-hint: "[이슈 번호]"
 
 - 4의 ready 뒤 4의 확인과 3-5 해당 여부를 다시 조회하고(해당이면 보고하고 멈춤) `gh pr merge --squash <번호> --match-head-commit <현재 head SHA> --subject "<PR 제목>" --body "<최종 결과 기준 [ISSUE]/[DESC]>"`
   - 메시지를 지정하지 않으면 저장소 설정에 따라 PR 의 커밋 메시지가 이어 붙어 중간 상태가 남는다.
-- merge 게이트: `gh pr merge` 직전 hook(`.claude/hooks/merge-gate.sh`)이 CI 통과, 현재 head 의 리뷰 요약, 그 요약의 Blocking 0건을 다시 확인하고 아니면 막는다. 위 명령의 플래그 밖(`--admin`·`--auto` 등)을 붙이면 막는다.
-  - hook 은 Should Fix 를 보지 않는다 → Should Fix 는 조사로 반박한 항목이 섞여 있어 기계로 셀 수 없다. 위 조회로 확인한다.
-  - 요약 작성자는 `github` 이면 Claude App, `local` 이면 세션의 gh 계정만 인정한다. Dependabot PR 은 `/adk:deps` 가 처리한다.
-  - `--match-head-commit` 이 검사한 head 와 같아야 한다 → 검사 뒤 끼어든 push 는 gh 가 거부한다.
-  - 막히면 원인을 고치거나 보고한다. `gh api` 로 merge 하는 등 hook 을 우회하지 않는다.
+- merge 게이트와 스택 PR 의 merge 는 [merge.md](merge.md) 를 따른다. 막히면 원인을 고치거나 보고하고, hook 을 우회하지 않는다.
 - 먼저 묻는 예외(CLAUDE.md)에 걸리는 변경이면 merge 하지 않고 보고한다.
   - 자율 범위·성숙도 절을 바꾸는 PR 은 저장소 소유자가 직접 merge 한다.
 

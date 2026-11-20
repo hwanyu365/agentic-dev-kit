@@ -139,6 +139,22 @@ t '12 abc1234' '{"tool_input":{"command":"gh pr merge 12 --squash -t x -b y -F f
 t '12 abc1234' '{"tool_input":{"command":"gh pr merge 12 --squash --body \"--admin\" --subject --auto --match-head-commit abc1234"}}'
 # TC#12 merge 방식은 squash 뿐이다
 t deny '{"tool_input":{"command":"gh pr merge 12 --delete-branch --match-head-commit abc1234"}}'
+# TC#98 gh stack merge 는 번호 하나와 squash 만 받는다 → 대상은 판정에서 GitHub 으로 정한다
+t 'stack 12' '{"tool_input":{"command":"gh stack merge 12 --squash --yes"}}'
+t 'stack 12' '{"tool_input":{"command":"gh stack merge 12 --squash -y"}}'
+t 'stack 12' '{"tool_input":{"command":"gh stack merge 12 --merge-method squash --yes"}}'
+t 'stack 12' '{"tool_input":{"command":"gh stack merge 12 --merge-method=squash"}}'
+t 'stack 12' '{"tool_input":{"command":"gh stack merge --squash 12"}}'
+for c in 'gh stack merge 12' 'gh stack merge 12 --merge' 'gh stack merge 12 --rebase' 'gh stack merge 12 --merge-method rebase' 'gh stack merge 12 --merge-method=merge' \
+  'gh stack merge 12 --squash -R o/r' 'gh stack merge 12 --squash --repo=o/r' 'gh stack merge 12 --squash --admin' 'gh stack merge 12 --squash -sy' 'gh stack merge --squash --yes' \
+  'gh stack merge 12 13 --squash' 'gh stack merge x --squash' 'gh stack merge $N --squash' 'gh stack merge \"$N\" --squash' 'gh stack merge 12 --squash --merge-method' \
+  'GH_REPO=o/r gh stack merge 12 --squash' 'export $V; gh stack merge 12 --squash' 'gh stack merge 12 --squash && gh pr merge 13 --squash' 'gh stack merge 12 --squash; gh stack merge 14 --squash' \
+  'gh stack $(echo merge) 12 --squash' 'gh stack m?rge 12 --squash'; do
+  t deny "{\"tool_input\":{\"command\":\"$c\"}}"
+done
+t none '{"tool_input":{"command":"gh stack view --json"}}'
+t none '{"tool_input":{"command":"gh stack submit --auto"}}'
+t none '{"tool_input":{"command":"gh stack link 10 11"}}'
 [ $fail -eq 0 ] && echo PASS || exit 1
 
 # 판정: gh 를 흉내 내는 stub 을 PATH 앞에 둔다. 코멘트 jq 필터는 실제 gh 의 jq 로 돌린다 → gh 인증이 없으면 실패로 끝낸다.
@@ -148,6 +164,16 @@ r=$(mktemp -d); trap 'rm -rf "$r"' EXIT
 mkdir -p "$r/bin" "$r/repo"
 cat > "$r/bin/gh" <<'GH'
 #!/bin/sh
+# FX 가 있으면 PR·스택·코멘트·CI 를 그 디렉터리의 파일에서 읽는다 (스택 판정용)
+if [ -n "$FX" ]; then
+  case "$1 $2" in "pr checks") [ -f "$FX/checks-$3" ] && exit "$(cat "$FX/checks-$3")"; exit 0 ;; esac
+  case "$2" in
+    */stacks/*) f="$FX/stack-${2##*/}.json"; [ -f "$f" ] || exit 1; exec "$REAL_GH" api rate_limit --jq "$(cat "$f") as \$d | \$d | $4" ;;
+    */issues/*/comments) n=${2%/comments}; n=${n##*/}; f="$FX/comments-$n.json"; [ -f "$f" ] || f="$FX/none.json"; exec "$REAL_GH" api rate_limit --jq "$(cat "$f") as \$d | \$d | $5" ;;
+    */pulls/*/*) ;;
+    */pulls/*) f="$FX/pull-${2##*/}.json"; [ -f "$f" ] || exit 1; exec "$REAL_GH" api rate_limit --jq "$(cat "$f") as \$d | \$d | $4" ;;
+  esac
+fi
 case "$1 $2" in
   "pr view") echo "12 abc1234def ${FAKE_AUTHOR:-me}" ;;
   "pr checks") exit "${FAKE_CHECKS:-0}" ;;
@@ -235,4 +261,40 @@ j 0 local abc1234 "{$usr,body:$ok}"
 A=; C=; j 2 github abc1234 "{$usr,body:$ok}"
 # TC#27 Dependabot 판정 조회가 실패하면 막는다
 A=app/dependabot; grp version-update:semver-minor; CF=1; dj 2; CF=; A=; C=
+# TC#99 gh stack merge 는 merge 될 PR(스택 아래부터 대상까지) 마다 CI·현재 head 요약·Blocking 을 판정한다
+fx="$r/fx"
+pull() { # 번호 스택 위치 [상태 merged_at 작성자]
+  st="{number:7,position:$2}"; [ "$2" = - ] && st=null
+  printf '{"number":%s,"state":"%s","merged_at":%s,"head":{"sha":"sha%s000"},"user":{"login":"%s"},"stack":%s}' "$1" "${3:-open}" "${4:-null}" "$1" "${5:-me}" "$(printf '%s' "$st" | sed 's/number/"number"/; s/position/"position"/')" > "$fx/pull-$1.json"
+}
+stack() { # 스택번호 PR번호들(아래부터)
+  s="$1"; shift; l=""; for m in "$@"; do l="$l${l:+,}{\"number\":$m}"; done
+  printf '{"number":%s,"pull_requests":[%s]}' "$s" "$l" > "$fx/stack-$s.json"
+}
+okc() { printf '[{%s,body:"HEAD: sha%s000\n## 🔴 Blocking (merge 전 수정 필수)\n\n없음.\n"}]' "$bot" "$1" > "$fx/comments-$1.json"; }
+blc() { printf '[{%s,body:"HEAD: sha%s000\n## 🔴 Blocking (merge 전 수정 필수)\n\n### [B1] x\n"}]' "$bot" "$1" > "$fx/comments-$1.json"; }
+base() { rm -rf "$fx"; mkdir -p "$fx"; echo '[]' > "$fx/none.json"; stack 7 11 12 13; pull 11 1; pull 12 2; pull 13 3; okc 11; okc 12; okc 13; }
+sj() { # 기대종료코드 대상번호 설명
+  rm -rf "$r/repo/.github"; mkdir -p "$r/repo/.github/workflows"; : > "$r/repo/.github/workflows/claude-review.yml"
+  got=$(cd "$r/repo" && printf '{"tool_input":{"command":"gh stack merge %s --squash --yes"}}' "$2" |
+    PATH="$r/bin:$PATH" REAL_GH="$real" FX="$fx" sh "$g" 2>&1); rc=$?
+  [ $rc -eq "$1" ] || { echo "FAIL TC#99($1) $3 → $rc $got"; fail=1; }
+}
+base; sj 0 12 "아래 PR 11 과 대상 12 모두 통과"
+base; blc 11; sj 2 12 "아래 PR 의 Blocking"
+base; echo 1 > "$fx/checks-11"; sj 2 12 "아래 PR 의 CI 실패"
+base; rm "$fx/comments-11.json"; sj 2 12 "아래 PR 의 요약 없음"
+base; blc 12; sj 2 12 "대상 PR 의 Blocking"
+base; blc 13; echo 1 > "$fx/checks-13"; sj 0 12 "대상 위 PR 은 보지 않음"
+base; pull 12 -; sj 2 12 "스택에 없는 PR"
+base; rm "$fx"/pull-*.json; pull 11 1; pull 12 2; pull 13 3; mv "$fx/pull-12.json" "$fx/p12"; mv "$fx/stack-7.json" "$fx/s7"; sj 2 12 "PR·스택 조회 실패"
+base; rm "$fx/pull-7.json" 2>/dev/null; sj 0 7 "스택 번호 → 스택 전부 통과"
+base; blc 13; sj 2 7 "스택 번호 → 맨 위 PR 의 Blocking"
+base; pull 11 1 closed '"2026-11-20T00:00:00Z"'; rm "$fx/comments-11.json"; sj 0 12 "merge 된 PR 은 빼고 판정"
+base; pull 11 1 closed; sj 2 12 "닫힌 PR 이 대상에 있음"
+base; pull 11 1 open null 'dependabot[bot]'; sj 2 12 "Dependabot 작성 PR 이 대상에 있음"
+base; printf '{"number":8,"pull_requests":[]}' > "$fx/stack-8.json"; sj 2 8 "PR 이 없는 스택"
+base; rm "$fx/pull-11.json"; sj 2 12 "스택 아래 PR 조회 실패"
+base; stack 7 12 11 13; sj 2 12 "스택 순서가 position 과 어긋남"
+base; pull 11 1 open null 'dependabot[bot]'; : > "$r/repo/dependabott"; sj 2 12 "작성자 글자가 저장소 파일 이름으로 펼쳐지지 않음"; rm -f "$r/repo/dependabott"
 [ $fail -eq 0 ] && echo PASS-판정 || exit 1
