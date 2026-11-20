@@ -19,20 +19,25 @@ argument-hint: "<PR 번호>"
   - 기준 시각: 세션 gh 계정이 남긴 마지막 "리뷰 대응" 코멘트(`/adk:ship` 3-2)의 작성 시각, 없으면 PR 생성 시각(`gh pr view <번호> --json createdAt`) → 기록 파일 없이 세션·기기가 바뀌어도 같은 기준이다.
 
     ```sh
-    gh api --paginate repos/{owner}/{repo}/issues/<번호>/comments --jq '.[] | select(.user.login == "<gh api user 의 login>" and (.body | split("\n")[0] | test("^#* *리뷰 대응"))) | .created_at' | sort | tail -n 1
+    B=$(gh api --paginate repos/{owner}/{repo}/issues/<번호>/comments --jq '.[] | select(.user.login == "<gh api user 의 login>" and (.body | split("\n")[0] | test("^#* *리뷰 대응"))) | .created_at') || { 멈추고 보고; }
+    B=$(printf '%s\n' "$B" | sort | tail -n 1)
     ```
 
     - 첫 줄만 보고 제목 표지(`##`)와 HEAD 표기는 가리지 않는다 → 손으로 쓴 대응 코멘트는 3-2 형식과 다르게 남아 있다.
+    - 조회가 오류로 끝나면 PR 생성 시각으로 넘어가지 않고 멈추고 보고한다 → 빈 결과를 "대응 없음" 으로 읽으면 이미 처리한 코멘트를 다시 조사한다.
 
   - 대상: 기준 시각 이후의 리뷰·inline 코멘트·일반 코멘트(작성자 무관)와 미해결 리뷰 스레드([human-review.md](../ship/human-review.md) 의 `reviewThreads` 조회)에서 처리한 id 를 뺀 것. `--paginate` 가 없으면 30건까지만 온다.
 
     ```sh
     gh api --paginate repos/{owner}/{repo}/pulls/<번호>/reviews --jq '.[] | select(.submitted_at >= "<기준 시각>") | [.id, .user.login, .state] | @tsv'
-    gh api --paginate repos/{owner}/{repo}/pulls/<번호>/comments --jq '.[] | select(.created_at >= "<기준 시각>") | [.id, .user.login] | @tsv'
-    gh api --paginate repos/{owner}/{repo}/issues/<번호>/comments --jq '.[] | select(.created_at >= "<기준 시각>") | [.id, .user.login] | @tsv'
+    gh api --paginate repos/{owner}/{repo}/pulls/<번호>/comments --jq '.[] | select(.created_at >= "<기준 시각>" or .updated_at >= "<기준 시각>") | [.id, .updated_at, .user.login] | @tsv'
+    gh api --paginate repos/{owner}/{repo}/issues/<번호>/comments --jq '.[] | select(.created_at >= "<기준 시각>" or .updated_at >= "<기준 시각>") | [.id, .updated_at, .user.login] | @tsv'
     ```
 
   - 처리한 id: 기준이 된 "리뷰 대응" 코멘트, 이 세션이 조사한 항목, 이 세션이 만든 코멘트·리뷰(답글, "리뷰 대응", 답글이 만든 `COMMENTED` 리뷰) → 빼지 않으면 자기 글이 매번 대상이 된다. 계정으로 거르지 않는다 → 소유자 계정으로 쓰면 소유자의 글까지 빠진다.
+    - 코멘트는 id 와 `updated_at` 의 쌍으로 센다 → 처리한 뒤 수정된 코멘트는 다시 대상이 된다. 리뷰 본문은 수정 시각이 API 에 없어 id 로만 센다.
+    - 세션이 만든 코멘트·리뷰는 id 로 뺀다 → 자기 글을 고쳐도 다시 대상이 되지 않는다.
+    - 처리한 id 는 세션 안에서만 유지된다 → 새 세션은 기준 "리뷰 대응" 과 같은 초에 남긴 이전 세션의 글을 다시 잡을 수 있다. 중복 조사일 뿐 빠지는 것은 없다.
   - 기준 시각은 세션 동안 옮기지 않고, `>=` 로 비교한다 → 로컬 시계와 GitHub 시각을 비교하지 않고, 같은 초에 달린 항목도 빠지지 않는다.
   - 대상이 있으면 2의 라운드를 처리하고, 없으면 보고하지 않고 아래 감시로 간다.
 - 변화가 생길 때까지 기다린다. `Monitor` 도구로 아래 조회를 주기(5분)로 돌리고, 직전 결과와 달라지면 깨어나 위의 수집으로 대상을 정해 2의 라운드를 처리한다.
