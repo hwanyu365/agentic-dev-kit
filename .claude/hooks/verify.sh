@@ -34,7 +34,7 @@ skip() {
   # 범위 파일·이 스크립트가 바뀐 변경은 그 변경 자체를 건너뛰게 할 수 있다.
   printf '%s\n' "$changed" | grep -qxF -e "$skips" -e .claude/hooks/verify.sh && return 1
   # 범위 파일이 없거나 유효한 줄이 없으면 제외가 없어 아래 diff 가 changed 와 같다 → 건너뛰지 않는다.
-  pats=$(grep -vE '^(#|$)' "$skips" 2>/dev/null)
+  pats=$(tr -d '\r' < "$skips" 2>/dev/null | sed 's/[[:space:]]*$//' | grep -vE '^(#|$)')
   set --
   while IFS= read -r p; do
     [ -n "$p" ] && set -- "$@" ":(exclude)$p"
