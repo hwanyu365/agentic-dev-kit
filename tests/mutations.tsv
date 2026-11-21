@@ -1,7 +1,7 @@
 # 보안 경계 조건 목록. 칸: 파일 / 바꿀 줄에 든 문자열(정확히 한 줄) / 대신 넣을 줄 / 실패해야 할 테스트
 # 경계 조건을 고치거나 더하면 이 목록도 고친다 → tests/mutation.sh 가 적용되지 않은 행과 살아남은 행을 실패시킨다.
 # 넣지 않은 조건: 지워도 바로 뒤 검사가 같은 종료 코드로 막아 동작이 같다 → 살아남는 것이 결함이 아니다.
-#   verify.sh 의 작업 트리 해시 실패(빈 해시는 기록과 달라 막힘), hooks-path.sh 의 pre-commit 없음(chmod 실패로 막힘),
+#   verify.sh 의 작업 트리 해시 실패(빈 해시는 기록과 달라 막힘)·건너뛰기 판정의 기록·트리 읽기 실패(빈 값은 diff 오류로 건너뛰지 않음), hooks-path.sh 의 pre-commit 없음(chmod 실패로 막힘),
 #   merge-gate.sh 의 PR 조회 실패(빈 head 는 --match-head-commit 검사에서 막힘)·코멘트 조회 실패(빈 결과는 요약 없음으로 막힘)·Dependabot 커밋 조회 실패(빈 결과는 ok 가 아니어서 막힘)
 plugins/adk/template/.githooks/pre-commit	[ -s "$r" ] ||	:	tests/pre-commit.test.sh
 plugins/adk/template/.githooks/pre-commit	[ -z "$f" ] ||	:	tests/pre-commit.test.sh
@@ -10,6 +10,11 @@ plugins/adk/template/.claude/hooks/verify.sh	[ "$(cat "$stamp" 2>/dev/null)" = "
 plugins/adk/template/.claude/hooks/verify.sh	sh .claude/hooks/hooks-path.sh || exit 2	:	tests/pre-commit.test.sh
 plugins/adk/template/.claude/hooks/verify.sh	else sh .github/spec-trace.sh; fi || exit	:	tests/verify.test.sh
 plugins/adk/template/.claude/hooks/verify.sh	[ "$r" -eq 0 ] || exit "$r"	:	tests/verify.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	&& [ -n "$changed" ] || return 1	  changed=$(git -c core.quotePath=false diff --name-only --no-renames "$base" "$now") || return 1	tests/verify.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	grep -qxF -e "$skips" -e .claude/hooks/verify.sh	  printf '%s\n' "$changed" | grep -qxF -e .claude/hooks/verify.sh && return 1	tests/verify.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	grep -qxF -e "$skips" -e .claude/hooks/verify.sh	  printf '%s\n' "$changed" | grep -qxF -e "$skips" && return 1	tests/verify.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	&& [ -z "$out" ]	  out=$(git diff --name-only "$base" "$now" -- . "$@"); :	tests/verify.test.sh
+plugins/adk/template/.claude/hooks/verify.sh	printf '%s\n' "$now" > "$stamp" ||	  printf '%s\n' "$now" | tee "$full" > "$stamp" || { rm -f "$stamp"; exit 1; }	tests/verify.test.sh
 plugins/adk/template/.claude/hooks/hooks-path.sh	[ "$hp" = .githooks ] && [ -x .githooks/pre-commit ] && exit 0	exit 0	tests/pre-commit.test.sh
 plugins/adk/template/.claude/hooks/hooks-path.sh	[ -z "$own" ] ||	:	tests/pre-commit.test.sh
 plugins/adk/template/.claude/hooks/hooks-path.sh	*) echo "core.hooksPath 가 $hp	*) ;;	tests/pre-commit.test.sh

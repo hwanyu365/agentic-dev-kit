@@ -32,6 +32,7 @@ disable-model-invocation: true
 | `{{VERIFY_ALLOWED_TOOLS}}` | 검증 명령의 Claude 권한 패턴 | `&&` 로 이은 하위 명령마다 정확히 일치하는 `Bash(<하위 명령>)` 하나씩 (앞부분 와일드카드는 publish·install 까지 연다) |
 | `{{TEST_LOCATION}}` | 테스트 파일 위치 규칙 | 소스 옆 `{file}.test.*` (사용자 전역 규칙이 있으면 그것), 스택이 강제하면 그 경로와 이유 |
 | `{{SECRET_FILES_REGEX}}` | 기본 목록(`.env`, 키 파일, 서비스 계정 키) 밖에 커밋되면 안 되는 스택 설정 파일의 정규식 | 없으면 줄 삭제 |
+| `{{VERIFY_SKIP_PATHS}}` | 테스트 무관 경로 (`verify-skip-paths`) | 없음(줄 삭제) |
 | `{{CI_SETUP}}` | CI 런타임 준비 step (setup-java, setup-node 등) | 스택 관례 |
 | `{{RELEASE_CMD}}` | 태그 시 산출물 빌드·배포 명령 | 없으면 step 삭제 |
 | `{{MATURITY}}` | poc / alpha / beta / ga | alpha |

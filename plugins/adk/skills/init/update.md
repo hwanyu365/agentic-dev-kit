@@ -15,6 +15,7 @@
 | `{{VERIFY_CMD}}` | `.claude/hooks/verify.sh`, 없으면 `ci.yml` 의 검증 step |
 | `{{VERIFY_ALLOWED_TOOLS}}` | `.claude/settings.json` allow 중 검증 명령 항목 |
 | `{{SECRET_FILES_REGEX}}` | `.github/secret-files.regex` 의 기본 목록 밖 줄 |
+| `{{VERIFY_SKIP_PATHS}}` | `.github/verify-skip-paths` 의 빈 줄·`#` 줄 밖 줄. 파일이 없으면 없음을 기본값으로 묻는다 |
 | `{{CI_SETUP}}`·`{{RELEASE_CMD}}` | `ci.yml`·`release.yml` 의 해당 step |
 | `{{MATURITY}}`·`{{AUTONOMY}}` | `CLAUDE.md` 의 성숙도·자율 범위 절 제목 |
 | `{{BRANCH_STRICT}}` | `CLAUDE.md` GIT 절 `main` 브랜치 보호 줄의 `브랜치 최신 요구:` 바로 뒤 백틱 값 (그 뒤 괄호는 설명). 없으면 브랜치 보호·ruleset 의 strict 현재 값을 기본값으로 묻는다 |
