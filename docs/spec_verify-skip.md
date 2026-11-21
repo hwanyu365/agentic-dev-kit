@@ -104,10 +104,10 @@
 | TC#104 | FR#2 FR#5 | 범위 밖 변경·변경 0건·기록 없음·기록 손상·범위 파일 없음·유효 줄 없음·범위 파일 변경·`verify.sh` 변경·범위 파일 `#` 줄과 같은 이름의 파일 → 검증 명령 실행, 그 종료 코드를 따름 | `tests/verify.test.sh` |
 | TC#105 | FR#3 | 범위 밖 → 범위 안으로 옮긴 파일 → 검증 명령 실행 | `tests/verify.test.sh` |
 | TC#106 | FR#4 | A 전체 통과 → B 건너뜀 → B 를 되돌려 A 와 같은 트리 → 검증 명령 실행 | `tests/verify.test.sh` |
-| TC#110 | FR#5 | CRLF 범위 파일·줄 끝 공백이 붙은 pathspec 도 범위로 읽어 건너뜀, 공백만 있는 줄은 무시 | `tests/verify.test.sh` |
 | TC#107 | FR#5 | 렌더 결과에 `.github/verify-skip-paths` 가 있고 자리표시자가 남지 않음 | `tests/render.test.sh` |
 | TC#108 | FR#5 FR#6 | init 질문 표·`update.md` 읽는 곳 표·템플릿·adk `CLAUDE.md` 원칙·`/adk:verify` 1·README 파일 표·범위 파일 주석이 같은 범위·조건을 적음, `ci.yml` 은 그대로 | (수동) 대조 |
 | TC#109 | NFR#1 NFR#2 | 건너뛰기 조건마다 mutation 행이 있고 조건을 지우면 테스트가 실패, ubuntu gawk·mawk·macOS 에서 같은 결과 | (수동) CI `mutation`·`sh` job 결과 확인 |
+| TC#110 | FR#5 | CRLF 범위 파일·줄 끝 공백이 붙은 pathspec 도 범위로 읽어 건너뜀, 공백만 있는 줄은 무시 | `tests/verify.test.sh` |
 
 ## 부록 — 변경 이력
 
