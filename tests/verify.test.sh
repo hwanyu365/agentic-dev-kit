@@ -77,6 +77,10 @@ mv "$r.skip" .github/verify-skip-paths; echo m > src/m.txt; v >/dev/null; ran >/
 mv src/m.txt docs/m.txt; v >/dev/null
 t "TC#105 범위 밖에서 범위 안으로 옮긴 파일 → 실행" "$(ran)" yes
 
+printf 'docs/ \r\n  \r\nnotes/\r\n' > .github/verify-skip-paths; v >/dev/null; ran >/dev/null
+echo t > docs/t.md; echo u > notes/u.txt; v >/dev/null
+t "TC#110 CRLF·줄 끝 공백이 붙은 범위 파일도 범위로 읽음" "$(ran)" no
+
 git add -A; git -c core.hooksPath=/dev/null commit -qm s || { echo "FAIL 워크트리 준비 커밋"; exit 1; }
 git worktree add -q "$r.wt" -b w
 (cd "$r.wt" && echo d5 > docs/v.md && sh .claude/hooks/verify.sh >/dev/null 2>&1)

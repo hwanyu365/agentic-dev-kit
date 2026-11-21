@@ -67,7 +67,7 @@
   Then A 대비 변경 0건이므로 검증 명령을 실행 (FR#2)
   ```
 
-- `FR#5` [요구사항] 범위 파일 `.github/verify-skip-paths` 는 한 줄에 git pathspec 하나다. 매직 시그니처(`:(glob)` 등)는 쓰지 않는다 → 판정이 `:(exclude)` 를 앞에 붙인다. 빈 줄과 `#` 으로 시작하는 줄은 무시하고, 형식과 주의 사항은 템플릿 범위 파일의 `#` 줄에 적는다. 템플릿은 자리표시자 `{{VERIFY_SKIP_PATHS}}` 한 줄을 두고, init 은 기본값 "없음"(줄 삭제)으로 묻고, `--update` 는 그 파일의 줄을 읽는다.
+- `FR#5` [요구사항] 범위 파일 `.github/verify-skip-paths` 는 한 줄에 git pathspec 하나다. 매직 시그니처(`:(glob)` 등)는 쓰지 않는다 → 판정이 `:(exclude)` 를 앞에 붙인다. 줄 끝 공백·CR 은 떼고 읽고, 빈 줄과 `#` 으로 시작하는 줄은 무시하고, 형식과 주의 사항은 템플릿 범위 파일의 `#` 줄에 적는다. 템플릿은 자리표시자 `{{VERIFY_SKIP_PATHS}}` 한 줄을 두고, init 은 기본값 "없음"(줄 삭제)으로 묻고, `--update` 는 그 파일의 줄을 읽는다.
 - `FR#6` [요구사항] CI 는 건너뛰지 않고 검증 명령 전체를 돌린다. 템플릿·adk `CLAUDE.md` 의 원칙 "검증 명령은 하나다" 에 로컬 건너뛰기의 조건과 전제(범위가 맞을 때만 로컬 통과 = CI 통과)를 적는다.
 
 ### 3.3 비기능 요구사항
@@ -107,7 +107,9 @@
 | TC#107 | FR#5 | 렌더 결과에 `.github/verify-skip-paths` 가 있고 자리표시자가 남지 않음 | `tests/render.test.sh` |
 | TC#108 | FR#5 FR#6 | init 질문 표·`update.md` 읽는 곳 표·템플릿·adk `CLAUDE.md` 원칙·`/adk:verify` 1·README 파일 표·범위 파일 주석이 같은 범위·조건을 적음, `ci.yml` 은 그대로 | (수동) 대조 |
 | TC#109 | NFR#1 NFR#2 | 건너뛰기 조건마다 mutation 행이 있고 조건을 지우면 테스트가 실패, ubuntu gawk·mawk·macOS 에서 같은 결과 | (수동) CI `mutation`·`sh` job 결과 확인 |
+| TC#110 | FR#5 | CRLF 범위 파일·줄 끝 공백이 붙은 pathspec 도 범위로 읽어 건너뜀, 공백만 있는 줄은 무시 | `tests/verify.test.sh` |
 
 ## 부록 — 변경 이력
 
 - GH-87: 테스트 무관 범위만 바뀌면 검증 명령을 건너뜀
+- GH-89: 범위 파일 줄 끝 공백·CR 을 떼고 읽음
