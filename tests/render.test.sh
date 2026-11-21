@@ -33,6 +33,7 @@ sh .claude/hooks/verify.sh >/dev/null 2>&1
 t "TC#4 워크트리에서 검증 후 커밋은 통과" "$(git commit -qm a >/dev/null 2>&1; echo $?)" 0
 
 # TC#47 브랜치 최신 요구 값이 GIT 절에 렌더되고, update.md 읽는 곳 표가 템플릿 자리표시자를 모두 덮는다
+t "TC#107 렌더 저장소에 범위 파일이 있고 유효 줄이 없음" "$(test -f "$r/m/.github/verify-skip-paths" && grep -cvE '^(#|$)' "$r/m/.github/verify-skip-paths")" 0
 t "TC#47 렌더 CLAUDE.md 에 브랜치 최신 요구 값" "$(grep -c '브랜치 최신 요구: `끔`' "$r/m/CLAUDE.md")" 1
 miss=$(grep -rhoE '\{\{[A-Z_]+\}\}' "$A/plugins/adk/template" | sort -u | while IFS= read -r k; do grep -qF "\`$k\`" "$A/plugins/adk/skills/init/update.md" || echo "$k"; done | tr '\n' ' ')
 t "TC#47 update.md 읽는 곳 표에 없는 자리표시자" "$miss" ""

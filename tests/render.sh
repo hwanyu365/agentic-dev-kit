@@ -64,7 +64,7 @@ find "$out" -type f | while IFS= read -r f; do
     BEGIN { n = split("PROJECT OWNER_REPO SUMMARY STACK VERIFY_CMD VERIFY_ALLOWED_TOOLS TEST_LOCATION RELEASE_CMD MATURITY AUTONOMY REVIEWER BRANCH_STRICT", k, " ") }
     {
       t = $0; sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
-      if (t == "# {{CI_SETUP}}" || t == "{{SECRET_FILES_REGEX}}") next
+      if (t == "# {{CI_SETUP}}" || t == "{{SECRET_FILES_REGEX}}" || t == "{{VERIFY_SKIP_PATHS}}") next
       s = $0
       for (i = 1; i <= n; i++) s = rep(s, "{{" k[i] "}}", ENVIRON["R_" k[i]])
       print s
