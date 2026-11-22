@@ -8,6 +8,7 @@
 ## 절차 도구
 
 - `adk` 플러그인 스킬로 수행한다: `/adk:spec` → `/adk:tdd` → `/adk:verify` → `/adk:ship`, 배포는 `/adk:release`, 세션 종료 전 `/adk:handoff`
+  - `/adk:spec` 에서 받을 결정이 둘 이상이고 화면·동작이 바뀌는 제안이면 `/adk:decide` 결정 페이지로 묻는다
 - 세션 인계 파일은 main 클론의 `.adk/handoff.md` 다. 세션 시작 시 adk 플러그인 hook 이 내용을 컨텍스트에 넣는다
 - 로컬 전용 설정(JDK 경로 등 환경변수)은 `.claude/settings.local.json` 에 둔다 (커밋하지 않음)
 

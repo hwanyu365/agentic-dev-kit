@@ -18,3 +18,4 @@
 | chore 분류 기준·변경 범위(`/adk:verify` 3)를 고친다 | `spec_dev-flow.md` §3·§6 |
 | 작업 습관 규칙(백그라운드 작업, 빈 출력, Refactor, 결함 등록 전 확인, 제목)을 고친다 | `spec_work-habits.md` §3·§6 |
 | `verify.sh` 의 검증 명령 건너뛰기 판정·범위 파일을 고친다 | `spec_verify-skip.md` §3·§6 |
+| 결정 페이지(`/adk:decide`)의 블록 구성·결정 모음·발행·`/adk:spec` 연결을 고친다 | `spec_decide.md` §3·§6 |

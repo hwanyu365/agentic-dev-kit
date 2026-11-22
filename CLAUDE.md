@@ -8,6 +8,7 @@ agent 가 SDD + TDD 로 개발하게 하는 프로젝트 틀(`plugins/adk/templa
 ## 절차 도구
 
 - `adk` 플러그인 스킬로 수행한다: `/adk:spec` → `/adk:tdd` → `/adk:verify` → `/adk:ship`, 배포는 `/adk:release`, 세션 종료 전 `/adk:handoff`
+  - `/adk:spec` 에서 받을 결정이 둘 이상이고 화면·동작이 바뀌는 제안이면 `/adk:decide` 결정 페이지로 묻는다
 - 세션 인계 파일은 main 클론의 `.adk/handoff.md` 다. 세션 시작 시 adk 플러그인 hook 이 내용을 컨텍스트에 넣는다
 - 로컬 전용 설정(JDK 경로 등 환경변수)은 `.claude/settings.local.json` 에 둔다 (커밋하지 않음)
 
@@ -64,6 +65,7 @@ agent 가 SDD + TDD 로 개발하게 하는 프로젝트 틀(`plugins/adk/templa
 
 - POSIX sh·awk: 템플릿 hook·검사 스크립트와 테스트. 적용 저장소의 OS 에서 돌므로 gawk·mawk·BSD awk 모두에서 같게 동작해야 한다
 - Python 3 + PyYAML: 템플릿 렌더·YAML 파싱 확인 등 테스트 보조
+- Node(내장 모듈만): 결정 페이지 틀(`skills/decide/templates/`)의 스크립트 로직 테스트 → npm 패키지를 쓰지 않는다
 - Claude Code 플러그인(스킬 `SKILL.md`, hook, agent 정의)과 GitHub Actions
 - 위 목록 밖의 의존성 추가는 PR 본문에 이유를 적는다.
 
@@ -105,6 +107,7 @@ sh tests/probe.test.sh
 sh tests/readme-commands.test.sh
 sh tests/cleanup.test.sh
 sh tests/watch.test.sh
+sh tests/decision-page.test.sh
 sh plugins/adk/template/.github/spec-trace.sh -- ':(exclude)docs/' ':(exclude)*.md' ':(exclude)plugins/adk/template/docs/' ':(exclude).github/spec-trace.sh' ':(exclude)plugins/adk/template/.github/spec-trace.sh'
 ```
 
