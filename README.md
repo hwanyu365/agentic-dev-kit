@@ -39,6 +39,7 @@ claude plugin install adk@agentic-dev-kit
 flowchart LR
   I[Request or GitHub Issue] --> S["/adk:spec"] --> T["/adk:tdd"] --> V["/adk:verify"] --> P["/adk:ship"]
   S -->|chore| V
+  S <-->|"2+ decisions, screen or behavior change"| D["/adk:decide"]
   P -->|autonomy pr| R["ready → report → /adk:watch: address teammate review → approval → squash merge"]
   P -->|autonomy merge| M[ready → squash merge]
   R & M --> L["/adk:release"]
@@ -48,6 +49,7 @@ flowchart LR
 | --- | --- |
 | `/adk:init` | Copies the scaffold into the current repository and fills placeholders (stack, verification command, maturity, autonomy scope, review mode, up-to-date branch requirement, etc.) through an interview. `--update` reads the current values of an adopted repository and compares/merges each file with the latest template |
 | `/adk:spec [issue]` | Creates worktree and branch, verifies the baseline → updates `docs/spec_{function}.md`, assigns requirement IDs and TCs, zero `[확인필요]` (needs confirmation) markers. Creates an issue after confirmation if none exists |
+| `/adk:decide` | Builds a decision page: per feature, a problem line → current and proposed side by side → what changes → choices with the recommended option preselected, and a summary at the bottom collected from the choices. Publishes as a private Artifact (local HTML file when unavailable), republishes to the same URL on feedback, and takes the owner's pasted [Copy decisions] result → records decisions in the handoff and confirms how to split them into issues (when called from `/adk:spec`, writes them into that spec instead). Used by `/adk:spec` when two or more decisions change screens or behavior |
 | `/adk:tdd` | Tests first from TCs (Red) → minimal implementation (Green) → refactor. Stops after 3 failed attempts at the same TC. For review comments, exhaustively counts every place the same input arrives and starts with tests |
 | `/adk:verify` | Verification command + per-spec-item cross-check of implementation location, TC and Then assertions, plus diff → spec reverse check (subagent without conversation history) + security boundary mutation table + comparison of blocking mechanisms with the previous version + change scope check. Cross-checks are skipped for chores |
 | `/adk:ship` | Commit (local review before push when review is `local`) → draft PR (PRs that depend on another open PR are stacked with `gh stack`; stacks merge with `gh stack merge`) → investigate and address CI and reviews → file follow-up issues → turn repeated comments into rule-making issues → stop decision (up to 2 re-review rounds for B and S; mergeable when only Nits remain) → ready → with autonomy `pr`, confirm review requests and report; with `merge`, squash merge |

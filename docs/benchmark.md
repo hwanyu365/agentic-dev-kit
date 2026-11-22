@@ -28,6 +28,7 @@ agentic-dev-kit 은 argos(Android + Firebase, v1.0.0 까지 agent 주도 개발)
 | [gstack](https://github.com/garrytan/gstack) `/review`, [pr-review-toolkit](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/pr-review-toolkit) | 테스트·검사 약화를 하나씩 이름으로 보고, 주석이 코드와 맞는지 | Red 테스트 삭제만 보면 기존 테스트의 skip·timeout 확대·snapshot 갱신·suppression 이 통과함. 틀린 주석은 agent 가 사실로 읽음 | 같음 |
 | [MountainUnicorn/add](https://github.com/MountainUnicorn/add) | 플러그인 저장소 자체 CI (validate·자체 검사) | 검증 명령이 로컬에서만 돌면 검증 없이 merge 될 수 있고, 공개 후 외부 PR 은 확인할 수단이 없음. ubuntu 의 `sh`·`awk` 에서도 같은 결과인지 확인됨 | 루트 `.github/workflows/test.yml` |
 | [superpowers](https://github.com/obra/superpowers), [Claude Code skills](https://code.claude.com/docs/en/skills) | 스킬 본문 크기 상한 테스트, 특정 상황에서만 쓰는 절차를 같은 폴더의 참조 파일로 분리 | 압축 뒤 스킬마다 앞 5,000 토큰만 다시 붙는다 → 긴 스킬은 뒤쪽 절(merge 조건 등)이 압축 뒤 사라짐. 분리한 파일은 해당 단계에서 읽음 | `tests/skill-size.test.sh`, `skills/ship/{human-review,followup}.md`, `skills/init/update.md`, `skills/ship/review.md` "사전 리뷰" |
+| 적용 저장소에서 쓴 개인 스킬 | 결정 페이지: 기능별 기존·변경안 그림 바로 아래 선택지, 권장안 기본 선택, 결정 모음 복사 | 문제 목록·시안·결정 표가 떨어진 보고서로는 소유자가 결정하지 못했고, 같은 내용을 기능별 그림 + 선택지로 바꾸자 결정 14개를 한 번에 받았다. 지적마다 같은 URL 로 다시 발행한 피드백에서 그림 원칙(장식 아이콘 빼기, 판단 정보 남기기, 짧은 버튼 문구, 중복 표시 빼기)이 나왔다 | `skills/decide/`, spec 2단계 |
 
 ## 채택하지 않음
 
